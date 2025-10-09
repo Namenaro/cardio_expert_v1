@@ -9,4 +9,4 @@ class Track:
         self.PSs: List[PS] = []
 
     def is_valid(self):
-        return len(self.PSs) > 0
+        return len(self.PSs) > 0  
