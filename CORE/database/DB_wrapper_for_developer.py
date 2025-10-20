@@ -1,4 +1,4 @@
-
+from CORE.dataclasses import Form, SMClassInfo, PSClassInfo, PCClassInfo, HCClassInfo
 
 class DBWrapperForDeveloper:
     def __init__(self):
@@ -10,5 +10,7 @@ class DBWrapperForDeveloper:
 
     def add_PC_class(self, class_info:PCClassInfo):
         pass
+
+
 
 

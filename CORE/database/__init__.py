@@ -1,1 +1,2 @@
-from .DB_wrapper_for_doctor import DBWrapperForDoctor
+from CORE.database.DB_wrapper_for_doctor import DBWrapperForDoctor
+from CORE.database.DB_wrapper_for_developer import DBWrapperForDeveloper
