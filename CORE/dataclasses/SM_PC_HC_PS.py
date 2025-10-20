@@ -1,79 +1,127 @@
 from dataclasses import dataclass, field
-from typing import Any, Dict
+from typing import Any, Dict, Set
 
-# Вспомогательные классы-------------------------------------
+# ----------------------------------------------------------
+# Классы, в которые сериализуются таблицы, описывающие только сигнатуры классов 4 типов (т.е. как коассы назваются, что ожидают их конструкторы)
 @dataclass
-class ClassInfo:
-    class_name: str
-    class_comment: str
-    class_type: str #PC, HC, ...
+class InputArgsInfo:
+    args_names_to_types: Dict[str, str] = field(default_factory=dict)
+    args_names_to_default_vals: Dict[str, Any]  = field(default_factory=dict)
+    args_names_to_comments: Dict[str, str] = field(default_factory=dict)
 
-    args_names_to_types: Dict[str, str]
-    args_names_to_default_vals: Dict[str, Any]
-    args_names_to_comments: Dict[str, str]
 
-    def add_constructor_arg(self, arg_name, default_val, data_type, arg_comment):
-        self.args_names_to_types[arg_name]=data_type
+    def add_arg(self, arg_name:str, default_val:Any, data_type:str, arg_comment:str=""):
+        self.args_names_to_types[arg_name] = data_type
         self.args_names_to_default_vals[arg_name] = default_val
         self.args_names_to_comments[arg_name] = arg_comment
 
+@dataclass
+class InputPointsInfo:
+    points_names_to_comments: Dict[str, str] = field(default_factory=dict)
+
+    def add_point(self, point_name:str, comment:str=""):
+        self.points_names_to_comments[point_name] = comment
+
+
+@dataclass
+class ParamsInfo:
+    params_names_to_comments: Dict[str, str] = field(default_factory=dict)
+
+    def add_param(self, param_name: str, comment: str=""):
+        self.params_names_to_comments[param_name] = comment
+
+
+""" Модификация сигнала """
+@dataclass
+class SMClassInfo:
+    class_name: str
+    class_comment: str
+
+    input_args_info: InputArgsInfo
+
+""" Селектор пула точек на сигнале """
+@dataclass
+class PSClassInfo:
+    class_name: str
+    class_comment: str
+
+    input_args_info: InputArgsInfo
+
+""" Правило замера параметра(-ов) по набору поставленных точек и набору уже померенных параметров """
+@dataclass
+class PCClassInfo:
+    class_name: str
+    class_comment: str
+
+    input_args_info: InputArgsInfo
+    input_params_info: ParamsInfo
+    input_points_info: InputPointsInfo
+
+    output_params_info: ParamsInfo
+
+""" Жесткое условие поверх группы параметров """
+@dataclass
+class HCClassInfo:
+    class_name: str
+    class_comment: str
+
+    input_args_info: InputArgsInfo
+    input_params_info: ParamsInfo
 
 # --------------------------------------------------------------------------
-# Основные 4 класса: каждый объект любого из них содержит всю
-# информацию для конструирования объекта соотв.типа и запуска его метода run.
-# --------------------------------------------------------------------------
+# Классы, в которые сериализуются таблицы, описывающие создание уже конкретных объектов классов 4 типов
 """ Модификация сигнала """
 @dataclass
 class SM_ObjectEntry:
-    class_info: ClassInfo
-    object_name: ""
+    class_info: SMClassInfo
+    object_name: str
     object_comment: str = ""
 
-    # для вызова конструктора
-    argname_to_argval: Dict[str, Any] = field(default_factory=dict)
+    args_names_to_vals: Dict[str, Any] = field(default_factory=dict)
 
-    """ Селектор пула точек на сигнале """
+    def add_arg_val(self, arg_name:str, arg_val:Any):
+        self.args_names_to_vals[arg_name] = arg_val
+
+
+
+""" Селектор пула точек на сигнале """
 @dataclass
 class PS_ObjectEntry:
-    class_info: ClassInfo
+    class_info: PSClassInfo
     object_name: ""
     object_comment: str = ""
 
-    # для вызова конструктора
-    argname_to_argval: Dict[str, Any] = field(default_factory=dict)
+    args_names_to_vals: Dict[str, Any] = field(default_factory=dict)
+
+    def add_arg_val(self, arg_name: str, arg_val: Any):
+        self.args_names_to_vals[arg_name] = arg_val
 
 
 """ Правило замера параметра(-ов) по набору поставленных точек и набору уже померенных параметров """
 @dataclass
 class PC_ObjectEntry:
-    class_info: ClassInfo
+    class_info: PCClassInfo
     object_name: ""
     object_comment: str = ""
 
-    # для вызова конструктора
-    argname_to_argval: Dict[str, Any] = field(default_factory=dict)
+    args_names_to_vals: Dict[str, Any] = field(default_factory=dict)
+    input_params_names_to_vals: Dict[str, str] = field(default_factory=dict)
+    input_points_names_to_vals: Dict[str, str] = field(default_factory=dict)
 
-    # для вызова run
-    input_params: Dict[str, ParamInfo] = field(default_factory=dict)
-    input_points_to_info: Dict[str, ParamInfo] = field(default_factory=dict)
+    output_params_to_vals: Dict[str, str] = field(default_factory=dict)
 
-    # какие параметры и их значения на выходе run
-    output_params_to_info: Dict[str, ParamInfo] = field(default_factory=dict)
 
 
 """ Жесткое условие поверх группы параметров """
 @dataclass
 class HC_ObjectEntry:
-    class_info: ClassInfo
+    class_info: HCClassInfo
 
     object_name: ""
     object_comment: str = ""
 
-    # для вызова конструктора
-    argname_to_argval: Dict[str, Any] = field(default_factory=dict)
-
-    # для вызова run
-    input_params_to_info: Dict[str, ParamInfo] = field(default_factory=dict)
+    args_names_to_vals: Dict[str, Any] = field(default_factory=dict)
+    input_params_names_to_vals: Dict[str, str] = field(default_factory=dict)
 
 
 
