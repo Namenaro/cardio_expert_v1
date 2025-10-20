@@ -10,12 +10,14 @@ from dataclasses import dataclass, field
 class Form:
         name: str
         comment: str = ""
+        path_to_pic: str = ""
+        path_to_dataset: str  = ""
 
         # точки формы
-        points: Set[Point] = field(default_factory=set)
+        points: List[Point] = field(default_factory=list)
 
         # параметры формы
-        parameters: Set[Parameter] = field(default_factory=set)
+        parameters: List[Parameter] = field(default_factory=list)
 
         # шаги установки точек формы, их столько сколько точек в форме, порядок в этом списке очень важен
         steps: List[Step] = field(default_factory=list)
