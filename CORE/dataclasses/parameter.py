@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 
+from typing import Optional
+
 @dataclass
 class Parameter:
-        name:str
-        comment:str = ""
+        id: Optional[int] = None  # первичный ключ в таблице parameter
+        name: str = ""
+        comment: str = ""

@@ -9,6 +9,8 @@ class Step:
     # Имя точки, ради которой затеян этот шаг установки
     target_point: Point
 
+    id: Optional[int] = None  # первичный ключ в таблице step
+
     # Список параллельных генераторов кандидатов
     tracks: Set[Track] = field(default_factory=set)
 

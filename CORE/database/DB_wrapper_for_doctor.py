@@ -1,25 +1,48 @@
-from CORE.dataclasses import Form, SMClassInfo, PSClassInfo, PCClassInfo, HCClassInfo
+from CORE.dataclasses import Form, Point, SMClassInfo, PSClassInfo, PCClassInfo, HCClassInfo
 
-from typing import List, Optional
+import sqlite3
+from typing import List, Optional, Dict
 
 class DBWrapperForDoctor:
-    def __init__(self):
+    def __init__(self, db_path):
+        self.db_path = db_path
+
+    def get_all_forms_names(self)->Dict[int, str]:
+        """ Вернуть список всех ID форм c их именами, т.е. dict{form.id, form.name}"""
         pass
 
-    def get_all_forms_names(self)->List[str]:
-        """ Вернуть список всех имен формы (см. form.name)"""
+    def load_form(self, form_id: int) -> Optional[Form]:
+        """Загрузка формы по ID"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+
+            # Загрузка основной информации о форме
+            cursor.execute('SELECT id, name, comment, path_to_pic, path_to_dataset FROM form WHERE id = ?', (form_id,))
+            form_data = cursor.fetchone()
+
+            if not form_data:
+                return None
+
+            form = Form(
+                id=form_data[0],
+                name=form_data[1],
+                comment=form_data[2],
+                path_to_pic=form_data[3],
+                path_to_dataset = form_data[4]
+            )
+
+            # Загрузка точек формы
+            # Загрузка параметров формы
+            # Загрузка шагов формы
+            # Загрузка измерителей параметров
+            # Загрузка жестких условий
+            return form
+
+    def delete_form(self, form_id: int):
+        """Удаление формы по ID"""
         pass
 
-    def read_form_by_name(self, form_name:str)->Optional[Form]:
-        """ По имени формы из form.name десериализовать объект Form. Если такой формы не найдено, вернуть None"""
-        pass
-
-    def delete_form(self, form_name):
-        """Удалить форму с таким именем из БД. Если ее там не было, то кинуть исключение.
-         При удалении формы нужно удалить все связанные с ней точки и параметры, шаги, треки, объекты всех классов."""
-        pass
-
-    def add_form(self, form:Form):
-        """ Добавить форму в БД, если такая уже есть ( с таким же form.name), то кинуть исключение """
+    def save_form(self, form:Form):
+        """Сохранение формы в базу данных"""
         pass
 

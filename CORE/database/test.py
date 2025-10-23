@@ -2,11 +2,11 @@ from CORE.dataclasses import Point, Parameter, Form
 from CORE.database import DBWrapperForDoctor
 
 def test_db_wrapper():
-    point1 = Point("q_peak", "нижняя точка пика q")
-    point2 = Point("r_peak", "пик r при инфаркте")
+    point1 = Point(None, "q_peak", "нижняя точка пика q")
+    point2 = Point(None,"r_peak", "пик r при инфаркте")
 
-    param1 = Parameter("q_height", "высотка пика q")
-    param2 = Parameter("q_len", "длина q")
+    param1 = Parameter(None,"q_height", "высотка пика q")
+    param2 = Parameter(None, "q_len", "длина q")
 
     # Создаем форму с точками и параметрами
     form = Form(
@@ -19,7 +19,7 @@ def test_db_wrapper():
     )
     db_wrapper_for_doctor = DBWrapperForDoctor()
     # добавим новую форму в базу
-    db_wrapper_for_doctor.add_form(form)
+    db_wrapper_for_doctor.save_form(form)
 
     # прочитаем форму из базы
     form_restored = db_wrapper_for_doctor.read_form_by_name("some_test_form")
