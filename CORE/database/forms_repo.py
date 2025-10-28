@@ -1,11 +1,12 @@
-from CORE.dataclasses import Form, Point, SMClassInfo, PSClassInfo, PCClassInfo, HCClassInfo
+from CORE.dataclasses import Form, Point, SM_Class, PS_Class, PC_Class, HC_Class
+from CORE.database.connection import DatabaseConnection
 
 import sqlite3
 from typing import List, Optional, Dict
 
 class DBWrapperForDoctor:
-    def __init__(self, db_path):
-        self.db_path = db_path
+    def __init__(self):
+        self.db = DatabaseConnection()
 
     def get_all_forms_names(self)->Dict[int, str]:
         """ Вернуть список всех ID форм c их именами, т.е. dict{form.id, form.name}"""

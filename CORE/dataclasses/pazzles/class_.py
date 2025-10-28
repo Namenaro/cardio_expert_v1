@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 
-class TYPES(Enum):
+class CLASS_TYPES(Enum):
     PC = "PC"
     HC = "HC"
     PS = "PS"
@@ -18,6 +18,13 @@ class DATA_TYPES(Enum):
     STR = "str"
     BOOL = "bool"
 
+@dataclass
+class ConstructorArg:
+    id = None
+    name:str = ""
+    comment: str = ""
+    default_val:str = ""
+    data_type:str = ""
 
 @dataclass
 class Class:
@@ -27,16 +34,16 @@ class Class:
 
     # Спецификация аргументов конструктора класса, все брать из таблицы
     # argument_to_class по внешнему ключу к class.id
-    args_ids_to_names: Dict[int, str] = field(default_factory=dict)
-    args_ids_to_defaults: Dict[int, str] = field(default_factory=dict)
-    ars_ids_to_comments: Dict[int, str] = field(default_factory=dict)
-    ars_ids_to_datatypes: Dict[int, str] = field(default_factory=dict)
+    constructor_args: List[ConstructorArg] = field(default_factory=list)
+
 
 
 @dataclass
 class SM_Class(Class):
+
     metainfo: str = ("Signal Modificator: Все классы этого типа получают на вход сигнал "
                      "и возвращают сигнал той же длины")
+
 
 
 @dataclass

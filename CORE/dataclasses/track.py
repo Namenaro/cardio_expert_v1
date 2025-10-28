@@ -1,4 +1,4 @@
-from CORE.dataclasses.pazzles.SM_PC_HC_PS import SM_ObjectEntry, PS_ObjectEntry
+from CORE.dataclasses.pazzles.object import SM_Object, PS_Object
 
 from typing import List
 from dataclasses import dataclass, field
@@ -12,8 +12,8 @@ class Track:
     """
     id: Optional[int] = None  # первичный ключ в таблице parameter
 
-    SMs: List[SM_ObjectEntry] = field(default_factory=list)
-    PSs: List[PS_ObjectEntry] = field(default_factory=list)
+    SMs: List[SM_Object] = field(default_factory=list)
+    PSs: List[PS_Object] = field(default_factory=list)
 
     def is_valid(self) -> bool:
         return len(self.PSs) > 0
