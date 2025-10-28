@@ -1,9 +1,11 @@
 from CORE.dataclasses import Form, SM_Class, PS_Class, PC_Class, HC_Class
 from CORE.dataclasses.pazzles import ConstructorArg
 from CORE.database.connection import DatabaseConnection
-from CORE.dataclasses.pazzles import CLASS_TYPES, DATA_TYPES
+from CORE.dataclasses.pazzles import CLASS_TYPES
+from CORE.database.schema import Schema
 
 from typing import List, Optional
+from copy import deepcopy
 
 
 class SM_ClassesRepo:
@@ -13,7 +15,7 @@ class SM_ClassesRepo:
         """Инициализация репозитория"""
         self.db = DatabaseConnection()
 
-    def add_new_SM_class(self, name: str, comment: str, default_val: str,
+    def add_new_SM_class(self, name: str, comment: str,
                          constructor_args: List[ConstructorArg]) -> int:
         """
         Добавляет новый класс в базу данных
@@ -21,7 +23,6 @@ class SM_ClassesRepo:
         Args:
             name: Имя класса
             comment: Комментарий к классу
-            default_val: Значение по умолчанию
             constructor_args: Список аргументов конструктора
 
         Returns:
@@ -33,8 +34,8 @@ class SM_ClassesRepo:
         try:
             # Создаем класс
             cursor.execute(
-                "INSERT INTO class (name, comment, TYPE, default_value) VALUES (?, ?, ?, ?)",
-                (name, comment, CLASS_TYPES.SM, default_val)
+                "INSERT INTO class (name, comment, TYPE) VALUES (?, ?, ?)",
+                (name, comment, CLASS_TYPES.SM.value)
             )
             class_id = cursor.lastrowid
 
@@ -46,6 +47,7 @@ class SM_ClassesRepo:
                 )
 
             conn.commit()
+
             return class_id
 
         except Exception:
@@ -89,8 +91,8 @@ class SM_ClassesRepo:
         try:
             # Обновляем данные класса
             cursor.execute(
-                "UPDATE class SET name = ?, comment = ?, default_value = ? WHERE id = ?",
-                (sm_class.name, sm_class.comment, sm_class.default_val, sm_class.id)
+                "UPDATE class SET name = ?, comment = ?  WHERE id = ?",
+                (sm_class.name, sm_class.comment, sm_class.id)
             )
 
             if cursor.rowcount == 0:
@@ -128,8 +130,8 @@ class SM_ClassesRepo:
 
         # Получаем данные класса
         cursor.execute(
-            "SELECT id, name, comment, default_value FROM class WHERE id = ? AND TYPE = 'SM_CLASS'",
-            (class_id,)
+            "SELECT id, name, comment FROM class WHERE id = ? AND TYPE = ?",
+            (class_id, CLASS_TYPES.SM.value)
         )
         row = cursor.fetchone()
 
@@ -160,7 +162,6 @@ class SM_ClassesRepo:
             id=row[0],
             name=row[1],
             comment=row[2] or "",
-            default_val=row[3] or "",
             constructor_args=constructor_args
         )
 
@@ -176,7 +177,8 @@ class SM_ClassesRepo:
         conn = self.db.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT id FROM class WHERE TYPE = 'SM_CLASS'")
+        cursor.execute("SELECT id FROM class WHERE TYPE = ?",
+                       (CLASS_TYPES.SM.value,))
         class_ids = [row[0] for row in cursor.fetchall()]
 
         classes = []
@@ -189,6 +191,12 @@ class SM_ClassesRepo:
 
 
 if __name__ == "__main__":
+    schema = Schema()
+
+    if schema.db_exists():
+        schema.delete_database()
+    schema.create_tables()
+
     repo = SM_ClassesRepo()
 
     # 1. Добавление нового класса
@@ -200,13 +208,19 @@ if __name__ == "__main__":
     class_id = repo.add_new_SM_class(
         name="TestClass",
         comment="Тестовый класс",
-        default_val="default_value",
         constructor_args=constructor_args
     )
+    print("Добавлен SM-класс " + str(class_id))
 
+    # 2. Получение всех классов этого типа
+    classes = repo.get_all_SM_classes()
+    print(classes)
 
+    # 3. Модификация существующего класса
+    modified = deepcopy(classes[0])
+    modified.name = "new_name!"
+    repo.update_SM_class(sm_class=modified)
 
-
-
-
-
+    # 4. Получение класса по его id
+    obj = repo.get_SM_class_by_id(class_id=class_id)
+    print(obj)

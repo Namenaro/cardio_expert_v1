@@ -20,7 +20,7 @@ class DATA_TYPES(Enum):
 
 @dataclass
 class ConstructorArg:
-    id = None
+    id : Optional[int] = None
     name:str = ""
     comment: str = ""
     default_val:str = ""

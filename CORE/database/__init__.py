@@ -1,2 +1,2 @@
-from CORE.database.forms_repo import DBWrapperForDoctor
+from CORE.database.repositories.forms_repo import DBWrapperForDoctor
 from CORE.database.repositories import SM_ClassesRepo
