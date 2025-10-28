@@ -2,6 +2,7 @@ from CORE.settings import DB_PATH
 from CORE.database.connection import DatabaseConnection
 import os
 
+
 class Schema:
     """Класс для управления схемой базы данных: ее создание и удаление"""
 
@@ -120,7 +121,6 @@ class Schema:
                         ON UPDATE NO ACTION ON DELETE NO ACTION
                     )
                     ''')
-
 
         cursor.execute('''
                     CREATE TABLE IF NOT EXISTS track (
@@ -267,22 +267,17 @@ class Schema:
         return False
 
 
-
-
-
 if __name__ == "__main__":
-    schema= Schema()
+    schema = Schema()
     schema.create_tables()
     #if schema.db_exists():
-        #schema.delete_database()
+    # schema.delete_database()
 
     db = DatabaseConnection()
     conn = db.get_connection()
     cursor = conn.cursor()
-    # Проверим какие таблицы уже есть
+
+    # Распечатаем список таблиц
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
     existing_tables = [row[0] for row in cursor.fetchall()]
     print(f"Существующие таблицы: {existing_tables}")
-
-
-
