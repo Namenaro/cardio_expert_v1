@@ -72,7 +72,9 @@ class Schema:
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             class_id INTEGER NOT NULL,
                             name TEXT,
-                            comment TEXT
+                            comment TEXT,
+                            FOREIGN KEY (class_id) REFERENCES class(id)
+            	            ON UPDATE NO ACTION ON DELETE NO ACTION
                         )
                         ''')
 
@@ -150,7 +152,7 @@ class Schema:
                         object_id INTEGER,
                         argument_id INTEGER NOT NULL,
                         argument_value TEXT,
-                        FOREIGN KEY (argument_id) REFERENCES argument(id)
+                        FOREIGN KEY (argument_id) REFERENCES argument_to_class(id)
                         ON UPDATE NO ACTION ON DELETE NO ACTION,
                         FOREIGN KEY (object_id) REFERENCES object(id)
                         ON UPDATE NO ACTION ON DELETE NO ACTION
@@ -242,9 +244,9 @@ class Schema:
                         point_id INTEGER NOT NULL,
                         FOREIGN KEY (object_id) REFERENCES object(id)
                         ON UPDATE NO ACTION ON DELETE NO ACTION,
-                        FOREIGN KEY (input_point_id) REFERENCES input_points_to_class(id)
+                        FOREIGN KEY (input_point_id) REFERENCES input_point_to_class(id)
                         ON UPDATE NO ACTION ON DELETE NO ACTION,
-                        FOREIGN KEY (point_id) REFERENCES points(id)
+                        FOREIGN KEY (point_id) REFERENCES point(id)
                         ON UPDATE NO ACTION ON DELETE NO ACTION
                     )
                     ''')
@@ -269,9 +271,10 @@ class Schema:
 
 if __name__ == "__main__":
     schema = Schema()
+
+    if schema.db_exists():
+        schema.delete_database()
     schema.create_tables()
-    #if schema.db_exists():
-    # schema.delete_database()
 
     db = DatabaseConnection()
     conn = db.get_connection()

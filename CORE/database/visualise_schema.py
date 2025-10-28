@@ -194,6 +194,406 @@ def generate_simple_schema_diagram(output_file='simple_schema_diagram'):
         print(f"Ошибка: {e}")
 
 
+def generate_er_diagram_custom_groups(output_file='database_er_diagram_custom'):
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        dot = graphviz.Digraph(
+            comment='Database ER Diagram with Custom Groups',
+            format='png',
+            graph_attr={'rankdir': 'TB', 'splines': 'ortho'}
+        )
+
+        # Группировка по вашему описанию
+        groups = {
+            'левые части объектов': {
+                'tables': ['input_param_to_class', 'input_point_to_class', 'output_param_to_class',
+                           'argument_to_class'],
+                'color': 'lightcoral',  # красный
+                'text_color': 'darkred'
+            },
+            'правые части объектов': {
+                'tables': ['value_to_argument', 'value_to_input_param', 'value_to_input_point',
+                           'value_to_output_param'],
+                'color': 'lightgreen',  # зеленый
+                'text_color': 'darkgreen'
+            },
+            'ядро базы': {
+                'tables': ['point', 'parameter', 'form'],
+                'color': 'lightblue',  # голубой
+                'text_color': 'darkblue'
+            }
+        }
+
+        # Создаем кластеры для сгруппированных таблиц
+        for group_name, group_info in groups.items():
+            with dot.subgraph(name=f'cluster_{group_name}') as cluster:
+                cluster.attr(
+                    label=group_name,
+                    style='filled,rounded',
+                    fillcolor=group_info['color'],
+                    color='black',
+                    fontcolor=group_info['text_color'],
+                    fontsize='12',
+                    fontname='Arial'
+                )
+
+                for table in group_info['tables']:
+                    # Проверяем что таблица существует
+                    cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,))
+                    if cursor.fetchone():
+                        cluster.node(
+                            table,
+                            shape='box',
+                            style='filled',
+                            fillcolor='white',
+                            color='black'
+                        )
+
+        # Таблицы без группы (серые)
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+        all_tables = [row[0] for row in cursor.fetchall()]
+
+        # Убираем из всех таблиц те, что уже в группах
+        grouped_tables = []
+        for group_info in groups.values():
+            grouped_tables.extend(group_info['tables'])
+
+        ungrouped_tables = [table for table in all_tables if table not in grouped_tables]
+
+        # Добавляем несгруппированные таблицы
+        with dot.subgraph(name='cluster_ungrouped') as cluster:
+            cluster.attr(
+                label='остальные таблицы',
+                style='filled,rounded',
+                fillcolor='lightgray',  # серый
+                color='black',
+                fontsize='12',
+                fontname='Arial'
+            )
+
+            for table in ungrouped_tables:
+                cluster.node(
+                    table,
+                    shape='box',
+                    style='filled',
+                    fillcolor='white',
+                    color='black'
+                )
+
+        # Добавляем все связи между таблицами
+        for table in all_tables:
+            cursor.execute(f"PRAGMA foreign_key_list({table})")
+            fks = cursor.fetchall()
+
+            for fk in fks:
+                ref_table = fk[2]
+                if ref_table in all_tables:
+                    # Определяем цвет стрелки в зависимости от групп
+                    from_group = None
+                    to_group = None
+
+                    for group_name, group_info in groups.items():
+                        if table in group_info['tables']:
+                            from_group = group_name
+                        if ref_table in group_info['tables']:
+                            to_group = group_name
+
+                    # Настраиваем цвет стрелки
+                    if from_group == 'левые части объектов' and to_group == 'правые части объектов':
+                        edge_color = 'red'
+                    elif from_group == 'правые части объектов' and to_group == 'левые части объектов':
+                        edge_color = 'green'
+                    else:
+                        edge_color = 'black'
+
+                    dot.edge(
+                        table,
+                        ref_table,
+                        color=edge_color,
+                        label=f"{fk[3]}→{fk[4]}"
+                    )
+
+        conn.close()
+        dot.render(output_file, cleanup=True)
+        print(f"Диаграмма с кастомной группировкой сохранена как: {output_file}.png")
+        print(f"Группы: {list(groups.keys())}")
+        print(f"Несгруппированные таблицы: {ungrouped_tables}")
+
+    except Exception as e:
+        print(f"Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+def generate_er_diagram_custom_groups_smooth(output_file='database_er_diagram_smooth'):
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        dot = graphviz.Digraph(
+            comment='Database ER Diagram with Smooth Edges',
+            format='png',
+            graph_attr={
+                'rankdir': 'TB',
+                'splines': 'spline',  # Плавные изогнутые линии
+                'overlap': 'false',
+                'nodesep': '0.8',
+                'ranksep': '1.2'
+            }
+        )
+
+        # Группировка по вашему описанию
+        groups = {
+            'левые части объектов': {
+                'tables': ['input_param_to_class', 'input_point_to_class', 'output_param_to_class',
+                           'argument_to_class'],
+                'color': 'lightcoral',
+                'text_color': 'darkred'
+            },
+            'правые части объектов': {
+                'tables': ['value_to_argument', 'value_to_input_param', 'value_to_input_point',
+                           'value_to_output_param'],
+                'color': 'lightgreen',
+                'text_color': 'darkgreen'
+            },
+            'ядро базы': {
+                'tables': ['point', 'parameter', 'form'],
+                'color': 'lightblue',
+                'text_color': 'darkblue'
+            }
+        }
+
+        # Создаем кластеры для сгруппированных таблиц
+        for group_name, group_info in groups.items():
+            with dot.subgraph(name=f'cluster_{group_name}') as cluster:
+                cluster.attr(
+                    label=group_name,
+                    style='filled,rounded',
+                    fillcolor=group_info['color'],
+                    color='black',
+                    fontcolor=group_info['text_color'],
+                    fontsize='12',
+                    fontname='Arial'
+                )
+
+                for table in group_info['tables']:
+                    cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,))
+                    if cursor.fetchone():
+                        cluster.node(
+                            table,
+                            shape='box',
+                            style='filled',
+                            fillcolor='white',
+                            color='black'
+                        )
+
+        # Таблицы без группы (серые)
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+        all_tables = [row[0] for row in cursor.fetchall()]
+
+        grouped_tables = []
+        for group_info in groups.values():
+            grouped_tables.extend(group_info['tables'])
+
+        ungrouped_tables = [table for table in all_tables if table not in grouped_tables]
+
+        # Добавляем несгруппированные таблицы
+        with dot.subgraph(name='cluster_ungrouped') as cluster:
+            cluster.attr(
+                label='остальные таблицы',
+                style='filled,rounded',
+                fillcolor='lightgray',
+                color='black',
+                fontsize='12',
+                fontname='Arial'
+            )
+
+            for table in ungrouped_tables:
+                cluster.node(
+                    table,
+                    shape='box',
+                    style='filled',
+                    fillcolor='white',
+                    color='black'
+                )
+
+        # Добавляем все связи между таблицами с плавными стрелками
+        for table in all_tables:
+            cursor.execute(f"PRAGMA foreign_key_list({table})")
+            fks = cursor.fetchall()
+
+            for fk in fks:
+                ref_table = fk[2]
+                if ref_table in all_tables:
+                    # Определяем цвет стрелки в зависимости от групп
+                    from_group = None
+                    to_group = None
+
+                    for group_name, group_info in groups.items():
+                        if table in group_info['tables']:
+                            from_group = group_name
+                        if ref_table in group_info['tables']:
+                            to_group = group_name
+
+                    # Настраиваем стиль стрелки
+                    if from_group == 'левые части объектов' and to_group == 'правые части объектов':
+                        edge_color = 'red'
+                    elif from_group == 'правые части объектов' and to_group == 'левые части объектов':
+                        edge_color = 'green'
+                    else:
+                        edge_color = 'black'
+
+                    dot.edge(
+                        table,
+                        ref_table,
+                        color=edge_color,
+                        label=f"{fk[3]}→{fk[4]}",
+                        arrowsize='0.8',  # Размер стрелки
+                        penwidth='1.2',  # Толщина линии
+                        style='solid'  # Стиль линии
+                    )
+
+        conn.close()
+        dot.render(output_file, cleanup=True)
+        print(f"Диаграмма с плавными стрелками сохранена как: {output_file}.png")
+
+    except Exception as e:
+        print(f"Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+def generate_er_diagram_group_colored_arrows(output_file='database_er_diagram_colored_arrows'):
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        dot = graphviz.Digraph(
+            comment='Database ER Diagram with Group-Colored Arrows',
+            format='png',
+            graph_attr={
+                'rankdir': 'TB',
+                'splines': 'spline',
+                'overlap': 'false',
+                'nodesep': '0.8',
+                'ranksep': '1.2'
+            }
+        )
+
+        # Группировка по вашему описанию
+        groups = {
+            'левые части объектов': {
+                'tables': ['input_param_to_class', 'input_point_to_class', 'output_param_to_class',
+                           'argument_to_class'],
+                'color': 'lightcoral',
+                'arrow_color': 'red'  # Цвет для стрелок из этой группы
+            },
+            'правые части объектов': {
+                'tables': ['value_to_argument', 'value_to_input_param', 'value_to_input_point',
+                           'value_to_output_param'],
+                'color': 'lightgreen',
+                'arrow_color': 'green'  # Цвет для стрелок из этой группы
+            },
+            'ядро базы': {
+                'tables': ['point', 'parameter', 'form'],
+                'color': 'lightblue',
+                'arrow_color': 'blue'  # Цвет для стрелок из этой группы
+            }
+        }
+
+        # Создаем кластеры для сгруппированных таблиц
+        for group_name, group_info in groups.items():
+            with dot.subgraph(name=f'cluster_{group_name}') as cluster:
+                cluster.attr(
+                    label=group_name,
+                    style='filled,rounded',
+                    fillcolor=group_info['color'],
+                    color='black',
+                    fontsize='12',
+                    fontname='Arial'
+                )
+
+                for table in group_info['tables']:
+                    cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,))
+                    if cursor.fetchone():
+                        cluster.node(
+                            table,
+                            shape='box',
+                            style='filled',
+                            fillcolor='white',
+                            color='black'
+                        )
+
+        # Таблицы без группы (серые)
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+        all_tables = [row[0] for row in cursor.fetchall()]
+
+        grouped_tables = []
+        for group_info in groups.values():
+            grouped_tables.extend(group_info['tables'])
+
+        ungrouped_tables = [table for table in all_tables if table not in grouped_tables]
+
+        # Добавляем несгруппированные таблицы
+        with dot.subgraph(name='cluster_ungrouped') as cluster:
+            cluster.attr(
+                label='остальные таблицы',
+                style='filled,rounded',
+                fillcolor='lightgray',
+                color='black',
+                fontsize='12',
+                fontname='Arial'
+            )
+
+            for table in ungrouped_tables:
+                cluster.node(
+                    table,
+                    shape='box',
+                    style='filled',
+                    fillcolor='white',
+                    color='black'
+                )
+
+        # Добавляем все связи между таблицами с цветами групп
+        for table in all_tables:
+            cursor.execute(f"PRAGMA foreign_key_list({table})")
+            fks = cursor.fetchall()
+
+            for fk in fks:
+                ref_table = fk[2]
+                if ref_table in all_tables:
+                    # Определяем цвет стрелки на основе группы исходной таблицы
+                    arrow_color = 'black'  # цвет по умолчанию для несгруппированных таблиц
+
+                    # Проверяем только исходную таблицу (table), игнорируем целевую (ref_table)
+                    for group_name, group_info in groups.items():
+                        if table in group_info['tables']:
+                            arrow_color = group_info['arrow_color']
+                            break
+                    # Если таблица в несгруппированных - оставляем черный цвет
+
+                    dot.edge(
+                        table,
+                        ref_table,
+                        color=arrow_color,
+                        label=f"{fk[3]}→{fk[4]}",
+                        arrowsize='0.8',
+                        penwidth='1.2',
+                        style='solid'
+                    )
+
+        conn.close()
+        dot.render(output_file, cleanup=True)
+        print(f"Диаграмма с цветными стрелками групп сохранена как: {output_file}.png")
+        print(f"Стрелки из сгруппированных таблиц - цветные, из несгруппированных - черные")
+
+    except Exception as e:
+        print(f"Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
+
 if __name__ == "__main__":
     # Сначала выводим текстовую схему
     print_database_schema()
@@ -207,3 +607,9 @@ if __name__ == "__main__":
 
     # И упрощенную версию
     generate_simple_schema_diagram()
+
+    generate_er_diagram_custom_groups()
+
+    generate_er_diagram_custom_groups_smooth()
+
+    generate_er_diagram_group_colored_arrows()
