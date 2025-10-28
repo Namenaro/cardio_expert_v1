@@ -255,7 +255,7 @@ def generate_er_diagram_group_colored_arrows(output_file='database_er_diagram_co
         conn.close()
         dot.render(output_file, cleanup=True)
         print(f"Диаграмма с цветными стрелками групп сохранена как: {output_file}.png")
-        print(f"Стрелки из сгруппированных таблиц - цветные, из несгруппированных - черные")
+
 
     except Exception as e:
         print(f"Ошибка: {e}")
