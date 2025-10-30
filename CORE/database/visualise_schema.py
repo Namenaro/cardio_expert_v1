@@ -262,6 +262,8 @@ def generate_er_diagram_group_colored_arrows(output_file='database_er_diagram_co
         import traceback
         traceback.print_exc()
 
+
+
 if __name__ == "__main__":
 
     generate_detailed_schema_diagram()
@@ -269,3 +271,4 @@ if __name__ == "__main__":
     generate_simple_schema_diagram()
 
     generate_er_diagram_group_colored_arrows()
+
