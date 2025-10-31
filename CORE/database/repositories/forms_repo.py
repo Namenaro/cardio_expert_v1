@@ -6,8 +6,9 @@ import sqlite3
 from typing import List, Optional, Dict
 
 class FormsRepo:
-    def __init__(self):
-        self.db = DatabaseConnection()
+    def __init__(self, db: DatabaseConnection) -> None:
+        """Инициализация репозитория"""
+        self.db = db
 
     def get_all_forms_summaries(self) -> List[Form]:
         """Вернуть список всех форм"""
@@ -87,7 +88,9 @@ if __name__ == "__main__":
     if schema.db_exists():
         schema.delete_database()
     schema.create_tables()
-    repo = FormsRepo()
+
+    db = DatabaseConnection()
+    repo = FormsRepo(db)
 
     test_form = Form(name="test_form",
                      comment="комментарий",

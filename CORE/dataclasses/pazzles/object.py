@@ -17,14 +17,6 @@ class Object:
     # значения аргументов коструктора
     args_ids_to_vals: Dict[int, Any] = field(default_factory=dict)
 
-    def get_constructor_args(self)->Dict[str, Any]:
-        """ Создаем словарь {имя аргумента - значение аргумента},
-         который будем передавать в конструктор класса"""
-
-        names_to_vals = map_names_to_values_throught_id(ids_to_names=self.class_signature.args_ids_to_names,
-                                                        ids_to_vals=self.args_ids_to_vals)
-        return names_to_vals
-
 
 @dataclass
 class SM_Object(Object):

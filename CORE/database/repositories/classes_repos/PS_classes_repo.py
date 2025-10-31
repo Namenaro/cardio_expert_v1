@@ -8,14 +8,14 @@ from typing import List, Optional
 from copy import deepcopy
 
 
-class SM_ClassesRepo:
-    """Репозиторий для работы с классами типа SM"""
+class PS_ClassesRepo:
+    """Репозиторий для работы с классами типа PS"""
 
-    def __init__(self) -> None:
+    def __init__(self, db: DatabaseConnection) -> None:
         """Инициализация репозитория"""
-        self.db = DatabaseConnection()
+        self.db = db
 
-    def add_new_SM_class(self, name: str, comment: str,
+    def add_new_PS_class(self, name: str, comment: str,
                          constructor_args: List[ConstructorArg]) -> int:
         """
         Добавляет новый класс в базу данных
@@ -35,7 +35,7 @@ class SM_ClassesRepo:
             # Создаем класс
             cursor.execute(
                 "INSERT INTO class (name, comment, TYPE) VALUES (?, ?, ?)",
-                (name, comment, CLASS_TYPES.SM.value)
+                (name, comment, CLASS_TYPES.PS.value)
             )
             class_id = cursor.lastrowid
 
@@ -54,7 +54,7 @@ class SM_ClassesRepo:
             conn.rollback()
             raise
 
-    def delete_SM_class(self, class_id: int) -> bool:
+    def delete_PS_class(self, class_id: int) -> bool:
         """
         Удаляет класс по ID (автоматически удаляет связанные аргументы)
 
@@ -72,7 +72,7 @@ class SM_ClassesRepo:
         conn.commit()
         return success
 
-    def update_SM_class(self, sm_class: SM_Class) -> bool:
+    def update_PS_class(self, ps_class: PS_Class) -> bool:
         """
         Обновляет данные класса
 
@@ -82,7 +82,7 @@ class SM_ClassesRepo:
         Returns:
             True если класс обновлен, False если класс не найден
         """
-        if sm_class.id is None:
+        if ps_class.id is None:
             raise ValueError("Class ID must be provided for update")
 
         conn = self.db.get_connection()
@@ -92,7 +92,7 @@ class SM_ClassesRepo:
             # Обновляем данные класса
             cursor.execute(
                 "UPDATE class SET name = ?, comment = ?  WHERE id = ?",
-                (sm_class.name, sm_class.comment, sm_class.id)
+                (ps_class.name, ps_class.comment, ps_class.id)
             )
 
             if cursor.rowcount == 0:
@@ -100,12 +100,12 @@ class SM_ClassesRepo:
                 return False
 
             # Удаляем старые аргументы и добавляем новые
-            cursor.execute("DELETE FROM argument_to_class WHERE class_id = ?", (sm_class.id,))
+            cursor.execute("DELETE FROM argument_to_class WHERE class_id = ?", (ps_class.id,))
 
-            for arg in sm_class.constructor_args:
+            for arg in ps_class.constructor_args:
                 cursor.execute(
                     "INSERT INTO argument_to_class (class_id, name, comment, data_type, default_value) VALUES (?, ?, ?, ?, ?)",
-                    (sm_class.id, arg.name, arg.comment, arg.data_type, arg.default_val)
+                    (ps_class.id, arg.name, arg.comment, arg.data_type, arg.default_val)
                 )
 
             conn.commit()
@@ -115,7 +115,7 @@ class SM_ClassesRepo:
             conn.rollback()
             raise
 
-    def get_SM_class_by_id(self, class_id: int) -> Optional[SM_Class]:
+    def get_PS_class_by_id(self, class_id: int) -> Optional[PS_Class]:
         """
         Получает класс по ID вместе с аргументами (вспомогательный метод)
 
@@ -131,7 +131,7 @@ class SM_ClassesRepo:
         # Получаем данные класса
         cursor.execute(
             "SELECT id, name, comment FROM class WHERE id = ? AND TYPE = ?",
-            (class_id, CLASS_TYPES.SM.value)
+            (class_id, CLASS_TYPES.PS.value)
         )
         row = cursor.fetchone()
 
@@ -158,16 +158,16 @@ class SM_ClassesRepo:
             constructor_args.append(arg)
 
         # Собираем класс
-        sm_class = SM_Class(
+        PS_class = PS_Class(
             id=row[0],
             name=row[1],
             comment=row[2] or "",
             constructor_args=constructor_args
         )
 
-        return sm_class
+        return PS_class
 
-    def get_all_SM_classes(self) -> List[SM_Class]:
+    def get_all_PS_classes(self) -> List[PS_Class]:
         """
         Получает все классы (вспомогательный метод)
 
@@ -178,12 +178,12 @@ class SM_ClassesRepo:
         cursor = conn.cursor()
 
         cursor.execute("SELECT id FROM class WHERE TYPE = ?",
-                       (CLASS_TYPES.SM.value,))
+                       (CLASS_TYPES.PS.value,))
         class_ids = [row[0] for row in cursor.fetchall()]
 
         classes = []
         for class_id in class_ids:
-            sm_class = self.get_SM_class_by_id(class_id)
+            sm_class = self.get_PS_class_by_id(class_id)
             if sm_class:
                 classes.append(sm_class)
 
@@ -197,7 +197,8 @@ if __name__ == "__main__":
         schema.delete_database()
     schema.create_tables()
 
-    repo = SM_ClassesRepo()
+    db = DatabaseConnection()
+    repo = PS_ClassesRepo(db)
 
     # 1. Добавление нового класса
     constructor_args = [
@@ -205,22 +206,22 @@ if __name__ == "__main__":
         ConstructorArg(name="param2", comment="Второй параметр", data_type="int", default_val="42")
     ]
 
-    class_id = repo.add_new_SM_class(
-        name="TestClassSM",
+    class_id = repo.add_new_PS_class(
+        name="TestPSClass",
         comment="Тестовый класс",
         constructor_args=constructor_args
     )
-    print("Добавлен SM-класс " + str(class_id))
+    print("Добавлен PS-класс " + str(class_id))
 
     # 2. Получение всех классов этого типа
-    classes = repo.get_all_SM_classes()
+    classes = repo.get_all_PS_classes()
     print(classes)
 
     # 3. Модификация существующего класса
     modified = deepcopy(classes[0])
-    modified.name = "new_name!"
-    repo.update_SM_class(sm_class=modified)
+    modified.name = "new_namePS!"
+    repo.update_PS_class(ps_class=modified)
 
     # 4. Получение класса по его id
-    obj = repo.get_SM_class_by_id(class_id=class_id)
+    obj = repo.get_PS_class_by_id(class_id=class_id)
     print(obj)
