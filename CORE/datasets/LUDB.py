@@ -20,6 +20,7 @@ LUDB_LEADS_NAMES = SimpleNamespace(
     v6='v6',
 )
 
+
 class LUDB_wrapper:
     def __init__(self):
         """
