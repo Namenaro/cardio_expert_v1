@@ -20,7 +20,8 @@ class Drawer:
 
     def draw_signal(self, signal: Signal, color=None, name=None):
         """
-        Отрисовывает сигнал на графике.
+        Отрисовывает сигнал на миллиметровке.
+        При любом растяжении ax для пользователя миллиметры остаются квадратными.
 
         Args:
             signal: Объект сигнала для отрисовки
@@ -35,7 +36,8 @@ class Drawer:
         # Настройка внешнего вида
         self.ax.set_xlabel('Время, с')
         self.ax.set_ylabel('Амплитуда, мВ')
-        self.ax.grid(True, alpha=0.3)
+
+        self.ax.grid(True, alpha=0.3) # TODO
 
         if name:
             self.ax.legend()
