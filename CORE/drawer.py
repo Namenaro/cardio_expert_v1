@@ -13,7 +13,7 @@ class Drawer:
     def __init__(self, ax):
         self.ax = ax
 
-        # Настройки миллиметровки
+        # Настройки миллиметровки TODO
         #self.little_cell_mv=..
         #self.little_cell_sec =..
         #self.grid_color =

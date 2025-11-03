@@ -34,7 +34,7 @@ class LUDB:
                 FileNotFoundError: Если файл датасета не найден
             """
         try:
-            with resources.files('datasets.data').joinpath('ludb.json').open('r', encoding='utf-8') as f:
+            with resources.files('CORE.datasets.data').joinpath('ecg_data_200.json').open('r', encoding='utf-8') as f:
                 self._data = json.load(f)
 
         except FileNotFoundError as e:
@@ -55,19 +55,20 @@ class LUDB:
                     если сигнал не найден
 
                 Note:
-                    Исходные данные в LUDB представлены в вольтах, поэтому при создании Signal
+                    Исходные данные в LUDB представлены в мквольтах, поэтому при создании Signal
                     выполняется преобразование в милливольты
         """
-        signal_mV = ... # TODO
+        signal_mkV= self._data[patient_id]['Leads'][lead_name]['Signal']
+        signal_mV = [s / 1000 for s in signal_mkV]
         signal = Signal(signal_mv=signal_mV)
         return signal
 
     def get_patients_ids(self)->List[str]:
-        pass # TODO
+        return list(self._data.keys())
 
 if __name__ == "__main__":
     ludb = LUDB()
     patients_ids = ludb.get_patients_ids()
 
     signal = ludb.get_1d_signal(patient_id=patients_ids[0], lead_name=LUDB_LEADS_NAMES.i)
-    print(signal)
+    print(signal.time[0:8])
