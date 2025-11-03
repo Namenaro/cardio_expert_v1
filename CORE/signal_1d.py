@@ -48,6 +48,7 @@ if __name__ == "__main__":
     raw_signal = list([sin(i) for i in range(80)])
     test_signal = Signal(signal_mv=raw_signal, frequency=2)
 
+
     print(test_signal.signal_mv)
     print(test_signal.time)
 

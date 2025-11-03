@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from CORE.signal_1d import Signal
 
+from typing import Optional
 
 class Drawer:
     """
@@ -14,18 +15,22 @@ class Drawer:
         self.ax = ax
 
         # Настройки миллиметровки TODO
-        #self.little_cell_mv=..
-        #self.little_cell_sec =..
+        #self.little_cell_mv = ..
+        #self.little_cell_sec = ..
         #self.grid_color =
 
-    def draw_signal(self, signal: Signal, color=None, name=None):
+    def draw_signal(self, signal: Signal, color=None, name:Optional[str]=None):
         """
         Отрисовывает сигнал на миллиметровке.
         При любом растяжении ax для пользователя миллиметры остаются квадратными.
 
         Args:
             signal: Объект сигнала для отрисовки
-            color: Цвет линии (по умолчанию автоматический)
+            color: Цвет линии. Может быть:
+                  - строкой ('red', 'blue', '#FF0000')
+                  - сокращением ('r', 'g', 'b')
+                  - RGB кортежем ((1.0, 0.0, 0.0))
+                  - None (автоматический выбор)
             name: Название сигнала для легенды
         """
         time = signal.time
