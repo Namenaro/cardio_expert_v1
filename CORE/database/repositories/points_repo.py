@@ -20,7 +20,24 @@ class PointsRepo:
         pass
 
     def add_new_point(self, point:Point, form_id:int)-> Optional[int]:
-        pass
+        """
+            Добавляет новую точку в базу данных.
+            """
+        try:
+            with self.db.get_connection() as conn:
+                cursor= conn.cursor()
+                query = """
+                        INSERT INTO point (name, comment, form_id)
+                        VALUES (?, ?, ?)
+                    """
+                cursor.execute(query, (point.name, point.comment, form_id))
+                conn.commit()
+                return cursor.lastrowid
+
+        except Exception as e:
+            conn.rollback()
+            print(f"Ошибка при добавлении точки: {e}")
+            return None
 
 
 

@@ -1,14 +1,19 @@
 from CORE.dataclasses import Form, Track, Point, SM_Class, PS_Class, PC_Class, HC_Class, Parameter, SM_Object, PS_Object
 from CORE.database.db_manager import DBManager
 
+from CORE.database.repositories.points_repo import PointsRepo
+
 
 import sqlite3
+
+
 from typing import List, Optional, Dict
 
 class FormsRepo:
     def __init__(self, db: DBManager) -> None:
         """Инициализация репозитория"""
         self.db = db
+        self.points_repo = PointsRepo(db)
 
     def get_all_forms_summaries(self) -> List[Form]:
         """Вернуть список всех форм"""
@@ -35,23 +40,33 @@ class FormsRepo:
     def get_form(self, form_id: int) -> Optional[Form]:
         """Загрузка формы по ID"""
         with self.db.get_connection() as conn:
+            conn.row_factory = sqlite3.Row  # Записи будут вести себя как словари
             cursor = conn.cursor()
 
             # Загрузка основной информации о форме
-            cursor.execute('SELECT id, name, comment, path_to_pic, path_to_dataset FROM form WHERE id = ?', (form_id,))
-            form_data = cursor.fetchone()
+            query = """
+                SELECT 
+                    id as form_id,
+                    name, 
+                    comment, 
+                    path_to_pic, 
+                    path_to_dataset 
+                FROM form 
+                WHERE id = ?
+            """
+            cursor.execute(query, (form_id,))
+            form_record = cursor.fetchone()
 
-            if not form_data:
+            if not form_record:
                 return None
 
             form = Form(
-                id=form_data[0],
-                name=form_data[1],
-                comment=form_data[2],
-                path_to_pic=form_data[3],
-                path_to_dataset = form_data[4]
+                id=form_record['form_id'],
+                name=form_record['name'],
+                comment=form_record['comment'],
+                path_to_pic=form_record['path_to_pic'],
+                path_to_dataset=form_record['path_to_dataset']
             )
-
             # Загрузка точек формы
             # Загрузка параметров формы
             # Загрузка шагов формы
