@@ -1,4 +1,4 @@
-from CORE.dataclasses.pazzles.object import SM_Object, PS_Object
+from CORE.db_dataclasses.pazzles.object import SM_Object, PS_Object
 
 from typing import List
 from dataclasses import dataclass, field

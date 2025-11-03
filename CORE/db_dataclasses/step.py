@@ -1,5 +1,5 @@
-from CORE.dataclasses.track import Track
-from CORE.dataclasses.point import Point
+from CORE.db_dataclasses.track import Track
+from CORE.db_dataclasses.point import Point
 
 from typing import Optional, List, Set
 from dataclasses import dataclass, field

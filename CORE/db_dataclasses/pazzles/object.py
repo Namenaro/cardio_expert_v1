@@ -1,10 +1,10 @@
 from typing import List, Optional, Dict, Any
 from dataclasses import dataclass, field
 
-from CORE.dataclasses.pazzles.class_ import Class, PC_Class, SM_Class, HC_Class, PS_Class
-from CORE.dataclasses.utils import map_names_to_values_throught_id
-from CORE.dataclasses.point import Point
-from CORE.dataclasses.parameter import Parameter
+from CORE.db_dataclasses.pazzles.class_ import Class, PC_Class, SM_Class, HC_Class, PS_Class
+from CORE.db_dataclasses.utils import map_names_to_values_throught_id
+from CORE.db_dataclasses.point import Point
+from CORE.db_dataclasses.parameter import Parameter
 
 
 @dataclass

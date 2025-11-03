@@ -1,4 +1,4 @@
-from CORE.dataclasses import Form
+from CORE.db_dataclasses import Form
 from CORE.database import FormsRepo
 
 from typing import List, Optional

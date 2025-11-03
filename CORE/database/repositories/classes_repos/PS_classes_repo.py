@@ -1,7 +1,7 @@
-from CORE.dataclasses import Form, SM_Class, PS_Class, PC_Class, HC_Class
-from CORE.dataclasses.pazzles import ConstructorArg
+from CORE.db_dataclasses import Form, SM_Class, PS_Class, PC_Class, HC_Class
+from CORE.db_dataclasses.pazzles import ConstructorArg
 from CORE.database.db_manager import DBManager
-from CORE.dataclasses.pazzles import CLASS_TYPES
+from CORE.db_dataclasses.pazzles import CLASS_TYPES
 
 
 from typing import List, Optional
