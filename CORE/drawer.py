@@ -36,7 +36,7 @@ class Drawer:
         time = signal.time
         values = signal.signal_mv
 
-        line = self.ax.plot(time, values, color=color, label=name)[0]
+        self.ax.plot(time, values, color=color, label=name)
 
         # Настройка внешнего вида
         self.ax.set_xlabel('Время, с')
@@ -47,7 +47,7 @@ class Drawer:
         if name:
             self.ax.legend()
 
-        return line
+
 
 
 # Пример использования
