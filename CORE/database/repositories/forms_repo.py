@@ -1,12 +1,12 @@
 from CORE.dataclasses import Form, Track, Point, SM_Class, PS_Class, PC_Class, HC_Class, Parameter, SM_Object, PS_Object
-from CORE.database.connection import DatabaseConnection
-from CORE.database.schema import Schema
+from CORE.database.db_manager import DBManager
+
 
 import sqlite3
 from typing import List, Optional, Dict
 
 class FormsRepo:
-    def __init__(self, db: DatabaseConnection) -> None:
+    def __init__(self, db: DBManager) -> None:
         """Инициализация репозитория"""
         self.db = db
 
@@ -34,7 +34,7 @@ class FormsRepo:
 
     def get_form(self, form_id: int) -> Optional[Form]:
         """Загрузка формы по ID"""
-        with sqlite3.connect(self.db_path) as conn:
+        with self.db.get_connection() as conn:
             cursor = conn.cursor()
 
             # Загрузка основной информации о форме
@@ -83,14 +83,14 @@ class FormsRepo:
             return None
 
 if __name__ == "__main__":
-    schema = Schema()
+    db_manager = DBManager()
 
-    if schema.db_exists():
-        schema.delete_database()
-    schema.create_tables()
+    if db_manager.db_exists():
+        db_manager.delete_database()
+    db_manager.create_tables()
 
-    db = DatabaseConnection()
-    repo = FormsRepo(db)
+
+    repo = FormsRepo(db_manager)
 
     test_form = Form(name="test_form",
                      comment="комментарий",
@@ -108,6 +108,9 @@ if __name__ == "__main__":
 
     id = repo.add_new_form(test_form)
     print(id)
+
+    form = repo.get_form(1)
+    print(form)
 
 
 

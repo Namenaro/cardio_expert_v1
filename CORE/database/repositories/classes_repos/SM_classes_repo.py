@@ -1,8 +1,8 @@
 from CORE.dataclasses import Form, SM_Class, PS_Class, PC_Class, HC_Class
 from CORE.dataclasses.pazzles import ConstructorArg
-from CORE.database.connection import DatabaseConnection
+from CORE.database.db_manager import DBManager
 from CORE.dataclasses.pazzles import CLASS_TYPES
-from CORE.database.schema import Schema
+
 
 from typing import List, Optional
 from copy import deepcopy
@@ -11,7 +11,7 @@ from copy import deepcopy
 class SM_ClassesRepo:
     """Репозиторий для работы с классами типа SM"""
 
-    def __init__(self, db: DatabaseConnection) -> None:
+    def __init__(self, db: DBManager) -> None:
         """Инициализация репозитория"""
         self.db = db
 
@@ -191,14 +191,14 @@ class SM_ClassesRepo:
 
 
 if __name__ == "__main__":
-    schema = Schema()
+    db_manager = DBManager()
 
-    if schema.db_exists():
-        schema.delete_database()
-    schema.create_tables()
+    if db_manager.db_exists():
+        db_manager.delete_database()
+    db_manager.create_tables()
 
-    db = DatabaseConnection()
-    repo = SM_ClassesRepo(db)
+
+    repo = SM_ClassesRepo(db_manager)
 
     # 1. Добавление нового класса
     constructor_args = [

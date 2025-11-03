@@ -1,12 +1,12 @@
 from CORE.dataclasses import Form, Track, Point, SM_Class, PS_Class, PC_Class, HC_Class, Parameter, SM_Object, PS_Object
-from CORE.database.connection import DatabaseConnection
-from CORE.database.schema import Schema
+from CORE.database.db_manager import DBManager
+
 
 import sqlite3
 from typing import List, Optional, Dict
 
 class ParamsRepo:
-    def __init__(self, db: DatabaseConnection) -> None:
+    def __init__(self, db: DBManager) -> None:
         """Инициализация репозитория"""
         self.db = db
 

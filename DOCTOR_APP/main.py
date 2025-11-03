@@ -1,4 +1,4 @@
-from form_controller import FormController
+from controller import FormController
 
 from typing import Optional, List
 
