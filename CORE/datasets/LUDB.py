@@ -39,7 +39,7 @@ class LUDB:
 
         except FileNotFoundError as e:
             raise FileNotFoundError(
-                f"Файл датасета 'ludb.json' не найден в пакете 'datasets.data'"
+                f"Файл датасета 'ecg_data_200.json' не найден в пакете 'datasets.data'"
             ) from e
 
     def get_1d_signal(self, patient_id:str, lead_name:LUDB_LEADS_NAMES)->Optional[Signal]:
