@@ -12,14 +12,10 @@ class Signal:
                 frequency (int): Частота дискретизации в Герцах (количество отсчетов в секунду)
 
         """
-        self._signal_mv = signal_mv
+        self.signal_mv = signal_mv
         self._ticks = ticks if ticks is not None else list(range(len(signal_mv)))
         self.frequency = frequency
 
-    @property
-    def signal_mv(self)->List[float]:
-        """Возвращает значения сигнала в милливольтах."""
-        return self._signal_mv
 
     @property
     def time(self)->List[float]:
@@ -38,7 +34,7 @@ class Signal:
             raise ValueError(f"Интервал [{start_time}, {end_time}) не содержит данных")
 
         return Signal(
-            signal_mv=[self._signal_mv[i] for i in indices],
+            signal_mv=[self.signal_mv[i] for i in indices],
             ticks=[self._ticks[i] for i in indices],
             frequency=self.frequency
         )

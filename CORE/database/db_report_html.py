@@ -81,7 +81,4 @@ def generate_html_report(output_file='database_report.html'):
 
 
 if __name__ == "__main__":
-
-
-
     generate_html_report()

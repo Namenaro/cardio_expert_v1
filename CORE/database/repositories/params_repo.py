@@ -1,24 +1,38 @@
-from CORE.db_dataclasses import Form, Track, Point, SM_Class, PS_Class, PC_Class, HC_Class, Parameter, SM_Object, PS_Object
-from CORE.database.db_manager import DBManager
+from CORE.db_dataclasses import Parameter
+
 
 
 import sqlite3
-from typing import List, Optional, Dict
+from typing import List, Optional
+
 
 class ParamsRepo:
-    def __init__(self, db: DBManager) -> None:
-        """Инициализация репозитория"""
-        self.db = db
+    """Репозиторий для работы с параметрами (работает только через переданные соединения)"""
 
-    def get_param_by_id(self, point_id:int)->Optional[Parameter]:
-        pass
+    def add_new_param(self, conn: sqlite3.Connection, form_id: int, param: Parameter) -> Optional[int]:
+        """
+        Добавляет один новый параметр к форме.
+        Возвращает ID созданного параметра или None при ошибке.
+        """
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                INSERT INTO parameters 
+                (form_id, name, comment)
+                VALUES (?, ?, ?)
+            """, (form_id, param.name, param.comment))
 
-    def delete_param(self, point_id:int)->bool:
-        pass
+            param_id = cursor.lastrowid
+            print(f"Добавлен параметр с ID {param_id} к форме {form_id}")
+            return param_id
 
-    def get_params_by_form_id(self)->List[Parameter]:
-        pass
+        except sqlite3.IntegrityError as e:
+            print(f"Ошибка целостности при добавлении параметра к форме {form_id}: {e}")
+            return None
+        except Exception as e:
+            print(f"Ошибка при добавлении параметра к форме {form_id}: {e}")
+            return None
+        finally:
+            cursor.close()
 
-    def add_new_param(self, param:Parameter, form_id:int)-> Optional[int]:
-        pass
 

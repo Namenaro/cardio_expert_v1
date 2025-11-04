@@ -12,7 +12,7 @@ class Step:
     id: Optional[int] = None  # первичный ключ в таблице step
 
     # Список параллельных генераторов кандидатов
-    tracks: Set[Track] = field(default_factory=set)
+    tracks: List[Track] = field(default_factory=list)
 
     #  Границы интервала, в котором надо поставить целевую точку
     right_point: Optional[Point] = field(default=None)
