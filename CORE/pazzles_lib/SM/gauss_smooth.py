@@ -24,24 +24,25 @@ class GaussianSmooth:
         return res_signal
 
 
+# Пример использования
 if __name__ == "__main__":
     from CORE.drawer import Drawer
     from CORE.datasets.LUDB import LUDB, LUDB_LEADS_NAMES
-
     import matplotlib.pyplot as plt
 
+    # Загружаем тестовый сигнал ЭКГ
     ludb = LUDB()
     patients_ids = ludb.get_patients_ids()
-
     signal = ludb.get_1d_signal(patient_id=patients_ids[0], lead_name=LUDB_LEADS_NAMES.i)
     old_signal = signal.get_fragment(0.0, 0.9)
 
+    # Создаем паззл
     gs = GaussianSmooth()
-
     new_signal = gs.run(signal=old_signal)
+
+    # Визуализация
     fig, ax = plt.subplots(figsize=(10, 4))
     drawer = Drawer(ax)
-
     drawer.draw_signal(new_signal, name="new")
     drawer.draw_signal(old_signal, name="old")
     plt.show()
