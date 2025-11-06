@@ -1,6 +1,4 @@
 from CORE.signal_1d import Signal
-from CORE.db_dataclasses.classes_to_pazzles_helpers import DATA_TYPES
-from CORE.db_dataclasses import *
 from copy import deepcopy
 
 from typing import Optional
@@ -11,7 +9,6 @@ class GaussianSmooth:
 
     def __init__(self, sigma: float = 2.5, kernel_size_t: float = 0.3):
         """
-
         :param sigma: Стандартное отклонение гауссова ядра.
         :param kernel_size_int:  Размер ядра фильтра. Измеряется в секундах
         """
