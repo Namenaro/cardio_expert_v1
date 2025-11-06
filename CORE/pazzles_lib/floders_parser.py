@@ -1,18 +1,13 @@
-
+import ast
+from pathlib import Path
+from typing import List, Tuple
 
 from CORE.db_dataclasses.base_class import BaseClass, CLASS_TYPES
-from CORE.db_dataclasses.classes_to_pazzles_helpers import *
 from CORE.pazzles_lib.class_parser import ClassParser
-
-import ast
-import inspect
-from dataclasses import dataclass, field
-from typing import List, Optional, Any, Dict, Tuple
-from pathlib import Path
 
 
 class FoldersParser:
-    """Парсер для обработки классов в папках проекта"""
+    """Парсер для обработки классов паззлов"""
 
     def __init__(self, base_package: str = "pazzles_lib"):
         self.base_package = base_package
@@ -114,11 +109,7 @@ def print_detailed_summary(pc_list: List[BaseClass], hc_list: List[BaseClass],
                            ps_list: List[BaseClass], sm_list: List[BaseClass]) -> None:
     """
     Подробно распечатывает информацию о всех найденных классах
-    используя красивые __repr__ методы
     """
-    print("=" * 80)
-    print("ПОДРОБНАЯ СВОДКА ПО ПАРСИНГУ КЛАССОВ")
-    print("=" * 80)
 
     total_classes = len(pc_list) + len(hc_list) + len(ps_list) + len(sm_list)
     print(f"Всего найдено классов: {total_classes}\n")
@@ -140,18 +131,11 @@ def print_detailed_summary(pc_list: List[BaseClass], hc_list: List[BaseClass],
                 print()  # Пустая строка между классами
 
 
-def main():
-    # Создаем парсер папок
+# Пример использования
+if __name__ == "__main__":
+    # Парсим все 4 папки
     folders_parser = FoldersParser("pazzles_lib")
-
-    # Парсим все папки
-    print("\nЗапуск парсинга...")
     pc_list, hc_list, ps_list, sm_list = folders_parser.parse_all_folders()
 
     # Выводим сводку
     print_detailed_summary(pc_list, hc_list, ps_list, sm_list)
-
-
-
-if __name__ == "__main__":
-    main()
