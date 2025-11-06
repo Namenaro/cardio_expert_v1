@@ -6,7 +6,7 @@ from dataclasses import dataclass
 class LessThanThreshold:
     """ Значение параметра меньше заданного порога"""
 
-    def __init__(self, threshold:float):
+    def __init__(self, threshold:float=3):
         """
         :param threshold: пороговое значение
         """

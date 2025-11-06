@@ -5,7 +5,7 @@ from typing import Optional
 
 
 class GlobalMaxSelector:
-    """ Сглаживание сигнала гауссовым ядром"""
+    """ Глобальный максимум на интервале"""
 
     def run(self, signal: Signal, left_t: Optional[float] = None, right_t: Optional[float] = None) -> float:
         t_of_max = 0.3

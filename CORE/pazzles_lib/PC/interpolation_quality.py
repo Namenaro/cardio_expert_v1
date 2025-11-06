@@ -1,6 +1,6 @@
 from CORE.signal_1d import Signal
 from typing import Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 class InterpolationError:
@@ -9,11 +9,9 @@ class InterpolationError:
 
     @dataclass
     class OutputParams:
-        error_in_procents: float
-        """Ошибка интерполяции в процентах"""
 
-        error_in_mV: float
-        """Ошибка интерполяции в mv"""
+        error_in_procents: float = field(metadata={"description": "Ошибка интерполяции в процентах"})
+        error_in_mV: float =field(metadata={"description": "Ошибка интерполяции в мв"})
 
     def register_points(self, point_left:float, point_middle:float, point_right:float):
         """

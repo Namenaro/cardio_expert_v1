@@ -10,7 +10,7 @@ class GaussianSmooth:
     def __init__(self, sigma: float = 2.5, kernel_size_t: float = 0.3):
         """
         :param sigma: Стандартное отклонение гауссова ядра.
-        :param kernel_size_int:  Размер ядра фильтра. Измеряется в секундах
+        :param kernel_size_t:  Размер ядра фильтра. Измеряется в секундах
         """
         self.sigma = sigma
         self.kernel_size_int = kernel_size_t

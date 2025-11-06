@@ -23,6 +23,11 @@ class ClassArgument:
     data_type: str = ""  # NOT NULL см. DATA_TYPES
     default_value: Optional[str] = None
 
+    def __repr__(self):
+        default_str = f" = {self.default_value}" if self.default_value else ""
+        comment_str = f"  # {self.comment}" if self.comment else ""
+        return f"{self.name}: {self.data_type}{default_str}{comment_str}"
+
 
 # Для таблицы value_to_argument
 @dataclass
@@ -43,6 +48,11 @@ class ClassInputParam:
     class_id: Optional[int] = None
     name: str = ""  # NOT NULL
     comment: str = ""
+    data_type: str = ""  # NOT NULL см. DATA_TYPES
+
+    def __repr__(self):
+        comment_str = f"  # {self.comment}" if self.comment else ""
+        return f"{self.name}: {self.data_type}{comment_str}"
 
 @dataclass
 class ObjectInputParamValue:
@@ -62,6 +72,12 @@ class ClassOutputParam:
     class_id: Optional[int] = None
     name: str = ""  # NOT NULL
     comment: str = ""
+    data_type: str = ""  # NOT NULL см. DATA_TYPES
+
+    def __repr__(self):
+        comment_str = f"  # {self.comment}" if self.comment else ""
+        return f"{self.name}: {self.data_type}{comment_str}"
+
 
 @dataclass
 class ObjectOutputParamValue:
@@ -81,6 +97,10 @@ class ClassInputPoint:
     class_id: Optional[int] = None
     name: str = ""  # NOT NULL
     comment: str = ""
+
+    def __repr__(self):
+        comment_str = f"  # {self.comment}" if self.comment else ""
+        return f"{self.name}{comment_str}"
 
 @dataclass
 class ObjectInputPointValue:
