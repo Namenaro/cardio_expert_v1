@@ -1,7 +1,8 @@
 from CORE.db_dataclasses.step import Step
 from CORE.db_dataclasses.point import Point
 from CORE.db_dataclasses.parameter import Parameter
-from CORE.db_dataclasses.pazzles.base_obj import PC_Object, HC_Object
+from CORE.db_dataclasses.base_class import BaseClass
+from CORE.db_dataclasses.base_pazzle import BasePazzle
 
 from typing import List, Optional
 from dataclasses import dataclass, field
@@ -29,10 +30,10 @@ class Form:
     steps: List[Step] = field(default_factory=list)
 
     # измерители параметров
-    PCs: List[PC_Object] = field(default_factory=list)
+    PCs: List[BasePazzle] = field(default_factory=list)
 
     # проверяльщики жестких условий на параметры
-    HCs: List[HC_Object] = field(default_factory=list)
+    HCs: List[BasePazzle] = field(default_factory=list)
 
     def is_valid(self) -> bool:
         conditions = (

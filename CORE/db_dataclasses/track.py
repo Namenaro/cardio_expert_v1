@@ -1,4 +1,4 @@
-from CORE.db_dataclasses.pazzles.base_obj import SM_Object, PS_Object
+from CORE.db_dataclasses.base_pazzle import BasePazzle
 
 from typing import List
 from dataclasses import dataclass, field
@@ -12,8 +12,8 @@ class Track:
     """
     id: Optional[int] = None
 
-    SMs: List[SM_Object] = field(default_factory=list)
-    PSs: List[PS_Object] = field(default_factory=list)
+    SMs: List[BasePazzle] = field(default_factory=list)
+    PSs: List[BasePazzle] = field(default_factory=list)
 
     def is_valid(self) -> bool:
         return len(self.PSs) > 0

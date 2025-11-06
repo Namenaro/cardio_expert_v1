@@ -52,12 +52,17 @@ class Drawer:
 
 # Пример использования
 if __name__ == "__main__":
+    from CORE.datasets.LUDB import LUDB, LUDB_LEADS_NAMES
+
+    # Загружаем тестовый сигнал
+    ludb = LUDB()
+    patients_ids = ludb.get_patients_ids()
+    signal = ludb.get_1d_signal(patient_id=patients_ids[0], lead_name=LUDB_LEADS_NAMES.i)
+    signal = signal.get_fragment(0.0, 0.9)
+
+    # Отрисовываем его
     fig, ax = plt.subplots(figsize=(10, 4))
     drawer = Drawer(ax)
-
-    # Создаем тестовый сигнал
-    signal_data = [0.5, 1.2, 0.8, 1.5, 0.3, 1.8, 0.9]
-    signal = Signal(signal_data, frequency=10)  # 10 Гц
     drawer.draw_signal(signal, color='blue', name='Тестовый сигнал')
 
 
