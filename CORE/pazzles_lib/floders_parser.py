@@ -50,19 +50,14 @@ class FoldersParser:
             print(f"Предупреждение: папка {folder_path} не найдена")
             return classes_list
 
-        print(f"Парсим папку: {folder_path}")
-
         # Ищем все Python файлы в папке (кроме __init__.py)
         python_files = [f for f in folder_path.glob("*.py") if f.name != "__init__.py"]
-        print(f"Найдено файлов в {folder_name}: {len(python_files)}")
 
         for file_path in python_files:
             try:
-                print(f"  Парсим файл: {file_path.name}")
                 class_info = self._parse_file(file_path, class_type)
                 if class_info:
                     classes_list.append(class_info)
-                    print(f"    ✓ Найден класс: {class_info.name}")
             except Exception as e:
                 print(f"    ✗ Ошибка при парсинге файла {file_path}: {e}")
 
@@ -70,44 +65,7 @@ class FoldersParser:
 
     def _get_folder_path(self, folder_name: str) -> Path:
         """Возвращает полный путь к папке с классами"""
-        # Способ 1: Ищем относительно текущего файла парсера
-        current_file_path = Path(__file__).parent
-        possible_paths = [
-            # Если парсер находится в pazzles_lib
-            current_file_path / folder_name,
-            # Если парсер находится в подпапке pazzles_lib
-            current_file_path.parent / folder_name,
-            # Если нужно подняться на уровень выше
-            current_file_path / self.base_package / folder_name,
-        ]
-
-        for path in possible_paths:
-            if path.exists():
-                return path
-
-        # Способ 2: Пытаемся найти через importlib
-        try:
-            import importlib.resources
-            package_path = importlib.resources.files(self.base_package)
-            potential_path = package_path / folder_name
-            if potential_path.exists():
-                return potential_path
-        except (ImportError, AttributeError, ModuleNotFoundError) as e:
-            print(f"Не удалось найти пакет через importlib: {e}")
-
-        # Способ 3: Ищем в корне проекта
-        project_root = Path.cwd()
-        potential_paths = [
-            project_root / self.base_package / folder_name,
-            project_root / folder_name,
-        ]
-
-        for path in potential_paths:
-            if path.exists():
-                return path
-
-        # Если ничего не нашли, возвращаем самый вероятный путь для отладки
-        return current_file_path / folder_name
+        return Path(__file__).parent / folder_name
 
     def _parse_file(self, file_path: Path, class_type: CLASS_TYPES) -> BaseClass:
         """
@@ -185,12 +143,6 @@ def print_detailed_summary(pc_list: List[BaseClass], hc_list: List[BaseClass],
 def main():
     # Создаем парсер папок
     folders_parser = FoldersParser("pazzles_lib")
-
-    # Для отладки: проверяем пути
-    print("Поиск папок...")
-    for folder in ["PC", "HC", "PS", "SM"]:
-        path = folders_parser._get_folder_path(folder)
-        print(f"Папка {folder}: {path} {'✓ СУЩЕСТВУЕТ' if path.exists() else '✗ НЕ НАЙДЕНА'}")
 
     # Парсим все папки
     print("\nЗапуск парсинга...")
