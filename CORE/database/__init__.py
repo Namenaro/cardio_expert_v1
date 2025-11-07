@@ -1,2 +1,0 @@
-from CORE.database.repositories.forms_write_repo import FormsRepo
-from CORE.database.repositories import SM_ClassesRepo

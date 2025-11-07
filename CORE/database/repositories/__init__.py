@@ -1,1 +1,0 @@
-from CORE.database.repositories.classes_repos.SM_classes_repo import SM_ClassesRepo

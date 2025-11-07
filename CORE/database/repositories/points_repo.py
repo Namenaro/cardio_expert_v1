@@ -1,8 +1,9 @@
-from CORE.db_dataclasses import Form, Track, Point, SM_Class, PS_Class, PC_Class, HC_Class, Parameter, SM_Object, PS_Object
+from CORE.db_dataclasses import Form, Track, Point, Parameter
 from CORE.database.db_manager import DBManager
 
 import sqlite3
 from typing import List, Optional, Dict
+
 
 class PointsRepo:
     """ Работа с точками формы (чтение и запись), работает только через переданное соединение"""

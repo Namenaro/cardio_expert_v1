@@ -1,4 +1,4 @@
-from CORE.db_dataclasses import Form, Track, Point, SM_Class, PS_Class, PC_Class, HC_Class, Parameter, SM_Object, PS_Object
+from CORE.db_dataclasses import Form, Track, Point,  Parameter, BaseClass, BasePazzle
 from CORE.database.db_manager import DBManager
 
 from CORE.database.repositories.points_repo import PointsRepo

@@ -18,6 +18,7 @@ def create_tables(cursor):
                                     name TEXT NOT NULL,
                                     form_id INTEGER,
                                     comment TEXT,
+                                    data_type TEXT,
                                     weight_of_param_for_exemplar_evaluation REAL,
                                     FOREIGN KEY (form_id) REFERENCES form(id)
                                     ON UPDATE NO ACTION ON DELETE NO ACTION
@@ -145,6 +146,7 @@ def create_tables(cursor):
                             class_id INTEGER NOT NULL,
                             name TEXT NOT NULL,
                             comment TEXT,
+                            data_type TEXT,
                             FOREIGN KEY (class_id) REFERENCES class(id)
                             ON UPDATE NO ACTION ON DELETE NO ACTION
                         )
@@ -167,6 +169,7 @@ def create_tables(cursor):
                             class_id INTEGER NOT NULL,
                             name TEXT NOT NULL,
                             comment TEXT,
+                            data_type TEXT,
                             FOREIGN KEY (class_id) REFERENCES class(id)
                             ON UPDATE NO ACTION ON DELETE NO ACTION
                         )
