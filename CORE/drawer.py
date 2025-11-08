@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator
 from CORE.signal_1d import Signal
 
 from typing import Optional
@@ -11,15 +12,18 @@ class Drawer:
         ax: Axes объект matplotlib для отрисовки
     """
 
-    def __init__(self, ax):
+    def __init__(self, ax: plt.Axes):
         self.ax = ax
 
-        # Настройки миллиметровки TODO
-        #self.little_cell_mv = ..
-        #self.little_cell_sec = ..
-        #self.grid_color =
+        # Настройки миллиметровки
+        self.minor_cell_mv = 0.1
+        self.minor_cell_sec = 0.04
+        self.major_cell_mv = 0.5
+        self.major_cell_sec = 0.2
+        self.minor_grid_color = "#f4bfbf"
+        self.major_grid_color = "#e37373"
 
-    def draw_signal(self, signal: Signal, color=None, name:Optional[str]=None):
+    def draw_signal(self, signal: Signal, color='#202020', name:Optional[str]=None):
         """
         Отрисовывает сигнал на миллиметровке.
         При любом растяжении ax для пользователя миллиметры остаются квадратными.
@@ -42,7 +46,16 @@ class Drawer:
         self.ax.set_xlabel('Время, с')
         self.ax.set_ylabel('Амплитуда, мВ')
 
-        self.ax.grid(True, alpha=0.3) # TODO
+        plt.gca().set_aspect(self.minor_cell_sec/self.minor_cell_mv)
+
+        self.ax.xaxis.set_major_locator(MultipleLocator(self.major_cell_sec))
+        self.ax.xaxis.set_minor_locator(MultipleLocator(self.minor_cell_sec))
+
+        self.ax.yaxis.set_major_locator(MultipleLocator(self.major_cell_mv))
+        self.ax.yaxis.set_minor_locator(MultipleLocator(self.minor_cell_mv))
+
+        self.ax.grid(True, 'major', color=self.major_grid_color)
+        self.ax.grid(True, 'minor', color=self.minor_grid_color, linewidth=0.5)
 
         if name:
             self.ax.legend()
