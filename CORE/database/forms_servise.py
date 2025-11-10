@@ -11,7 +11,7 @@ class FormsServise:
 
         self.db = db
         self._points_repo = PointsRepo()
-        self._simple_fprms_repo = FormsSimpleRepo()
+        self._simple_forms_repo = FormsSimpleRepo()
         self._params_repo = ParamsRepo()
 
 
@@ -20,7 +20,7 @@ class FormsServise:
         conn = self.db.get_connection()
 
         try:
-            form_id = self._simple_fprms_repo.add_form(conn=conn, form=Form)
+            form_id = self._simple_forms_repo.add_form(conn=conn, form=Form)
             if not form_id:
                 conn.rollback()
                 return None
