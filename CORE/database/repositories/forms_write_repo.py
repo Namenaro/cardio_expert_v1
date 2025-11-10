@@ -25,12 +25,13 @@ class FormsWriteRepo:
         try:
             conn.execute("BEGIN")
 
-            # 1. Создаем основную запись формы
+            # 1. Создаем  основную запись формы
             form_id = self._insert_form(conn, form)
             if not form_id:
                 conn.rollback()
                 return None
 
+            # 2. создаем все точки и параметры и возвращаем их ид
 
             conn.commit()
             return form_id
@@ -59,10 +60,6 @@ class FormsWriteRepo:
         except Exception as e:
             logging.error(f"Ошибка вставки формы: {e}")
             return None
-
-
-
-
 
 
 if __name__ == "__main__":

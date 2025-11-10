@@ -71,7 +71,7 @@ if __name__ == "__main__":
     ludb = LUDB()
     patients_ids = ludb.get_patients_ids()
     signal = ludb.get_1d_signal(patient_id=patients_ids[0], lead_name=LUDB_LEADS_NAMES.i)
-    signal = signal.get_fragment(0.0, 0.9)
+    signal = signal.get_fragment(0.0, 1.9)
 
     # Отрисовываем его
     fig, ax = plt.subplots(figsize=(10, 4))
