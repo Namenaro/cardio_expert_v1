@@ -1,4 +1,4 @@
-from CORE.db_dataclasses import Form, Track, Point,  Parameter, BaseClass, BasePazzle
+from CORE.db_dataclasses import Form, Track, Point,  Parameter, BaseClass, BasePazzle, CLASS_TYPES, DATA_TYPES
 from CORE.database.db_manager import DBManager
 from CORE.database.repositories import *
 
@@ -228,3 +228,13 @@ if __name__ == "__main__":
 
     id = servise.add_form(test_form)
     print(id)
+
+    point_id_1 = servise.add_point(form_id=id, point=Point(name="point_1", comment="коммент о точке"))
+    point_id_2 = servise.add_point(form_id=id, point=Point(name="point_2", comment="коммент о точке"))
+
+
+    parameter_1 = servise.add_parameter(form_id=id, parameter=Parameter(name="param_1", comment="коммент о параметре", data_type=DATA_TYPES.INT.value))
+    parameter_2 = servise.add_parameter(form_id=id, parameter=Parameter(name="param_2", comment="коммент о параметре",
+                                                                        data_type=DATA_TYPES.FLOAT.value))
+
+

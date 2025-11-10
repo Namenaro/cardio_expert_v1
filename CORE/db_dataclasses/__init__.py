@@ -12,7 +12,7 @@ from CORE.db_dataclasses.classes_to_pazzles_helpers import *
 import sys
 
 # Собираем all полуавтоматически
-__all__ = ['Form', 'Point', 'Parameter', 'Track', 'Step', 'BaseClass']
+__all__ = ['Form', 'Point', 'Parameter', 'Track', 'Step', 'BaseClass', 'DATA_TYPES']
 
 # Получаем текущий модуль
 current_module = sys.modules[__name__]
