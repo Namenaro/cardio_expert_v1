@@ -29,11 +29,9 @@ class Form:
     # шаги установки точек формы, их столько сколько точек в форме, порядок в этом списке очень важен
     steps: List[Step] = field(default_factory=list)
 
-    # измерители параметров
-    PCs: List[BasePazzle] = field(default_factory=list)
+    # измерители параметров проверяльщики жестких условий на параметры
+    HC_PC_objects: List[BasePazzle] = field(default_factory=list)
 
-    # проверяльщики жестких условий на параметры
-    HCs: List[BasePazzle] = field(default_factory=list)
 
     def is_valid(self) -> bool:
         conditions = (

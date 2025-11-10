@@ -55,3 +55,62 @@ class ObjectsRepo(BaseRepo):
         return self._execute_commit(conn,
                                     'DELETE FROM object WHERE id = ?',
                                     (object_id,))
+
+    def add_object_to_form(self, conn: sqlite3.Connection, form_id: int, object_id: int) -> Optional[int]:
+        """Добавляет связь объекта с формой"""
+        try:
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO HC_PC_object_to_form (form_id, object_id)
+                VALUES (?, ?)
+            ''', (form_id, object_id))
+
+            relation_id = cursor.lastrowid
+            conn.commit()
+            return relation_id
+        except sqlite3.Error as e:
+            print(f"Ошибка при добавлении связи объекта с формой: {e}")
+            conn.rollback()
+            return None
+
+    def get_objects_by_form(self, conn: sqlite3.Connection, form_id: int) -> List[int]:
+        """Получает список ID объектов, связанных с формой"""
+        rows = self._execute_fetchall(conn,
+                                      'SELECT object_id FROM HC_PC_object_to_form WHERE form_id = ? ORDER BY id',
+                                      (form_id,))
+
+        return [row['object_id'] for row in rows]
+
+    def get_forms_by_object(self, conn: sqlite3.Connection, object_id: int) -> List[int]:
+        """Получает список ID форм, связанных с объектом"""
+        rows = self._execute_fetchall(conn,
+                                      'SELECT form_id FROM HC_PC_object_to_form WHERE object_id = ? ORDER BY id',
+                                      (object_id,))
+
+        return [row['form_id'] for row in rows]
+
+    def delete_object_from_form(self, conn: sqlite3.Connection, form_id: int, object_id: int) -> bool:
+        """Удаляет связь объекта с формой"""
+        return self._execute_commit(conn,
+                                    'DELETE FROM HC_PC_object_to_form WHERE form_id = ? AND object_id = ?',
+                                    (form_id, object_id))
+
+    def delete_all_objects_from_form(self, conn: sqlite3.Connection, form_id: int) -> bool:
+        """Удаляет все связи объектов с указанной формой"""
+        return self._execute_commit(conn,
+                                    'DELETE FROM HC_PC_object_to_form WHERE form_id = ?',
+                                    (form_id,))
+
+    def delete_all_forms_from_object(self, conn: sqlite3.Connection, object_id: int) -> bool:
+        """Удаляет все связи форм с указанным объектом"""
+        return self._execute_commit(conn,
+                                    'DELETE FROM HC_PC_object_to_form WHERE object_id = ?',
+                                    (object_id,))
+
+    def relation_exists(self, conn: sqlite3.Connection, form_id: int, object_id: int) -> bool:
+        """Проверяет существование связи"""
+        row = self._execute_fetchone(conn,
+                                     'SELECT 1 FROM HC_PC_object_to_form WHERE form_id = ? AND object_id = ?',
+                                     (form_id, object_id))
+
+        return row is not None

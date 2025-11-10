@@ -58,7 +58,7 @@ def create_tables(cursor):
                             ''')
 
     cursor.execute('''
-                        CREATE TABLE IF NOT EXISTS HC_object_to_form (
+                        CREATE TABLE IF NOT EXISTS HC_PC_object_to_form (
                 	        id INTEGER PRIMARY KEY AUTOINCREMENT,
                 	        form_id INTEGER NOT NULL,
                 	        object_id INTEGER NOT NULL,
@@ -69,17 +69,7 @@ def create_tables(cursor):
                         );
                         ''')
 
-    cursor.execute('''
-                                CREATE TABLE IF NOT EXISTS PC_object_to_form (
-                                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                    form_id INTEGER NOT NULL,
-                                    object_id INTEGER NOT NULL,
-                                    FOREIGN KEY (object_id) REFERENCES object(id)
-                                    ON UPDATE NO ACTION ON DELETE NO ACTION,
-                                    FOREIGN KEY (form_id) REFERENCES form(id)
-                                    ON UPDATE NO ACTION ON DELETE NO ACTION
-                                )
-                                ''')
+
 
     cursor.execute('''
                         CREATE TABLE IF NOT EXISTS step (

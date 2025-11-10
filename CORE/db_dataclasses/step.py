@@ -6,6 +6,9 @@ from dataclasses import dataclass, field
 
 @dataclass
 class Step:
+    # Порядковый номер шага в форме
+    num_in_form: int
+
     # Имя точки, ради которой затеян этот шаг установки
     target_point: Point
 
@@ -21,6 +24,7 @@ class Step:
     right_padding_t: Optional[float] = None
 
     comment: str = ""
+
 
     def is_valid(self) -> bool:
         """

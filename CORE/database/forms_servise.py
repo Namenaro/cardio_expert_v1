@@ -1,6 +1,7 @@
-from CORE.db_dataclasses import Form, Track, Point,  Parameter, BaseClass, BasePazzle, CLASS_TYPES, DATA_TYPES
+from CORE.db_dataclasses import Form, Track, Point,  Parameter, BaseClass, Step, BasePazzle, CLASS_TYPES, DATA_TYPES
 from CORE.database.db_manager import DBManager
 from CORE.database.repositories import *
+from CORE.database.repositories.objects_helpers_repos import *
 
 
 import sqlite3
@@ -10,39 +11,220 @@ import logging
 
 
 class FormsService:
-    def __init__(self, db: 'DBManager') -> None:
-        self.db = db
-        self._points_repo = PointsRepo()
-        self._simple_forms_repo = FormsSimpleRepo()
-        self._params_repo = ParamsRepo()
+    """Расширенный сервис для работы с формами и всеми связанными сущностями"""
 
-    # Методы для работы с формами
-    def get_all_forms(self) -> List[Form]:
-        """Получить все формы"""
+    def __init__(self, db: 'DBManager'):
+        self.db = db
+        self._simple_forms_repo = FormsSimpleRepo()
+        self._points_repo = PointsRepo()
+        self._params_repo = ParamsRepo()
+        self._objects_repo = ObjectsRepo()
+        self._objects_service = ObjectsService()
+        self._steps_repo = StepsRepo()
+
+    # Методы для работы с записями таблицы form (только основная информация)
+    def get_all_form_entries(self) -> List[Form]:
+        """Получить все записи форм (только основная информация)"""
         with self.db.get_connection() as conn:
             return self._simple_forms_repo.get_all_forms(conn)
 
-    def get_form_by_id(self, form_id: int) -> Optional[Form]:
-        """Получить форму по ID"""
+    def get_form_entry_by_id(self, form_id: int) -> Optional[Form]:
+        """Получить запись формы по ID (только основная информация)"""
         with self.db.get_connection() as conn:
             return self._simple_forms_repo.get_form_by_id(conn, form_id)
 
-    def add_form(self, form: Form) -> Optional[int]:
-        """Добавить новую форму"""
+    def add_form_entry(self, form: Form) -> Optional[int]:
+        """Добавить запись формы (только основная информация)"""
         with self.db.get_connection() as conn:
             return self._simple_forms_repo.add_form(conn, form)
 
-    def update_form(self, form: Form) -> bool:
-        """Обновить форму"""
+    def update_form_entry(self, form: Form) -> bool:
+        """Обновить запись формы (только основная информация)"""
         with self.db.get_connection() as conn:
             return self._simple_forms_repo.update_form(conn, form)
 
-    def delete_form(self, form_id: int) -> bool:
-        """Удалить форму по ID"""
+    def delete_form_entry(self, form_id: int) -> bool:
+        """Удалить запись формы по ID (только основная информация)"""
         with self.db.get_connection() as conn:
             return self._simple_forms_repo.delete_form_by_id(conn, form_id)
 
-    # Методы для работы с точками
+    # Методы для работы с полными формами (со всем содержимым)
+    def add_form(self, form: Form) -> Optional[int]:
+        """Добавить форму со всем ее содержимым (точками, параметрами, объектами, шагами)"""
+        with self.db.get_connection() as conn:
+            try:
+                # Создаем базовую запись формы
+                form_id = self._simple_forms_repo.add_form(conn, Form(
+                    name=form.name,
+                    comment=form.comment,
+                    path_to_pic=form.path_to_pic,
+                    path_to_dataset=form.path_to_dataset
+                ))
+                if form_id is None:
+                    conn.rollback()
+                    return None
+
+                # Добавляем точки формы
+                for point in form.points:
+                    point_id = self._points_repo.add_new_point(conn, form_id, point)
+                    if point_id is None:
+                        conn.rollback()
+                        return None
+                    # Сохраняем ID созданной точки для использования в шагах
+                    point.id = point_id
+
+                # Добавляем параметры формы
+                for parameter in form.parameters:
+                    param_id = self._params_repo.add_new_parameter(conn, form_id, parameter)
+                    if param_id is None:
+                        conn.rollback()
+                        return None
+
+                # Добавляем объекты HC/PC
+                for obj in form.HC_PC_objects:
+                    if obj.id:  # Если объект уже существует в БД
+                        if self._objects_repo.add_object_to_form(conn, form_id, obj.id) is None:
+                            conn.rollback()
+                            return None
+                    else:
+                        print(f"Предупреждение: объект {obj.name} не имеет ID, пропускаем")
+
+                # Добавляем шаги с треками и объектами
+                for step_index, step in enumerate(form.steps):
+                    # Проверяем, что целевая точка существует и имеет ID
+                    if not step.target_point or not step.target_point.id:
+                        print(f"Ошибка: целевая точка шага {step_index} не определена")
+                        conn.rollback()
+                        return None
+
+                    # Создаем шаг
+                    step_id = self._steps_repo.add_step(
+                        conn, form_id,
+                        step.target_point.id,
+                        step.left_point.id if step.left_point else None,
+                        step.right_point.id if step.right_point else None,
+                        step.left_padding_t,
+                        step.right_padding_t,
+                        step.comment,
+                        step_index  # num_in_form
+                    )
+                    if step_id is None:
+                        conn.rollback()
+                        return None
+
+                    # Добавляем треки шага
+                    for track_index, track in enumerate(step.tracks):
+                        track_id = self._steps_repo.add_track(conn, step_id)
+                        if track_id is None:
+                            conn.rollback()
+                            return None
+
+                        # Добавляем SM объекты в трек
+                        for sm_index, sm_obj in enumerate(track.SMs):
+                            if sm_obj.id:
+                                relation_id = self._steps_repo.add_object_to_track(
+                                    conn, track_id, sm_obj.id, sm_index
+                                )
+                                if relation_id is None:
+                                    conn.rollback()
+                                    return None
+                            else:
+                                print(f"Предупреждение: SM объект не имеет ID, пропускаем")
+
+                        # Добавляем PS объекты в трек (после SM)
+                        ps_start_index = len(track.SMs)
+                        for ps_index, ps_obj in enumerate(track.PSs):
+                            if ps_obj.id:
+                                relation_id = self._steps_repo.add_object_to_track(
+                                    conn, track_id, ps_obj.id, ps_start_index + ps_index
+                                )
+                                if relation_id is None:
+                                    conn.rollback()
+                                    return None
+                            else:
+                                print(f"Предупреждение: PS объект не имеет ID, пропускаем")
+
+                conn.commit()
+                return form_id
+
+            except sqlite3.Error as e:
+                conn.rollback()
+                print(f"Ошибка при добавлении формы с содержимым: {e}")
+                return None
+
+    def get_form(self, form_id: int) -> Optional[Form]:
+        """Получить полную форму со всем содержимым"""
+        with self.db.get_connection() as conn:
+            # Получаем базовую информацию о форме
+            form = self._simple_forms_repo.get_form_by_id(conn, form_id)
+            if not form:
+                return None
+
+            # Получаем точки формы
+            form.points = self._points_repo.read_all_points_by_form_id(conn, form_id)
+
+            # Получаем параметры формы
+            form.parameters = self._params_repo.read_all_parameters_by_form_id(conn, form_id)
+
+            # Получаем объекты HC/PC, связанные с формой
+            object_ids = self._objects_repo.get_objects_by_form(conn, form_id)
+            form.HC_PC_objects = []
+            for obj_id in object_ids:
+                full_obj = self._objects_service.get_full_object(conn, obj_id)
+                if full_obj:
+                    form.HC_PC_objects.append(full_obj)
+
+            # Получаем шаги формы с полной информацией
+            steps = self._steps_repo.get_steps_by_form(conn, form_id)
+
+            # Заполняем дополнительную информацию для шагов
+            for step in steps:
+                if step.id:
+                    # Получаем треки шага
+                    tracks = self._steps_repo.get_tracks_by_step(conn, step.id)
+
+                    # Для каждого трека получаем объекты и разделяем их на SM и PS
+                    for track in tracks:
+                        if track.id:
+                            objects = self.get_objects_by_track(track.id)
+                            for obj in objects:
+                                # Определяем тип объекта (SM или PS)
+                                if obj.class_ref and obj.class_ref.type == "SM":
+                                    track.SMs.append(obj)
+                                elif obj.class_ref and obj.class_ref.type == "PS":
+                                    track.PSs.append(obj)
+
+                    step.tracks = tracks
+
+            form.steps = steps
+            return form
+
+    def delete_form(self, form_id: int) -> bool:
+        """Удалить полную форму со всеми связанными сущностями"""
+        with self.db.get_connection() as conn:
+            try:
+                # Удаляем шаги и их связи
+                self._steps_repo.delete_all_steps_of_form(conn, form_id)
+
+                # Удаляем точки формы
+                self._points_repo.delete_all_points_of_form(conn, form_id)
+
+                # Удаляем параметры формы
+                self._params_repo.delete_all_parameters_of_form(conn, form_id)
+
+                # Удаляем связи с объектами HC/PC
+                self._objects_repo.delete_all_objects_from_form(conn, form_id)
+
+                # Удаляем саму запись формы
+                result = self._simple_forms_repo.delete_form_by_id(conn, form_id)
+                conn.commit()
+                return result
+            except sqlite3.Error as e:
+                print(f"Ошибка при удалении формы: {e}")
+                conn.rollback()
+                return False
+
+    # Методы для работы с отдельными компонентами формы остаются без изменений
     def add_point(self, form_id: int, point: Point) -> Optional[int]:
         """Добавить точку к форме"""
         with self.db.get_connection() as conn:
@@ -63,12 +245,6 @@ class FormsService:
         with self.db.get_connection() as conn:
             return self._points_repo.delete_point_by_id(conn, point_id)
 
-    def delete_all_points_of_form(self, form_id: int) -> bool:
-        """Удалить все точки формы"""
-        with self.db.get_connection() as conn:
-            return self._points_repo.delete_all_points_of_form(conn, form_id)
-
-    # Методы для работы с параметрами
     def add_parameter(self, form_id: int, parameter: Parameter) -> Optional[int]:
         """Добавить параметр к форме"""
         with self.db.get_connection() as conn:
@@ -89,124 +265,39 @@ class FormsService:
         with self.db.get_connection() as conn:
             return self._params_repo.delete_parameter_by_id(conn, parameter_id)
 
-    def delete_all_parameters_of_form(self, form_id: int) -> bool:
-        """Удалить все параметры формы"""
+    # Методы для работы с объектами HC/PC
+    def add_object_to_form(self, form_id: int, object_id: int) -> bool:
+        """Добавляет объект к форме"""
         with self.db.get_connection() as conn:
-            return self._params_repo.delete_all_parameters_of_form(conn, form_id)
+            result = self._objects_repo.add_object_to_form(conn, form_id, object_id)
+            return result is not None
 
-    # Комплексные операции
-    def get_form_with_details(self, form_id: int) -> Optional[dict]:
-        """Получить форму со всеми точками и параметрами"""
+    def get_form_objects(self, form_id: int) -> List[BasePazzle]:
+        """Получает список объектов, связанных с формой"""
         with self.db.get_connection() as conn:
-            form = self._simple_forms_repo.get_form_by_id(conn, form_id)
-            if not form:
-                return None
+            object_ids = self._objects_repo.get_objects_by_form(conn, form_id)
+            objects = []
+            for obj_id in object_ids:
+                obj = self._objects_service.get_full_object(conn, obj_id)
+                if obj:
+                    objects.append(obj)
+            return objects
 
-            points = self._points_repo.read_all_points_by_form_id(conn, form_id)
-            parameters = self._params_repo.read_all_parameters_by_form_id(conn, form_id)
-
-            return {
-                'form': form,
-                'points': points,
-                'parameters': parameters
-            }
-
-    def delete_form_completely(self, form_id: int) -> bool:
-        """Полностью удалить форму со всеми точками и параметрами"""
+    # Методы для работы с шагами
+    def add_step(self, form_id: int, target_point_id: int,
+                 left_point_id: Optional[int] = None, right_point_id: Optional[int] = None,
+                 left_padding: Optional[float] = None, right_padding: Optional[float] = None,
+                 comment: str = "", num_in_form: int = 0) -> Optional[int]:
+        """Добавляет шаг к форме"""
         with self.db.get_connection() as conn:
-            try:
-                # Удаляем точки формы
-                self._points_repo.delete_all_points_of_form(conn, form_id)
-                # Удаляем параметры формы
-                self._params_repo.delete_all_parameters_of_form(conn, form_id)
-                # Удаляем саму форму
-                result = self._simple_forms_repo.delete_form_by_id(conn, form_id)
-                conn.commit()
-                return result
-            except sqlite3.Error as e:
-                conn.rollback()
-                print(f"Ошибка при полном удалении формы: {e}")
-                return False
+            return self._steps_repo.add_step(conn, form_id, target_point_id, left_point_id,
+                                             right_point_id, left_padding, right_padding,
+                                             comment, num_in_form)
 
-    def create_form_with_data(self, form: Form, points: List[Point], parameters: List[Parameter]) -> Optional[int]:
-        """Создать форму с точками и параметрами в одной транзакции"""
+    def get_steps_by_form(self, form_id: int) -> List[Step]:
+        """Получает все шаги формы"""
         with self.db.get_connection() as conn:
-            try:
-                # Создаем форму
-                form_id = self._simple_forms_repo.add_form(conn, form)
-                if form_id is None:
-                    conn.rollback()
-                    return None
-
-                # Добавляем точки
-                for point in points:
-                    point_id = self._points_repo.add_new_point(conn, form_id, point)
-                    if point_id is None:
-                        conn.rollback()
-                        return None
-
-                # Добавляем параметры
-                for parameter in parameters:
-                    param_id = self._params_repo.add_new_parameter(conn, form_id, parameter)
-                    if param_id is None:
-                        conn.rollback()
-                        return None
-
-                conn.commit()
-                return form_id
-            except sqlite3.Error as e:
-                conn.rollback()
-                print(f"Ошибка при создании формы с данными: {e}")
-                return None
-
-    def copy_form(self, source_form_id: int, new_form_name: str) -> Optional[int]:
-        """Скопировать форму со всеми точками и параметрами"""
-        with self.db.get_connection() as conn:
-            try:
-                # Получаем исходную форму
-                source_form = self._simple_forms_repo.get_form_by_id(conn, source_form_id)
-                if not source_form:
-                    return None
-
-                # Создаем новую форму
-                new_form = Form(
-                    name=new_form_name,
-                    comment=f"Копия: {source_form.comment}",
-                    path_to_pic=source_form.path_to_pic,
-                    path_to_dataset=source_form.path_to_dataset
-                )
-
-                new_form_id = self._simple_forms_repo.add_form(conn, new_form)
-                if new_form_id is None:
-                    conn.rollback()
-                    return None
-
-                # Копируем точки
-                source_points = self._points_repo.read_all_points_by_form_id(conn, source_form_id)
-                for point in source_points:
-                    new_point = Point(name=point.name, comment=point.comment)
-                    if self._points_repo.add_new_point(conn, new_form_id, new_point) is None:
-                        conn.rollback()
-                        return None
-
-                # Копируем параметры
-                source_parameters = self._params_repo.read_all_parameters_by_form_id(conn, source_form_id)
-                for param in source_parameters:
-                    new_param = Parameter(
-                        name=param.name,
-                        comment=param.comment,
-                        data_type=param.data_type
-                    )
-                    if self._params_repo.add_new_parameter(conn, new_form_id, new_param) is None:
-                        conn.rollback()
-                        return None
-
-                conn.commit()
-                return new_form_id
-            except sqlite3.Error as e:
-                conn.rollback()
-                print(f"Ошибка при копировании формы: {e}")
-                return None
+            return self._steps_repo.get_steps_by_form(conn, form_id)
 
 # Пример использования
 if __name__ == "__main__":
