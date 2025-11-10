@@ -1,8 +1,7 @@
-# argument_values_repo.py
 import sqlite3
 from typing import Optional, List
-from .base_repo import BaseRepo
-from .dataclasses import ObjectArgumentValue
+from CORE.database.repositories.objects_helpers_repos.base_repo import BaseRepo
+from CORE.db_dataclasses import ObjectArgumentValue
 
 
 class ArgumentValuesRepo(BaseRepo):
@@ -57,3 +56,9 @@ class ArgumentValuesRepo(BaseRepo):
         return self._execute_commit(conn,
                                     'DELETE FROM value_to_argument WHERE id = ?',
                                     (value_id,))
+
+    def delete_all_argument_values_by_object(self, conn: sqlite3.Connection, object_id: int) -> bool:
+        """Удаляет все значения аргументов для указанного объекта"""
+        return self._execute_commit(conn,
+                                    'DELETE FROM value_to_argument WHERE object_id = ?',
+                                    (object_id,))
