@@ -19,7 +19,6 @@ def create_tables(cursor):
                                     form_id INTEGER,
                                     comment TEXT,
                                     data_type TEXT,
-                                    weight_of_param_for_exemplar_evaluation REAL,
                                     FOREIGN KEY (form_id) REFERENCES form(id)
                                     ON UPDATE NO ACTION ON DELETE NO ACTION
 

@@ -1,38 +1,110 @@
 from CORE.db_dataclasses import Parameter
 
-
-
 import sqlite3
 from typing import List, Optional
 
 
 class ParamsRepo:
-    """Репозиторий для работы с параметрами (работает только через переданные соединения)"""
 
-    def add_new_param(self, conn: sqlite3.Connection, form_id: int, param: Parameter) -> Optional[int]:
+    def add_new_parameter(self, conn: sqlite3.Connection, form_id: int, parameter: Parameter) -> Optional[int]:
         """
-        Добавляет один новый параметр к форме.
-        Возвращает ID созданного параметра или None при ошибке.
+        Добавляет новый параметр для указанной формы
+        Возвращает ID созданного параметра или None в случае ошибки
         """
-        cursor = conn.cursor()
         try:
-            cursor.execute("""
-                INSERT INTO parameters 
-                (form_id, name, comment)
-                VALUES (?, ?, ?)
-            """, (form_id, param.name, param.comment))
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO parameter (name, form_id, comment, data_type)
+                VALUES (?, ?, ?, ?)
+            ''', (parameter.name, form_id, parameter.comment, parameter.data_type))
 
             param_id = cursor.lastrowid
-            print(f"Добавлен параметр с ID {param_id} к форме {form_id}")
+            conn.commit()
             return param_id
-
-        except sqlite3.IntegrityError as e:
-            print(f"Ошибка целостности при добавлении параметра к форме {form_id}: {e}")
+        except sqlite3.Error as e:
+            print(f"Ошибка при добавлении параметра: {e}")
+            conn.rollback()
             return None
-        except Exception as e:
-            print(f"Ошибка при добавлении параметра к форме {form_id}: {e}")
-            return None
-        finally:
-            cursor.close()
 
+    def delete_parameter_by_id(self, conn: sqlite3.Connection, parameter_id: int) -> bool:
+        """
+        Удаляет параметр по его ID
+        Возвращает True если удаление успешно, False в случае ошибки
+        """
+        try:
+            cursor = conn.cursor()
+            cursor.execute('DELETE FROM parameter WHERE id = ?', (parameter_id,))
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Ошибка при удалении параметра: {e}")
+            conn.rollback()
+            return False
+
+    def read_all_parameters_by_form_id(self, conn: sqlite3.Connection, form_id: int) -> List[Parameter]:
+        """
+        Возвращает список всех параметров для указанной формы
+        """
+        try:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT id, name, comment, data_type 
+                FROM parameter 
+                WHERE form_id = ?
+                ORDER BY id
+            ''', (form_id,))
+
+            parameters = []
+            for row in cursor.fetchall():
+                parameter = Parameter(
+                    id=row[0],
+                    name=row[1],
+                    comment=row[2],
+                    data_type=row[3]
+                )
+                parameters.append(parameter)
+
+            return parameters
+        except sqlite3.Error as e:
+            print(f"Ошибка при чтении параметров: {e}")
+            return []
+
+    def update_parameter(self, conn: sqlite3.Connection, parameter: Parameter) -> bool:
+        """
+        Обновляет данные параметра
+        Возвращает True если обновление успешно, False в случае ошибки
+        """
+        if parameter.id is None:
+            print("Ошибка: ID параметра не указан")
+            return False
+
+        try:
+            cursor = conn.cursor()
+            cursor.execute('''
+                UPDATE parameter 
+                SET name = ?, comment = ?, data_type = ?
+                WHERE id = ?
+            ''', (parameter.name, parameter.comment, parameter.data_type, parameter.id))
+
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Ошибка при обновлении параметра: {e}")
+            conn.rollback()
+            return False
+
+    def delete_all_parameters_of_form(self, conn: sqlite3.Connection, form_id: int) -> bool:
+        """
+        Удаляет все параметры указанной формы
+        Возвращает True если удаление успешно, False в случае ошибки
+        """
+        try:
+            cursor = conn.cursor()
+            cursor.execute('DELETE FROM parameter WHERE form_id = ?', (form_id,))
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Ошибка при удалении всех параметров формы: {e}")
+            conn.rollback()
+            return False
 
