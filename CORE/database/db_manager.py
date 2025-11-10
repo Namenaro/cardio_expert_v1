@@ -5,6 +5,8 @@ import sqlite3
 import os
 from typing import Optional
 import logging
+from contextlib import contextmanager
+
 
 class DBManager:
     """
@@ -19,19 +21,10 @@ class DBManager:
 
     def create_tables(self):
         """Создает все таблицы в базе данных"""
-        conn = self.get_connection()
-        try:
+        with self.get_connection() as conn:
             cursor = conn.cursor()
             create_tables(cursor)
-
-            conn.commit()
             logging.info("Таблицы успешно созданы")
-
-        except Exception as e:
-            conn.rollback()
-            raise e
-        finally:
-            conn.close()
 
     def delete_database(self) -> bool:
         """Удаляет базу данных"""
@@ -40,14 +33,20 @@ class DBManager:
             return True
         return False
 
-    def get_connection(self) -> sqlite3.Connection:
-        """
-        Возвращает новое подключение к БД.
-        """
+
+    @contextmanager
+    def get_connection(self):
         conn = sqlite3.connect(self.db_path)
-        conn.execute("PRAGMA foreign_keys = ON")
         conn.row_factory = sqlite3.Row
-        return conn
+        conn.execute("PRAGMA foreign_keys = ON")
+        try:
+            yield conn
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
 
 
 
