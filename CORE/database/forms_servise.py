@@ -18,7 +18,7 @@ class FormsService:
         self._simple_forms_repo = FormsSimpleRepo()
         self._points_repo = PointsRepo()
         self._params_repo = ParamsRepo()
-        self._objects_repo = ObjectsRepo()
+        self._objects_repo = ObjectsSimpleRepo()
         self._objects_service = ObjectsService()
         self._steps_repo = StepsRepo()
 
@@ -81,7 +81,7 @@ class FormsService:
                 # Создаем объекты HC/PC
                 # Привязываем созданные объекты HC/PC к форме
                 for obj in form.HC_PC_objects:
-                    obj_id = self._objects_repo.add_object_to_form(conn, form_id, obj.id)
+                    obj_id = self._objects_repo.connect_object_to_form(conn, form_id, obj.id)
                     if obj_id is None:
                         conn.rollback()
                         return None
@@ -165,7 +165,7 @@ class FormsService:
             form.parameters = self._params_repo.read_all_parameters_by_form_id(conn, form_id)
 
             # Получаем объекты HC/PC, связанные с формой
-            object_ids = self._objects_repo.get_objects_by_form(conn, form_id)
+            object_ids = self._objects_repo.get_objects_ids_by_form(conn, form_id)
             form.HC_PC_objects = []
             for obj_id in object_ids:
                 full_obj = self._objects_service.get_full_object(conn, obj_id)
@@ -267,13 +267,13 @@ class FormsService:
     def add_object_to_form(self, form_id: int, object_id: int) -> bool:
         """Добавляет объект к форме"""
         with self.db.get_connection() as conn:
-            result = self._objects_repo.add_object_to_form(conn, form_id, object_id)
+            result = self._objects_repo.connect_object_to_form(conn, form_id, object_id)
             return result is not None
 
     def get_form_objects(self, form_id: int) -> List[BasePazzle]:
         """Получает список объектов, связанных с формой"""
         with self.db.get_connection() as conn:
-            object_ids = self._objects_repo.get_objects_by_form(conn, form_id)
+            object_ids = self._objects_repo.get_objects_ids_by_form(conn, form_id)
             objects = []
             for obj_id in object_ids:
                 obj = self._objects_service.get_full_object(conn, obj_id)

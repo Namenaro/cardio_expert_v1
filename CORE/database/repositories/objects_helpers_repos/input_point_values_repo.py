@@ -6,7 +6,7 @@ from CORE.db_dataclasses import ObjectInputPointValue
 class InputPointValuesRepo(BaseRepo):
     """Репозиторий для работы со значениями входных точек (value_to_input_point)"""
 
-    def add_input_point_value(self, conn: sqlite3.Connection, object_id: int, input_point_id: int, point_id: int) -> \
+    def add_input_point_value(self, conn: sqlite3.Connection, object_id: int, value:ObjectInputPointValue) -> \
     Optional[int]:
         """Добавляет значение входной точки для объекта"""
         try:
@@ -14,7 +14,7 @@ class InputPointValuesRepo(BaseRepo):
             cursor.execute('''
                 INSERT INTO value_to_input_point (object_id, input_point_id, point_id)
                 VALUES (?, ?, ?)
-            ''', (object_id, input_point_id, point_id))
+            ''', (object_id, value.input_point_id, value.point_id))
 
             value_id = cursor.lastrowid
             conn.commit()

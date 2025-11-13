@@ -7,14 +7,14 @@ from CORE.db_dataclasses import ObjectInputParamValue
 class InputParamValuesRepo(BaseRepo):
     """Репозиторий для работы со значениями входных параметров (value_to_input_param)"""
 
-    def add_input_param_value(self, conn: sqlite3.Connection, object_id: int, input_param_id: int, parameter_id: Optional[int]) -> Optional[int]:
+    def add_input_param_value(self, conn: sqlite3.Connection, object_id: int, value: ObjectInputParamValue) -> Optional[int]:
         """Добавляет значение входного параметра для объекта"""
         try:
             cursor = conn.cursor()
             cursor.execute('''
                 INSERT INTO value_to_input_param (object_id, input_param_id, parameter_id)
                 VALUES (?, ?, ?)
-            ''', (object_id, input_param_id, parameter_id))
+            ''', (object_id, value.input_param_id, value.parameter_id))
 
             value_id = cursor.lastrowid
             conn.commit()

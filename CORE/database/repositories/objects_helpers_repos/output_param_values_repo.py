@@ -7,15 +7,14 @@ from CORE.db_dataclasses import ObjectOutputParamValue
 class OutputParamValuesRepo(BaseRepo):
     """Репозиторий для работы со значениями выходных параметров (value_to_output_param)"""
 
-    def add_output_param_value(self, conn: sqlite3.Connection, object_id: int, output_param_id: int,
-                               parameter_id: int) -> Optional[int]:
+    def add_output_param_value(self, conn: sqlite3.Connection, object_id: int, value:ObjectOutputParamValue) -> Optional[int]:
         """Добавляет значение выходного параметра для объекта"""
         try:
             cursor = conn.cursor()
             cursor.execute('''
                 INSERT INTO value_to_output_param (object_id, output_param_id, parameter_id)
                 VALUES (?, ?, ?)
-            ''', (object_id, output_param_id, parameter_id))
+            ''', (object_id, value.output_param_id, value.parameter_id))
 
             value_id = cursor.lastrowid
             conn.commit()

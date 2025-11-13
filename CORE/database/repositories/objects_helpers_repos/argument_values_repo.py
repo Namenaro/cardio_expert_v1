@@ -7,15 +7,18 @@ from CORE.db_dataclasses import ObjectArgumentValue
 class ArgumentValuesRepo(BaseRepo):
     """Репозиторий для работы со значениями аргументов (value_to_argument)"""
 
-    def add_argument_value(self, conn: sqlite3.Connection, object_id: int, argument_id: int, value: str) -> Optional[
+    def add_argument_value(self, conn: sqlite3.Connection, object_id: int, value: ObjectArgumentValue) -> Optional[
         int]:
         """Добавляет значение аргумента для объекта"""
+
+        argument_id= value.argument_id
+        val = value.argument_value
         try:
             cursor = conn.cursor()
             cursor.execute('''
                 INSERT INTO value_to_argument (object_id, argument_id, argument_value)
                 VALUES (?, ?, ?)
-            ''', (object_id, argument_id, value))
+            ''', (object_id, argument_id, val))
 
             value_id = cursor.lastrowid
             conn.commit()
