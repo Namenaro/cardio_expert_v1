@@ -53,41 +53,39 @@ class FormsService:
         """Добавить форму со всем ее содержимым (точками, параметрами, объектами, шагами)"""
         with self.db.get_connection() as conn:
             try:
+
                 # Создаем базовую запись формы
-                form_id = self._simple_forms_repo.add_form(conn, Form(
-                    name=form.name,
-                    comment=form.comment,
-                    path_to_pic=form.path_to_pic,
-                    path_to_dataset=form.path_to_dataset
-                ))
+                form_id = self._simple_forms_repo.add_form(conn, form)
                 if form_id is None:
                     conn.rollback()
                     return None
+                form.form_id = form_id
 
                 # Добавляем точки формы
                 for point in form.points:
                     point_id = self._points_repo.add_new_point(conn, form_id, point)
+                    point.id = point_id
                     if point_id is None:
                         conn.rollback()
                         return None
-                    # Сохраняем ID созданной точки для использования в шагах
-                    point.id = point_id
+
 
                 # Добавляем параметры формы
                 for parameter in form.parameters:
                     param_id = self._params_repo.add_new_parameter(conn, form_id, parameter)
+                    parameter.id = param_id
                     if param_id is None:
                         conn.rollback()
                         return None
 
-                # Добавляем объекты HC/PC
+                # Создаем объекты HC/PC
+                # Привязываем созданные объекты HC/PC к форме
                 for obj in form.HC_PC_objects:
-                    if obj.id:  # Если объект уже существует в БД
-                        if self._objects_repo.add_object_to_form(conn, form_id, obj.id) is None:
-                            conn.rollback()
-                            return None
-                    else:
-                        print(f"Предупреждение: объект {obj.name} не имеет ID, пропускаем")
+                    obj_id = self._objects_repo.add_object_to_form(conn, form_id, obj.id)
+                    if obj_id is None:
+                        conn.rollback()
+                        return None
+
 
                 # Добавляем шаги с треками и объектами
                 for step_index, step in enumerate(form.steps):
@@ -327,5 +325,7 @@ if __name__ == "__main__":
     parameter_1 = servise.add_parameter(form_id=id, parameter=Parameter(name="param_1", comment="коммент о параметре", data_type=DATA_TYPES.INT.value))
     parameter_2 = servise.add_parameter(form_id=id, parameter=Parameter(name="param_2", comment="коммент о параметре",
                                                                         data_type=DATA_TYPES.FLOAT.value))
+
+    servise.delete_parameter(parameter_id=parameter_1)
 
 

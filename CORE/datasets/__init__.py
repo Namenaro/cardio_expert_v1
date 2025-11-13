@@ -1,1 +1,1 @@
-from CORE.datasets.LUDB import LUDB_LEADS_NAMES, LUDB
+from CORE.datasets.LUDB import LEADS_NAMES, LUDB

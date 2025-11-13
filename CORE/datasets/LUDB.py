@@ -5,7 +5,7 @@ import json
 from typing import Optional, List
 from types import SimpleNamespace
 
-LUDB_LEADS_NAMES = SimpleNamespace(
+LEADS_NAMES = SimpleNamespace(
     i='i',
     ii='ii',
     iii='iii',
@@ -42,7 +42,7 @@ class LUDB:
                 f"Файл датасета 'ecg_data_200.json' не найден в пакете 'datasets.data'"
             ) from e
 
-    def get_1d_signal(self, patient_id:str, lead_name:LUDB_LEADS_NAMES)->Optional[Signal]:
+    def get_1d_signal(self, patient_id:str, lead_name:LEADS_NAMES)->Optional[Signal]:
         """
                 Возвращает одномерный сигнал для указанного пациента и отведения.
 
@@ -70,5 +70,5 @@ if __name__ == "__main__":
     ludb = LUDB()
     patients_ids = ludb.get_patients_ids()
 
-    signal = ludb.get_1d_signal(patient_id=patients_ids[0], lead_name=LUDB_LEADS_NAMES.i)
+    signal = ludb.get_1d_signal(patient_id=patients_ids[0], lead_name=LEADS_NAMES.i)
     print(signal.time[0:8])

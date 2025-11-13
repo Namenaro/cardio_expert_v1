@@ -14,10 +14,10 @@ class BasePazzle:
     name: Optional[str] = None      # Может быть NULL
     comment: str = ""
 
-    # Ссылка на класс (опционально, для удобства)
+    # Ссылка на класс
     class_ref: Optional[BaseClass] = None
 
-    # Связи с другими таблицами (опционально, для удобства)
+    # Связи с другими таблицами
     argument_values: List[ObjectArgumentValue] = field(default_factory=list)      # value_to_argument
     input_param_values: List[ObjectInputParamValue] = field(default_factory=list) # value_to_input_param
     input_point_values: List[ObjectInputPointValue] = field(default_factory=list) # value_to_input_point

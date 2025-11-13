@@ -27,13 +27,13 @@ class GaussianSmooth:
 # Пример использования
 if __name__ == "__main__":
     from CORE.drawer import Drawer
-    from CORE.datasets.LUDB import LUDB, LUDB_LEADS_NAMES
+    from CORE.datasets.LUDB import LUDB, LEADS_NAMES
     import matplotlib.pyplot as plt
 
     # Загружаем тестовый сигнал ЭКГ
     ludb = LUDB()
     patients_ids = ludb.get_patients_ids()
-    signal = ludb.get_1d_signal(patient_id=patients_ids[0], lead_name=LUDB_LEADS_NAMES.i)
+    signal = ludb.get_1d_signal(patient_id=patients_ids[0], lead_name=LEADS_NAMES.i)
     old_signal = signal.get_fragment(0.0, 0.9)
 
     # Создаем паззл

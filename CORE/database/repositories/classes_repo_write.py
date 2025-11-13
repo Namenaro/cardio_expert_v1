@@ -5,19 +5,21 @@ from CORE.db_dataclasses import BaseClass
 import sqlite3
 from typing import List
 
-class ClassesRepo:
+class ClassesRepoWrite:
     """Репозиторий для работы с классами в базе данных"""
 
-    def __init__(self, db: DBManager,
+    def __init__(self, db: DBManager):
+        self.db = db
+
+
+    def save_all_classes(self,
                  pc_list: List[BaseClass],
                  hc_list: List[BaseClass],
                  ps_list: List[BaseClass],
-                 sm_list: List[BaseClass]):
-        self.db = db
+                 sm_list: List[BaseClass]) -> None:
+        """Сохраняет все классы и их связанные данные в базу"""
         self.all_classes = pc_list + hc_list + ps_list + sm_list
 
-    def save_all_classes(self) -> None:
-        """Сохраняет все классы и их связанные данные в базу"""
         with self.db.get_connection() as conn:
             # Сохраняем/обновляем классы и получаем их ID
             class_ids = self._save_or_update_classes(conn)
@@ -200,8 +202,8 @@ def add_all_classes_to_db(db_manager):
 
 
     # Создаем репозиторий и сохраняем данные
-    repo = ClassesRepo(db_manager, pc_list, hc_list, ps_list, sm_list)
-    repo.save_all_classes()
+    repo = ClassesRepoWrite(db_manager)
+    repo.save_all_classes(pc_list, hc_list, ps_list, sm_list)
 
 
 # Пример применения
