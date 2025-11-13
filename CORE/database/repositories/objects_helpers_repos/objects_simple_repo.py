@@ -77,12 +77,10 @@ class ObjectsSimpleRepo(BaseRepo):
             ''', (form_id, object_id))
 
             relation_id = cursor.lastrowid
-            conn.commit()
             return relation_id
         except sqlite3.Error as e:
             print(f"Ошибка при добавлении связи объекта с формой: {e}")
-            conn.rollback()
-            return None
+            raise
 
 
     def get_objects_ids_by_form(self, conn: sqlite3.Connection, form_id: int) -> List[int]:

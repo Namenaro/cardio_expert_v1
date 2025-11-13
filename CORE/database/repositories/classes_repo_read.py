@@ -35,6 +35,8 @@ class ClassesRepoRead:
             base_class.input_params = self._get_input_params(conn, class_id)
             base_class.output_params = self._get_output_params(conn, class_id)
 
+            base_class.id = class_id
+
             return base_class
 
     def _get_constructor_arguments(self, conn: sqlite3.Connection, class_id: int) -> List[ClassArgument]:

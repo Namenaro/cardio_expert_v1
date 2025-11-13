@@ -19,14 +19,14 @@ def create_test_db():
     add_all_classes_to_db(db_manager)
 
     # Добавляем одну тестовую форму
-    form = get_test_form(db_manager)
+    get_test_form(db_manager)
 
 
     # Распечатаем содержимое базы в файл
     generate_html_report(output_file='database_report.html')
 
 
-def get_test_form(db_manager:DBManager)->Optional[Form]:
+def get_test_form(db_manager:DBManager):
     servise = FormsService(db_manager)
 
     # Осноная информация о форме
@@ -51,7 +51,7 @@ def get_test_form(db_manager:DBManager)->Optional[Form]:
     base_class = classes_repo_read.get_class_by_id(class_id=class_id)
     hc1.class_ref = base_class
     hc1.argument_values = [ObjectArgumentValue(argument_id=base_class.constructor_arguments[0].id, argument_value="5")]
-
+    hc1.input_param_values = [ObjectInputParamValue(input_param_id=base_class.input_params[0], parameter_id=1)]
 
 
     # Добавим все связанные с формой объекты в форму

@@ -8,6 +8,7 @@ import sqlite3
 
 from typing import List, Optional, Dict
 import logging
+from copy import deepcopy
 
 
 class FormsService:
@@ -50,41 +51,33 @@ class FormsService:
 
     # Методы для работы с полными формами (со всем содержимым)
     def add_form(self, form: Form) -> Optional[int]:
-        """Добавить форму со всем ее содержимым (точками, параметрами, объектами, шагами)"""
+        """Добавить форму со всем ее содержимым (точками, параметрами, объектами, шагами).
+
+        ВНИМАНИЕ: добавление делается в одну транзацкию, в случае ее отката
+        переданный объект формы будет содержать невалидные id своих подобъектов - вызывающий
+        код должен это учитывать"""
+
         with self.db.get_connection() as conn:
             try:
 
                 # Создаем базовую запись формы
                 form_id = self._simple_forms_repo.add_form(conn, form)
-                if form_id is None:
-                    conn.rollback()
-                    return None
                 form.form_id = form_id
 
                 # Добавляем точки формы
                 for point in form.points:
                     point_id = self._points_repo.add_new_point(conn, form_id, point)
                     point.id = point_id
-                    if point_id is None:
-                        conn.rollback()
-                        return None
-
 
                 # Добавляем параметры формы
                 for parameter in form.parameters:
                     param_id = self._params_repo.add_new_parameter(conn, form_id, parameter)
                     parameter.id = param_id
-                    if param_id is None:
-                        conn.rollback()
-                        return None
 
                 # Создаем объекты HC/PC
-                # Привязываем созданные объекты HC/PC к форме
                 for obj in form.HC_PC_objects:
-                    obj_id = self._objects_repo.connect_object_to_form(conn, form_id, obj.id)
-                    if obj_id is None:
-                        conn.rollback()
-                        return None
+                    obj_id, arg_vals_ids, input_param_vals_ids, input_point_vals_ids, output_param_vals_ids = self._objects_service.add_full_object(conn, obj)
+                    self._objects_repo.connect_object_to_form(conn, form_id, obj.id)
 
 
                 # Добавляем шаги с треками и объектами
@@ -222,7 +215,7 @@ class FormsService:
                 conn.rollback()
                 return False
 
-    # Методы для работы с отдельными компонентами формы остаются без изменений
+
     def add_point(self, form_id: int, point: Point) -> Optional[int]:
         """Добавить точку к форме"""
         with self.db.get_connection() as conn:
