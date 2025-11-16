@@ -8,7 +8,9 @@ class GlobalMaxSelector:
     """ Глобальный максимум на интервале"""
 
     def run(self, signal: Signal, left_t: Optional[float] = None, right_t: Optional[float] = None) -> List[float]:
-        ts_of_maxs = [0.3]
+        ts_indices = [t for t, x in enumerate(signal.signal_mv) if x == max(signal.signal_mv)]          # finding indices of global max points
+        ts_of_maxs = [signal.time[t] for t in ts_indices]                                               # matching points indices with timestamps
+        print(ts_of_maxs)
         return ts_of_maxs
 
 
