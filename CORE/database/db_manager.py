@@ -4,65 +4,50 @@ from CORE.database.schema import create_tables
 import sqlite3
 import os
 from typing import Optional
+import logging
+from contextlib import contextmanager
+
 
 class DBManager:
-    def __init__(self, db_path = DB_PATH):
+    """
+    Управляет созданием/удалением базы и получением соединения с ней
+    """
+    def __init__(self, db_path:str = DB_PATH):
         self.db_path = db_path
-        self._connection: Optional[sqlite3.Connection] = None
 
     def db_exists(self) -> bool:
-        """
-        Проверяет существование базы данных
-
-        Returns:
-            True если база существует, False если нет
-        """
+        """Проверяет существование базы данных"""
         return os.path.exists(self.db_path)
-
 
     def create_tables(self):
         """Создает все таблицы в базе данных"""
-        connection = self.get_connection()
-        cursor = connection.cursor()
-        create_tables(cursor)
-
-        connection.commit()
-        self.close()
-        print(print("Таблицы успешно созданы"))
-
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            create_tables(cursor)
+            logging.info("Таблицы успешно созданы")
 
     def delete_database(self) -> bool:
-        """
-        Удаляет базу данных
-
-        Returns:
-            True если база удалена, False если не существовала
-        """
-        self.close()
+        """Удаляет базу данных"""
         if os.path.exists(self.db_path):
             os.remove(self.db_path)
             return True
         return False
 
-    def get_connection(self) -> sqlite3.Connection:
-        """
-        Возвращает подключение к БД.
-        Создает новое при первом вызове, затем возвращает существующее.
 
-        Returns:
-            Активное подключение к базе данных
-        """
-        if self._connection is None:
-            self._connection = sqlite3.connect(self.db_path)
-            self._connection.execute("PRAGMA foreign_keys = ON")
-        return self._connection
+    @contextmanager
+    def get_connection(self):
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA foreign_keys = ON")
+        try:
+            yield conn
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
 
-
-    def close(self)-> None:
-        """Закрывает подключение"""
-        if self._connection:
-            self._connection.close()
-            self._connection = None
 
 
 

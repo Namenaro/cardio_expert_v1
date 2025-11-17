@@ -1,1 +1,10 @@
-from CORE.database.repositories.classes_repos.SM_classes_repo import SM_ClassesRepo
+from CORE.database.repositories.form_simple_repo import FormsSimpleRepo
+from CORE.database.repositories.points_repo import PointsRepo
+from CORE.database.repositories.params_repo import ParamsRepo
+from CORE.database.repositories.steps_repo import StepsRepo
+from CORE.database.repositories.objects_servise import ObjectsService
+from CORE.database.repositories.classes_repo_read import ClassesRepoRead
+
+
+
+__all__ = ['FormsSimpleRepo', 'ParamsRepo', 'PointsRepo', 'ObjectsService', 'StepsRepo', 'ClassesRepoRead']

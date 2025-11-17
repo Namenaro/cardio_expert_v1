@@ -18,7 +18,7 @@ def create_tables(cursor):
                                     name TEXT NOT NULL,
                                     form_id INTEGER,
                                     comment TEXT,
-                                    weight_of_param_for_exemplar_evaluation REAL,
+                                    data_type TEXT,
                                     FOREIGN KEY (form_id) REFERENCES form(id)
                                     ON UPDATE NO ACTION ON DELETE NO ACTION
 
@@ -58,7 +58,7 @@ def create_tables(cursor):
                             ''')
 
     cursor.execute('''
-                        CREATE TABLE IF NOT EXISTS HC_object_to_form (
+                        CREATE TABLE IF NOT EXISTS HC_PC_object_to_form (
                 	        id INTEGER PRIMARY KEY AUTOINCREMENT,
                 	        form_id INTEGER NOT NULL,
                 	        object_id INTEGER NOT NULL,
@@ -69,17 +69,7 @@ def create_tables(cursor):
                         );
                         ''')
 
-    cursor.execute('''
-                                CREATE TABLE IF NOT EXISTS PC_object_to_form (
-                                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                    form_id INTEGER NOT NULL,
-                                    object_id INTEGER NOT NULL,
-                                    FOREIGN KEY (object_id) REFERENCES object(id)
-                                    ON UPDATE NO ACTION ON DELETE NO ACTION,
-                                    FOREIGN KEY (form_id) REFERENCES form(id)
-                                    ON UPDATE NO ACTION ON DELETE NO ACTION
-                                )
-                                ''')
+
 
     cursor.execute('''
                         CREATE TABLE IF NOT EXISTS step (
@@ -145,6 +135,7 @@ def create_tables(cursor):
                             class_id INTEGER NOT NULL,
                             name TEXT NOT NULL,
                             comment TEXT,
+                            data_type TEXT,
                             FOREIGN KEY (class_id) REFERENCES class(id)
                             ON UPDATE NO ACTION ON DELETE NO ACTION
                         )
@@ -167,6 +158,7 @@ def create_tables(cursor):
                             class_id INTEGER NOT NULL,
                             name TEXT NOT NULL,
                             comment TEXT,
+                            data_type TEXT,
                             FOREIGN KEY (class_id) REFERENCES class(id)
                             ON UPDATE NO ACTION ON DELETE NO ACTION
                         )
