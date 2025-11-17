@@ -1,3 +1,6 @@
+import numpy as np
+from scipy.signal import convolve
+
 from CORE.signal_1d import Signal
 from copy import deepcopy
 
@@ -17,10 +20,34 @@ class GaussianSmooth:
 
     def run(self, signal: Signal, left_t:Optional[float]=None, right_t:Optional[float]=None) -> Signal:
         res_signal = deepcopy(signal)
+
         # переводим секунды в дискреты
-        # учитываем нечетность количества дискретов в ядре
+        sampling_rate = res_signal.frequency
+        kernel_size_samples = int(self.kernel_size_int * sampling_rate)
+
+        # Проверяем размер ядра
+        if kernel_size_samples >= len(res_signal.signal_mv) or kernel_size_samples < 1:
+            return res_signal
+
         # проверяем границы
-        # проводим свертку сигнала res_signal.signal_mV
+        if kernel_size_samples > len(res_signal.signal_mv):
+            kernel_size_samples = len(res_signal.signal_mv) - 1
+            if kernel_size_samples % 2 == 0:
+                kernel_size_samples -= 1  # гарантируем нечетность
+
+        if kernel_size_samples < 3:
+            return res_signal
+
+        # создаем гауссово ядро
+        x = np.linspace(-kernel_size_samples // 2, kernel_size_samples // 2, kernel_size_samples)
+        kernel = np.exp(-x ** 2 / (2 * self.sigma ** 2))
+        kernel = kernel / np.sum(kernel)  # нормализуем
+
+        # проводим свертку сигнала
+        smoothed_signal = convolve(res_signal.signal_mv, kernel, mode='same', method='auto')
+
+        res_signal.signal_mv = smoothed_signal.tolist()
+
         return res_signal
 
 
