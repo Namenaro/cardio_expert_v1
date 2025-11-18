@@ -1,5 +1,5 @@
 from CORE.database.db_manager import DBManager
-from CORE.database.forms_servise import FormsService
+from CORE.database.forms_service_write import FormsServiceWrite
 from CORE.database.repositories.classes_repo_write import add_all_classes_to_db
 from CORE.database.repositories import *
 from CORE.database.test_utils.db_report_html import generate_html_report
@@ -27,7 +27,7 @@ def create_test_db():
 
 
 def get_test_form(db_manager:DBManager):
-    servise = FormsService(db_manager)
+    servise = FormsServiceWrite(db_manager)
 
     # Осноная информация о форме
     form = Form(name="test_form",
@@ -51,7 +51,7 @@ def get_test_form(db_manager:DBManager):
     base_class = classes_repo_read.get_class_by_id(class_id=class_id)
     hc1.class_ref = base_class
     hc1.argument_values = [ObjectArgumentValue(argument_id=base_class.constructor_arguments[0].id, argument_value="5")]
-    hc1.input_param_values = [ObjectInputParamValue(input_param_id=base_class.input_params[0], parameter_id=1)]
+    hc1.input_param_values = [ObjectInputParamValue(input_param_id=base_class.input_params[0].id, parameter_id=1)]
 
 
     # Добавим все связанные с формой объекты в форму

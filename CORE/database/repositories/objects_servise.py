@@ -1,6 +1,6 @@
 import sqlite3
 from typing import Optional, List
-from CORE.database.repositories.objects_helpers_repos import *
+from CORE.database.repositories.values_repos import *
 from CORE.db_dataclasses import BasePazzle
 
 import logging

@@ -1,22 +1,28 @@
 from CORE.db_dataclasses import Form
-from CORE.database import FormsRepo
+from CORE.database.forms_service_read import FormsServiceRead
+from CORE.database.forms_service_write import FormsServiceWrite
+from CORE.database.db_manager import DBManager
+
 
 from typing import List, Optional
 
 class FormController:
-    def __init__(self, forms_repository:FormsRepo):
+    def __init__(self,  db: 'DBManager'):
         self.form:Optional[Form] = None
-        self.db = forms_repository
+        self.reader = FormsServiceRead(db)
+        self.writer = FormsServiceWrite(db)
         # TODO self.simulator = None
 
-    def get_all_forms(self)->List[Form]:
-        return self.db.get_all_forms_summaries()
+    def get_all_forms_summaries(self)->List[str]:
+        forms = self.reader.get_all_form_entries()
+        forms_names = [form.name for form in forms]
+        return forms_names
 
     def start_with_new_form(self):
         self.form = Form()
 
     def load_form(self, form_id:int):
-        self.form = self.db.get_form(form_id)
+        pass
 
     def delete_form(self, form_id):
-        self.db.delete_form(form_id)
+        pass

@@ -1,6 +1,6 @@
 import sqlite3
 from typing import Optional, List
-from CORE.database.repositories.objects_helpers_repos.base_repo import BaseRepo
+from CORE.database.repositories.base_repo import BaseRepo
 from CORE.db_dataclasses import ObjectInputParamValue
 
 

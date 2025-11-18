@@ -23,8 +23,7 @@ class ParamsRepo:
             return param_id
         except sqlite3.Error as e:
             print(f"Ошибка при добавлении параметра: {e}")
-            conn.rollback()
-            return None
+            raise
 
     def delete_parameter_by_id(self, conn: sqlite3.Connection, parameter_id: int) -> bool:
         """
@@ -38,8 +37,7 @@ class ParamsRepo:
             return cursor.rowcount > 0
         except sqlite3.Error as e:
             print(f"Ошибка при удалении параметра: {e}")
-            conn.rollback()
-            return False
+            raise
 
     def read_all_parameters_by_form_id(self, conn: sqlite3.Connection, form_id: int) -> List[Parameter]:
         """
@@ -67,7 +65,7 @@ class ParamsRepo:
             return parameters
         except sqlite3.Error as e:
             print(f"Ошибка при чтении параметров: {e}")
-            return []
+            raise
 
     def update_parameter(self, conn: sqlite3.Connection, parameter: Parameter) -> bool:
         """
@@ -90,8 +88,7 @@ class ParamsRepo:
             return cursor.rowcount > 0
         except sqlite3.Error as e:
             print(f"Ошибка при обновлении параметра: {e}")
-            conn.rollback()
-            return False
+            raise
 
     def delete_all_parameters_of_form(self, conn: sqlite3.Connection, form_id: int) -> bool:
         """
@@ -105,6 +102,5 @@ class ParamsRepo:
             return cursor.rowcount > 0
         except sqlite3.Error as e:
             print(f"Ошибка при удалении всех параметров формы: {e}")
-            conn.rollback()
-            return False
+            raise
 

@@ -32,7 +32,7 @@ class FormsSimpleRepo:
             return forms
         except sqlite3.Error as e:
             print(f"Ошибка при получении всех форм: {e}")
-            return []
+            raise
 
     def delete_form_by_id(self, conn: sqlite3.Connection, form_id: int) -> bool:
         """
@@ -46,8 +46,7 @@ class FormsSimpleRepo:
             return cursor.rowcount > 0
         except sqlite3.Error as e:
             print(f"Ошибка при удалении формы: {e}")
-            conn.rollback()
-            return False
+            raise
 
     def get_form_by_id(self, conn: sqlite3.Connection, form_id: int) -> Optional[Form]:
         """
@@ -74,7 +73,7 @@ class FormsSimpleRepo:
             return None
         except sqlite3.Error as e:
             print(f"Ошибка при получении формы по ID: {e}")
-            return None
+            raise
 
     def update_form(self, conn: sqlite3.Connection, form: Form) -> bool:
         """
@@ -97,8 +96,7 @@ class FormsSimpleRepo:
             return cursor.rowcount > 0
         except sqlite3.Error as e:
             print(f"Ошибка при обновлении формы: {e}")
-            conn.rollback()
-            return False
+            raise
 
     def add_form(self, conn: sqlite3.Connection, form: Form) -> Optional[int]:
         """
@@ -117,12 +115,10 @@ class FormsSimpleRepo:
             return form_id
         except sqlite3.IntegrityError as e:
             print(f"Ошибка целостности при добавлении формы (возможно, имя уже существует): {e}")
-            conn.rollback()
-            return None
+            raise
         except sqlite3.Error as e:
             print(f"Ошибка при добавлении формы: {e}")
-            conn.rollback()
-            return None
+            raise
 
     def get_forms_with_search(self, conn: sqlite3.Connection, search_term: str) -> List[Form]:
         """
@@ -152,4 +148,4 @@ class FormsSimpleRepo:
             return forms
         except sqlite3.Error as e:
             print(f"Ошибка при поиске форм: {e}")
-            return []
+            raise

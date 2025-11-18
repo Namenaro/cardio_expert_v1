@@ -1,14 +1,11 @@
-from CORE.db_dataclasses import Form, Track, Point,  Parameter, BaseClass, BasePazzle, Step, Track, CLASS_TYPES, DATA_TYPES
-from CORE.database.db_manager import DBManager
-from CORE.database.repositories import *
-from CORE.database.repositories.objects_helpers_repos import *
-from CORE.database.repositories.objects_helpers_repos.base_repo import BaseRepo
+from CORE.db_dataclasses import Step, Track
+from CORE.database.repositories.base_repo import BaseRepo
 
 
 import sqlite3
 
-from typing import List, Optional, Dict
-import logging
+from typing import List, Optional
+
 
 class StepsRepo(BaseRepo):
     """Репозиторий для работы с шагами, треками и их связями"""
@@ -33,8 +30,7 @@ class StepsRepo(BaseRepo):
             return step_id
         except sqlite3.Error as e:
             print(f"Ошибка при добавлении шага: {e}")
-            conn.rollback()
-            return None
+            raise
 
     def get_steps_by_form(self, conn: sqlite3.Connection, form_id: int) -> List[Step]:
         """Получает все шаги формы"""
