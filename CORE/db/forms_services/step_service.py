@@ -1,5 +1,5 @@
-from CORE.database.track_service import TrackService
-from CORE.db_dataclasses import CLASS_TYPES, Track, Step, Point
+from CORE.db.forms_services.track_service import TrackService
+from CORE.db_dataclasses import Step, Point
 
 import logging
 from typing import Optional
@@ -13,14 +13,14 @@ class StepService:
     Точки (point) не создаются и не удаляются этим сервисом - они считаются существующими.
     """
 
-    def __init__(self, track_service: TrackService):
+    def __init__(self):
         """
         Инициализация сервиса шагов.
 
         Args:
             track_service: Сервис для работы с треками
         """
-        self.track_service = track_service
+        self.track_service = TrackService()
 
     def delete_step(self, conn, step_id: int) -> bool:
         """

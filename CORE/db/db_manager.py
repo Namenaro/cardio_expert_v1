@@ -1,5 +1,5 @@
 from CORE.settings import DB_PATH
-from CORE.database.schema import create_tables
+from CORE.db.schema import create_tables
 
 import sqlite3
 import os

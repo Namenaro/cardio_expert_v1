@@ -1,9 +1,9 @@
 from import QObject
 
 from CORE.db_dataclasses import Form
-from CORE.database.forms_service_read import FormsServiceRead
-from CORE.database.forms_service_write import FormsServiceWrite
-from CORE.database.db_manager import DBManager
+from CORE.db.forms_service_read import FormsServiceRead
+from CORE.db.forms_service_write import FormsServiceWrite
+from CORE.db.db_manager import DBManager
 
 
 from typing import List

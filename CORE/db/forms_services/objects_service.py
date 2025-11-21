@@ -1,9 +1,9 @@
 from CORE.db_dataclasses import *
-from CORE.database.object_relation_service import ObjectRelationService
-from CORE.database.object_data_service import ObjectDataService
+from CORE.db.forms_services.object_relation_service import ObjectRelationService
+from CORE.db.forms_services.object_data_service import ObjectDataService
 
 import logging
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 
 class ObjectsService:

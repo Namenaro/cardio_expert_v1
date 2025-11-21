@@ -1,4 +1,4 @@
-from CORE.database.objects_service import ObjectsService
+from CORE.db.forms_services.objects_service import ObjectsService
 from CORE.db_dataclasses import *
 
 import logging
@@ -13,14 +13,14 @@ class TrackService:
     с сохранением целостности данных и порядковых номеров объектов.
     """
 
-    def __init__(self, objects_service: ObjectsService):
+    def __init__(self):
         """
         Инициализация сервиса треков.
 
         Args:
             objects_service: Сервис для работы с объектами
         """
-        self.objects_service = objects_service
+        self.objects_service = ObjectsService()
 
     def delete_track(self, conn, track_id: int) -> bool:
         """

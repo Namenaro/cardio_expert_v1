@@ -1,6 +1,6 @@
 from form_controller import FormController
 from start_dialog import run_start_dialog
-from CORE.database.db_manager import DBManager
+from CORE.db.db_manager import DBManager
 
 from PySide6.QtWidgets import QApplication
 import sys

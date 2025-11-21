@@ -1,7 +1,7 @@
-from CORE.database.parameter_service import ParameterService
-from CORE.database.point_service import PointService
-from CORE.database.step_service import StepService
-from CORE.database.objects_service import ObjectsService
+from CORE.db.forms_services.parameter_service import ParameterService
+from CORE.db.forms_services.point_service import PointService
+from CORE.db.forms_services.step_service import StepService
+from CORE.db.forms_services.objects_service import ObjectsService
 from CORE.db_dataclasses import *
 
 import logging
@@ -15,21 +15,14 @@ class FormService:
     целостности данных. Не изменяет таблицы class и *_to_class.
     """
 
-    def __init__(self, objects_service: ObjectsService, step_service: StepService,
-                 point_service: PointService, parameter_service: ParameterService):
+    def __init__(self):
         """
-        Инициализация сервиса форм.
-
-        Args:
-            objects_service: Сервис для работы с объектами
-            step_service: Сервис для работы с шагами
-            point_service: Сервис для работы с точками
-            parameter_service: Сервис для работы с параметрами
+        Инициализация сервиса форм: создает все вспомогательные сервисы для работы с шагами, точками и т.п.
         """
-        self.objects_service = objects_service
-        self.step_service = step_service
-        self.point_service = point_service
-        self.parameter_service = parameter_service
+        self.objects_service = ObjectsService()
+        self.step_service = StepService()
+        self.point_service = PointService()
+        self.parameter_service = ParameterService()
 
     def add_form(self, conn, form: Form) -> Form:
         """

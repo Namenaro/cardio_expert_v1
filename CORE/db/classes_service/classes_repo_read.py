@@ -1,4 +1,4 @@
-from CORE.database.db_manager import DBManager
+from CORE.db.db_manager import DBManager
 from CORE.db_dataclasses import *
 
 import sqlite3
