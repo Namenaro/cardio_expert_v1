@@ -3,7 +3,6 @@ from CORE.database.schema import create_tables
 
 import sqlite3
 import os
-from typing import Optional
 import logging
 from contextlib import contextmanager
 

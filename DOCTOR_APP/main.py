@@ -1,4 +1,4 @@
-from controller import FormController
+from form_controller import FormController
 from start_dialog import run_start_dialog
 from CORE.database.db_manager import DBManager
 

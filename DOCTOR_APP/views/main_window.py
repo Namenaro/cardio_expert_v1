@@ -9,7 +9,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("DoctorApp")
         self.setGeometry(100, 100, 1000, 700) # позиция экрана
-
+ 
         # Центральный виджет
         central_widget = QWidget()
         self.setCentralWidget(central_widget)

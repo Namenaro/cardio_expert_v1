@@ -1,11 +1,9 @@
 from CORE.database.db_manager import DBManager
 from CORE.database.forms_service_write import FormsServiceWrite
-from CORE.database.repositories.classes_repo_write import add_all_classes_to_db
+from CORE.database.classes_repo_write import add_all_classes_to_db
 from CORE.database.repositories import *
-from CORE.database.test_utils.db_report_html import generate_html_report
+from CORE.database.db_report_html import generate_html_report
 from CORE.db_dataclasses import *
-
-from typing import Optional
 
 
 def create_test_db():
@@ -23,7 +21,7 @@ def create_test_db():
 
 
     # Распечатаем содержимое базы в файл
-    generate_html_report(output_file='database_report.html')
+    generate_html_report(output_file='../database/test_utils/database_report.html')
 
 
 def get_test_form(db_manager:DBManager):
