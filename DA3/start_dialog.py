@@ -2,7 +2,7 @@ from CORE.db_dataclasses import Form
 
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout,
                                QListWidget, QPushButton, QListWidgetItem,
-                               QLabel,QApplication)
+                               QLabel, QApplication)
 
 from PySide6.QtCore import Qt
 from typing import List, Optional, Tuple
@@ -16,7 +16,6 @@ def select_form_from_dialog(forms: List[Form]) -> Tuple[Optional[int], bool]:
     else:
         # Диалог закрыт через крестик
         return None, False
-
 
 
 class FormSelectionDialog(QDialog):
@@ -91,11 +90,6 @@ class FormSelectionDialog(QDialog):
         self.create_new_form = True
         self.accept()
 
-    def closeEvent(self, event):
-        """Обработка закрытия окна через крестик"""
-        event.accept()
-
-
     def get_selection_result(self) -> tuple[Optional[int], bool]:
         """
         Возвращает результат выбора
@@ -129,4 +123,3 @@ if __name__ == "__main__":
         print(f"Выбрана форма с ID: {form_id}")
     else:
         print("Диалог закрыт через крестик")
-
