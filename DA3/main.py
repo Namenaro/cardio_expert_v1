@@ -3,7 +3,6 @@ from CORE.db_dataclasses import Form
 from DA3.start_dialog import select_form_from_dialog
 from DA3.main_form import MainForm
 
-
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QApplication,
                                QListWidget, QPushButton, QListWidgetItem)
 from PySide6.QtCore import Qt
@@ -33,8 +32,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
