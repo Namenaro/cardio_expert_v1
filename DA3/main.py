@@ -13,23 +13,15 @@ from typing import List, Optional
 
 
 def main():
-    """Главная функция приложения"""
     app = QApplication(sys.argv)
 
-    # Тестовые данные форм
-    forms = [
-        Form(1, "Форма заказа", "Для оформления заказов"),
-        Form(2, "Форма клиента", "Данные клиентов"),
-        Form(3, "Форма товара", "Информация о товарах")
-    ]
+    controller = Contoller()
 
     # Показываем диалог выбора формы
+    forms = controller.get_all_forms_summaries()
     form_id, create_new = select_form_from_dialog(forms)
-
-    # Если диалог закрыт через крестик - выходим
     if form_id is None and not create_new:
-        print("Диалог закрыт через крестик - приложение завершено")
-        return  # Завершаем функцию main
+        return
 
     # Показываем главную форму
     main_window = MainForm(form_id, create_new)
