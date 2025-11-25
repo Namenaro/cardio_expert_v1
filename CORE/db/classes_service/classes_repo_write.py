@@ -11,7 +11,6 @@ class ClassesRepoWrite:
     def __init__(self, db: DBManager):
         self.db = db
 
-
     def save_all_classes(self,
                  pc_list: List[BaseClass],
                  hc_list: List[BaseClass],
@@ -199,7 +198,6 @@ def add_all_classes_to_db(db_manager):
     # Парсим классы из папок
     folders_parser = FoldersParser()
     pc_list, hc_list, ps_list, sm_list = folders_parser.parse_all_folders()
-
 
     # Создаем репозиторий и сохраняем данные
     repo = ClassesRepoWrite(db_manager)
