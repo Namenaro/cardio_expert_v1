@@ -23,7 +23,7 @@ def main():
         return
 
     # Показываем главную форму
-    main_window = MainForm(form_id, create_new)
+    main_window = MainForm()
     main_window.show()
 
     # Запускаем главный цикл приложения
