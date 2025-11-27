@@ -1,4 +1,4 @@
-from DA3.controller import Contoller
+from DA3.model import Model
 from CORE.db_dataclasses import Form
 from DA3.start_dialog import select_form_from_dialog
 from DA3.main_form import MainForm
@@ -14,7 +14,7 @@ from typing import List, Optional
 def main():
     app = QApplication(sys.argv)
 
-    controller = Contoller()
+    controller = Model()
 
     # Показываем диалог выбора формы
     forms = controller.get_all_forms_summaries()
@@ -25,6 +25,7 @@ def main():
     # Показываем главную форму
     main_window = MainForm()
     main_window.show()
+
 
     # Запускаем главный цикл приложения
     sys.exit(app.exec())
