@@ -14,7 +14,7 @@ class TopBestInterpolationPoints:
         self.N = N
 
     def run(self, signal: Signal, left_t: Optional[float] = None, right_t: Optional[float] = None) -> List[float]:
-        # translating left and right timestamps into indices
+        # Переводим left_t и right_t в индексы
         if left_t is None or left_t not in signal.time:
             left_t = signal.time[0]
         if right_t is None or right_t not in signal.time:
@@ -22,16 +22,16 @@ class TopBestInterpolationPoints:
         left_i = signal.time.index(left_t)
         right_i = signal.time.index(right_t)
 
-        # translating time and mv to points in 2d space
+        # Переводим временные отрезки и импульсы в точки в двумерном пространстве
         points = [(x, y) for x, y in list(zip(signal.time, signal.signal_mv))]
 
-        # linear interpolation
+        # Метод линейной интерполяции
         def interpolate(x, a, b):
             x1, y1 = a
             x2, y2 = b
             return y1 + (y2 - y1) * (x - x1) / (x2 - x1)
 
-        # getting MSE for every candidate
+        # Вычисляем среднеквадратичную ошибку в каждой точке
         mses = []
         for i in range(left_i+1, right_i):
             sum_error = 0.0
@@ -43,7 +43,7 @@ class TopBestInterpolationPoints:
                 sum_error += (y - y_interp)**2
             mses.append(np.mean(sum_error))
 
-        # choosing N best candidates
+        # Выбираем N лучших кандидатов
         ts_indices = np.argsort(mses)[:self.N]
         ts_of_best = [signal.time[left_i+t] for t in ts_indices]
         return ts_of_best
