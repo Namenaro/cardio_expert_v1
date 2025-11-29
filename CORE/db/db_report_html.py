@@ -3,7 +3,7 @@ from CORE.settings import DB_PATH
 import sqlite3
 
 
-def generate_html_report(output_file='database_report.html'):
+def generate_html_report(output_file='REPORT.html'):
     """Генерация красивого HTML отчета по базе данных"""
     try:
         conn = sqlite3.connect(DB_PATH)

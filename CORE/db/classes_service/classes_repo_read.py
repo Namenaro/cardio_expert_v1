@@ -1,5 +1,4 @@
-from CORE.pazzles_lib import FoldersParser
-from CORE.database.db_manager import DBManager
+from CORE.db.db_manager import DBManager
 from CORE.db_dataclasses import *
 
 import sqlite3

@@ -1,5 +1,5 @@
 from CORE.pazzles_lib import FoldersParser
-from CORE.database.db_manager import DBManager
+from CORE.db.db_manager import DBManager
 from CORE.db_dataclasses import BaseClass
 
 import sqlite3
@@ -10,7 +10,6 @@ class ClassesRepoWrite:
 
     def __init__(self, db: DBManager):
         self.db = db
-
 
     def save_all_classes(self,
                  pc_list: List[BaseClass],
@@ -199,7 +198,6 @@ def add_all_classes_to_db(db_manager):
     # Парсим классы из папок
     folders_parser = FoldersParser()
     pc_list, hc_list, ps_list, sm_list = folders_parser.parse_all_folders()
-
 
     # Создаем репозиторий и сохраняем данные
     repo = ClassesRepoWrite(db_manager)

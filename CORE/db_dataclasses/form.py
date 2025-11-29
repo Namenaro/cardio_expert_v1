@@ -6,6 +6,7 @@ from CORE.db_dataclasses.base_pazzle import BasePazzle
 
 from typing import List, Optional
 from dataclasses import dataclass, field
+import copy
 
 """ Основной класс фреймфорка"""
 
@@ -33,11 +34,5 @@ class Form:
     HC_PC_objects: List[BasePazzle] = field(default_factory=list)
 
 
-    def is_valid(self) -> bool:
-        conditions = (
-            all(step.is_valid() for step in self.steps),
-            len(self.steps) == len(self.points),
-            len(self.parameters) > 0,
-            len(self.points) > 0
-        )
-        return all(conditions)
+    def deep_copy(self):
+        return copy.deepcopy(self)
