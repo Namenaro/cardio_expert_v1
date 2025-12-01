@@ -4,23 +4,20 @@ from dataclasses import dataclass, field
 
 
 class InterpolationError:
-    """ Если построить лин.интерполяцию по трем точкам (левая, посередине, правая),
+    """ Если построить лин.интерполяцию по 2 точкам (левая,  правая),
     то какое расхождение будет с сигналом внутри этого промежутка"""
 
     @dataclass
     class OutputParams:
-
         error_in_procents: float = field(metadata={"description": "Ошибка интерполяции в процентах"})
         error_in_mV: float =field(metadata={"description": "Ошибка интерполяции в мв"})
 
-    def register_points(self, point_left:float, point_middle:float, point_right:float):
+    def register_points(self, point_left:float, point_right:float):
         """
         :param point_left: левая точка
-        :param point_middle:  точка в интервале между левой и правой
         :param point_right: правая точка
         """
         self.point_left = point_left
-        self.point_middle = point_middle
         self.point_right = point_right
 
 
@@ -58,9 +55,8 @@ if __name__ == "__main__":
     pc = InterpolationError()
     pc.register_input_parameters(some_example_param=True)
     p1=0.3
-    p2=0.4
     p3=0.5
-    pc.register_points(point_left=p1, point_middle=p2, point_right=p3)
+    pc.register_points(point_left=p1, point_right=p3)
     out_params = pc.run(signal=signal)
 
     # Визуализация
@@ -68,7 +64,6 @@ if __name__ == "__main__":
     drawer = Drawer(ax)
     drawer.draw_signal(signal)
     ax.axvline(x=p1, ymin=0, ymax=1, color='r', linestyle='--', linewidth=1)
-    ax.axvline(x=p2, ymin=0, ymax=1, color='g', linestyle='--', linewidth=1)
     ax.axvline(x=p3, ymin=0, ymax=1, color='b', linestyle='--', linewidth=1)
     plt.show()
 

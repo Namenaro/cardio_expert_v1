@@ -128,13 +128,3 @@ class FormInfoWidget(QWidget):
         if self._form is not None:
             # Испускаем сигнал с формой и ссылкой на себя
             app_signals.request_main_info_redactor.emit(self._form, self)
-
-    @property
-    def form(self) -> Optional[Form]:
-        """Получить текущую форму (только для чтения)"""
-        return self._form
-
-    def clear_form(self) -> None:
-        """Очистить информацию о форме"""
-        self._form = None
-        self.refresh()

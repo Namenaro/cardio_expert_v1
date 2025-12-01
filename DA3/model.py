@@ -27,6 +27,14 @@ class Model:
             return forms
 
 
+    def get_form_by_id(self, from_id):
+        with self.db_manager.get_connection() as conn:
+            form = self.form_service.get_form_by_id(form_id=from_id, conn=conn)
+            return form
+
+    def add_new_form(self, name):
+        pass
+
     def add_object(self, obj):
         pass
 
@@ -36,7 +44,6 @@ class Model:
     def delete_object(self, obj):
         pass
 
-    def get_form_by_id(self, obj):
-        pass
+
 
 

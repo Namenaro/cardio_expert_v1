@@ -1,31 +1,60 @@
-from DA3.model import Model
-from CORE.db_dataclasses import Form
-from DA3.start_dialog import select_form_from_dialog
-from DA3.main_form import MainForm
-
-from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QApplication,
-                               QListWidget, QPushButton, QListWidgetItem)
-from PySide6.QtCore import Qt
-
 import sys
-from typing import List, Optional
+import logging
+from typing import Optional
+from PySide6.QtWidgets import QApplication
+
+from DA3.main_form import MainForm
+from DA3.controller import Controller
+from CORE.db_dataclasses import Form
+from DA3.model import Model
+from DA3.start_dialog import select_form_from_dialog
+
+
+def setup_logging():
+    """Настройка логирования"""
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
 
 
 def main():
+    """Точка входа в приложение"""
+    # Настраиваем логирование
+    setup_logging()
+    logger = logging.getLogger(__name__)
+
+    # Создаем экземпляр приложения Qt
     app = QApplication(sys.argv)
 
-    controller = Model()
+    # Создаем модель
+    logger.info("Создание модели...")
+    model = Model()
 
-    # Показываем диалог выбора формы
-    forms = controller.get_all_forms_summaries()
-    form_id, create_new = select_form_from_dialog(forms)
-    if form_id is None and not create_new:
-        return
-
-    # Показываем главную форму
+    # Создаем главное окно
+    logger.info("Создание главного окна...")
     main_window = MainForm()
-    main_window.show()
 
+    # Создаем контроллер
+    logger.info("Создание контроллера...")
+    controller = Controller(
+        model=model,
+        main_window=main_window
+    )
+
+    # Инициализируем форму через диалог выбора
+    logger.info("Инициализация формы через диалог выбора...")
+    success = controller.init_form_from_dialog()
+
+    # Если пользователь отменил выбор или произошла ошибка
+    if not success:
+        logger.info("Инициализация формы не удалась. Приложение завершено.")
+        sys.exit(0)
+
+    # Показываем главное окно
+    main_window.show()
+    logger.info("Главное окно отображено. Запуск главного цикла приложения...")
 
     # Запускаем главный цикл приложения
     sys.exit(app.exec())
