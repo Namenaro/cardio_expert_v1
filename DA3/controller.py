@@ -1,11 +1,11 @@
 import logging
 from typing import Optional
-from CORE.db_dataclasses import Form
+from CORE.db_dataclasses import *
 from DA3.model import Model
 from DA3.main_form import MainForm
 from DA3.start_dialog import select_form_from_dialog
 from DA3 import app_signals
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, Slot
 
 
 class Controller(QObject):
@@ -29,23 +29,47 @@ class Controller(QObject):
         self._init_signals()
 
     def _init_signals(self):
-        """Инициализация подключения сигналов"""
-        # Подключаем сигнал запроса редактора основной информации
         app_signals.request_main_info_redactor.connect(self._open_main_info_redactor)
 
-        self.logger.debug("Сигналы контроллера инициализированы")
+    @Slot(object, object)
+    def _open_parameter_redactor(self, parameter: Optional[Parameter], sender_widget: object) -> None:
+        if parameter is None:
+            print("Создание нового параметра")
+        else:
+            print(f"Редактирование параметра ID: {parameter.id}")
 
-    def _open_main_info_redactor(self, form: Form, parent_widget) -> None:
-        """
-        Открыть редактор основной информации о форме
+    @Slot(object, object)
+    def _open_step_redactor(self, step: Optional[Step], sender_widget: object) -> None:
+        if step is None:
+            print("Создание нового шага")
+        else:
+            print(f"Редактирование шага ID: {step.id}")
 
-        Args:
-            form: Объект Form для редактирования
-            parent_widget: Родительский виджет (для позиционирования диалога)
-        """
-        # Заглушка - просто логируем запрос
-        self.logger.info(f"Запрос на редактирование основной информации формы ID={form.id}, имя='{form.name}'")
-        self.logger.info(f"Родительский виджет: {parent_widget}")
+    @Slot(object, object)
+    def _open_hc_redactor(self, hc: Optional[BasePazzle], sender_widget: object) -> None:
+        if hc is None:
+            print("Создание нового HC")
+        else:
+            print(f"Редактирование HC ID: {hc.id}")
+
+    @Slot(object, object)
+    def _open_main_info_redactor(self, form: Form, sender_widget: object) -> None:
+        print(f"Редактирование основной информации формы: {form.name}")
+
+
+    @Slot(object, object)
+    def _open_pc_redactor(self, pc: Optional[BasePazzle], sender_widget: object) -> None:
+        if pc is None:
+            print("Создание нового PC")
+        else:
+            print(f"Редактирование PC ID: {pc.id}")
+
+    @Slot(object, object)
+    def _open_point_redactor(self, point: Point, sender_widget: object) -> None:
+        if pc is None:
+            print("Создание нового PC")
+        else:
+            print(f"Редактирование PC")
 
     def init_form_from_dialog(self) -> bool:
         """

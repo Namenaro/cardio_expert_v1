@@ -86,16 +86,9 @@ class MainForm(QMainWindow):
         """
         # Обновляем виджет основной информации
         self.form_info_widget.reset_form(form)
+        self.points_widget.reset_points(form.points)
 
-        # Здесь в будущем можно будет добавить обновление других виджетов:
-        # self.points_widget.refresh(form.points)
-        # self.parameters_widget.refresh(form.parameters)
-        # self.steps_widget.refresh(form.steps)
-        # self.pcs_widget.refresh(form.HC_PC_objects)
-        # self.hcs_widget.refresh(form.HC_PC_objects)
 
-        # На данный момент другие виджеты просто показывают кнопку "Запустить редактор"
-        # и не зависят от конкретной формы
 
 
 # Пример использования:
