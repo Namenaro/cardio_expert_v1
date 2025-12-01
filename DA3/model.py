@@ -80,6 +80,9 @@ class Model:
             # Добавим новый шаг
             return self.step_service.add_step(conn=conn, step=step, form_id=form_id)
 
+    def add_form(self, form:Form)->Form:
+        with self.db_manager.get_connection() as conn:
+            return  self.form_service.add_form(conn=conn, form=form)
 
     # ================= ОБНОВЛЕНИЕ ======================
     def update_main_info(self, form:Form)->Form:
