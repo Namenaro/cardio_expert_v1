@@ -117,15 +117,15 @@ class TrackService:
         track_objects = self.objects_service.get_objects_by_track(conn, track_id)
 
         # Разделяем объекты на SMs и PSs по типу класса
-        for obj, num_in_track in track_objects:
+        for obj, _ in track_objects:
             if obj.class_ref.type == CLASS_TYPES.SM.value:
                 track.SMs.append(obj)
             elif obj.class_ref.type == CLASS_TYPES.PS.value:
                 track.PSs.append(obj)
 
-        # Сортируем по порядковому номеру (если важно сохранить порядок)
+        # Сортируем по порядковому номеру
         track.SMs.sort(key=lambda x: next((num for obj, num in track_objects if obj.id == x.id), 0))
-        track.PSs.sort(key=lambda x: next((num for obj, num in track_objects if obj.id == x.id), 0))
+
 
         return track
 

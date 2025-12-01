@@ -13,14 +13,15 @@ class AppSignals(QObject):
     # ===================== СИГНАЛЫ ОТКРЫТИЯ РЕДАКТОРОВ =====================
 
     request_main_info_redactor = Signal(Form, object)
-    request_point_redactor = Signal(Optional[Point], object)
-    request_parameter_redactor = Signal(Optional[Parameter], object)
-    request_step_redactor = Signal(Optional[Step], object)
+    request_point_redactor = Signal(Point, object)
+    request_parameter_redactor = Signal(Parameter, object)
+    request_step_redactor = Signal(Step, object)
+    request_track_redactor = Signal(Track, object)
 
-    request_hc_redactor = Signal(Optional[BasePazzle], object)
-    request_pc_redactor = Signal(Optional[BasePazzle], object)
-    request_sm_redactor = Signal(Optional[BasePazzle], object)
-    request_ps_redactor = Signal(Optional[BasePazzle], object)
+    request_hc_redactor = Signal(BasePazzle, object)
+    request_pc_redactor = Signal(BasePazzle, object)
+    request_sm_redactor = Signal(BasePazzle, object)
+    request_ps_redactor = Signal(BasePazzle, object)
 
     # ===================== СИГНАЛЫ ДЕЙСТВИЙ С БАЗОЙ =====================
     # СИГНАЛЫ ОБНОВЛЕНИЯ И УДАЛЕНИЯ

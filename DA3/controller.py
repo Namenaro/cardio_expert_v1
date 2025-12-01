@@ -32,21 +32,21 @@ class Controller(QObject):
         app_signals.request_main_info_redactor.connect(self._open_main_info_redactor)
 
     @Slot(object, object)
-    def _open_parameter_redactor(self, parameter: Optional[Parameter], sender_widget: object) -> None:
+    def _open_parameter_redactor(self, parameter: Parameter, sender_widget: object) -> None:
         if parameter is None:
             print("Создание нового параметра")
         else:
             print(f"Редактирование параметра ID: {parameter.id}")
 
     @Slot(object, object)
-    def _open_step_redactor(self, step: Optional[Step], sender_widget: object) -> None:
+    def _open_step_redactor(self, step: Step, sender_widget: object) -> None:
         if step is None:
             print("Создание нового шага")
         else:
             print(f"Редактирование шага ID: {step.id}")
 
     @Slot(object, object)
-    def _open_hc_redactor(self, hc: Optional[BasePazzle], sender_widget: object) -> None:
+    def _open_hc_redactor(self, hc: BasePazzle, sender_widget: object) -> None:
         if hc is None:
             print("Создание нового HC")
         else:
@@ -58,8 +58,8 @@ class Controller(QObject):
 
 
     @Slot(object, object)
-    def _open_pc_redactor(self, pc: Optional[BasePazzle], sender_widget: object) -> None:
-        if pc is None:
+    def _open_pc_redactor(self, pc:BasePazzle, sender_widget: object) -> None:
+        if pc.id is None:
             print("Создание нового PC")
         else:
             print(f"Редактирование PC ID: {pc.id}")

@@ -1,6 +1,6 @@
 from typing import Optional
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QGridLayout
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Slot
 from CORE.db_dataclasses import Form
 from DA3 import app_signals
 
@@ -72,30 +72,9 @@ class FormInfoWidget(QWidget):
         self.edit_button.clicked.connect(self.on_edit_clicked)
         self.edit_button.setEnabled(False)  # По умолчанию выключена, пока форма не установлена
         self.edit_button.setMinimumHeight(40)
-        self.edit_button.setStyleSheet("""
-            QPushButton {
-                font-weight: bold;
-                padding: 8px;
-                background-color: #4CAF50;
-                color: white;
-                border-radius: 4px;
-            }
-            QPushButton:disabled {
-                background-color: #cccccc;
-                color: #666666;
-            }
-            QPushButton:hover:!disabled {
-                background-color: #45a049;
-            }
-        """)
+
         main_layout.addWidget(self.edit_button)
 
-        # Общий стиль виджета
-        self.setStyleSheet("""
-            QWidget {
-                background-color: #f0f0f0;
-            }
-        """)
 
     def reset_form(self, form: Form) -> None:
         """Установить новую форму для отображения"""
@@ -123,8 +102,7 @@ class FormInfoWidget(QWidget):
         # Включаем кнопку редактирования
         self.edit_button.setEnabled(True)
 
+    @Slot()
     def on_edit_clicked(self) -> None:
-        """Обработчик нажатия кнопки редактирования"""
         if self._form is not None:
-            # Испускаем сигнал с формой и ссылкой на себя
             app_signals.request_main_info_redactor.emit(self._form, self)

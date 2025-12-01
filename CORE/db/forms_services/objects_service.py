@@ -52,9 +52,12 @@ class ObjectsService:
     def add_object(self, conn, base_pazzle: BasePazzle,
                    form_id: Optional[int] = None,
                    track_id: Optional[int] = None,
-                   num_in_track: Optional[int] = None) -> BasePazzle:
+                   num_in_track: Optional[int] = -1) -> BasePazzle:
         """
-        Добавляет новый объект в базу данных каскадно
+        Добавляет новый объект в базу данных каскадно.
+        Если пазл типа PC/HC, то указать form_id
+        Если пазл типа PS SM, указать привязку к треку "
+        num_in_track = -1 в случае, если добавляется объект PS
         """
         cursor = conn.cursor()
 
@@ -74,12 +77,13 @@ class ObjectsService:
         # Добавляем связанные данные
         self.data_service._add_related_data(cursor, object_id, base_pazzle)
 
-        # Добавляем связи если указаны
-        if form_id is not None:
+        # Добавляем связи
+        if form_id is not None: # напрямую к форме привязываем HC|PC
             self.relation_service.add_object_to_form(cursor, object_id, form_id)
-
-        if track_id is not None and num_in_track is not None:
+        elif track_id is not None: # Это SM или PS
             self.relation_service.add_object_to_track(cursor, object_id, track_id, num_in_track)
+        else:
+            raise ValueError("Нарушено соглашение: Если пазл типа PC/HC, то указать form_id, иначе указать привязку к треку")
 
         # Получаем полный объект с заполненными ID
         result = self.relation_service._get_full_object(cursor, object_id)
