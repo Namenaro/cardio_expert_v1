@@ -34,11 +34,12 @@ class Controller(QObject):
         # Сигналы открытия редакторов
         app_signals.request_main_info_redactor.connect(self._open_main_info_redactor)
         app_signals.request_point_redactor.connect(self._open_point_redactor)
-        app_signals.request_ps_redactor.connect(self._open_parameter_redactor)
+        app_signals.request_parameter_redactor.connect(self._open_parameter_redactor)
 
         # Сигналы добавления объектов (теперь с обработкой результата)
         app_signals.db_add_form.connect(self._handle_add_form)
         app_signals.db_add_point.connect(self._handle_add_point)
+        app_signals.db_add_parameter.connect(self._handle_add_parameter)
 
         # Сигналы обновления объектов
         app_signals.db_update_object.connect(self._handle_update_object)
@@ -134,6 +135,21 @@ class Controller(QObject):
             return False
 
     # ==================== ОБРАБОТЧИКИ ОПЕРАЦИЙ С БАЗОЙ ====================
+    @Slot(Parameter)
+    def _handle_add_parameter(self, parameter: Parameter) -> None:
+        """Обработчик добавления параметра"""
+        if self.current_form is None or self.current_form.id is None:
+            self._show_error("Нет текущей формы для добавления параметра")
+            return
+
+        success, message = self.model.add_parameter(parameter, self.current_form.id)
+
+        if success:
+            self._refresh_form_data(self.current_form.id)
+            self._show_success(message)
+        else:
+            self._show_error(message)
+
     @Slot(Form)
     def _handle_update_form_main_info(self, form: Form) -> None:
         """Обработчик обновления основной информации формы"""

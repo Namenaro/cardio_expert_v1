@@ -118,4 +118,5 @@ class MainForm(QMainWindow):
         # Обновляем виджет основной информации
         self.form_info_widget.reset_form(form)
         self.points_widget.reset_points(form.points)
+        self.parameters_widget.reset_parameters(form.parameters)
         # Добавьте обновление других виджетов по необходимости
