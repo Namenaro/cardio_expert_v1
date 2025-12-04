@@ -102,7 +102,7 @@ class FormInfoWidget(QWidget):
         # Включаем кнопку редактирования
         self.edit_button.setEnabled(True)
 
-    @Slot()
+    @Slot(Form)
     def on_edit_clicked(self) -> None:
         if self._form is not None:
             app_signals.request_main_info_redactor.emit(self._form)

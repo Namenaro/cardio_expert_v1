@@ -32,27 +32,17 @@ class Controller(QObject):
     def _init_signals(self):
         app_signals.request_main_info_redactor.connect(self._open_main_info_redactor)
         app_signals.request_point_redactor.connect(self._open_point_redactor)
+        app_signals.request_ps_redactor.connect(self._open_parameter_redactor)
 
-    @Slot(object, object)
-    def _open_parameter_redactor(self, parameter: Parameter, sender_widget: object) -> None:
-        if parameter is None:
-            print("Создание нового параметра")
-        else:
-            print(f"Редактирование параметра ID: {parameter.id}")
+    @Slot(Parameter)
+    def _open_parameter_redactor(self, parameter: Parameter) -> None:
+        editor = ParameterEditor(self.main_window, parameter)
+        editor.exec()
 
-    @Slot(object, object)
-    def _open_step_redactor(self, step: Step, sender_widget: object) -> None:
-        if step is None:
-            print("Создание нового шага")
-        else:
-            print(f"Редактирование шага ID: {step.id}")
+    @Slot(Step)
+    def _open_step_redactor(self, step: Step) -> None:
+        print(f"Редактирование шага ID: {step.id}")
 
-    @Slot(object, object)
-    def _open_hc_redactor(self, hc: BasePazzle, sender_widget: object) -> None:
-        if hc is None:
-            print("Создание нового HC")
-        else:
-            print(f"Редактирование HC ID: {hc.id}")
 
     @Slot(Form)
     def _open_main_info_redactor(self, form: Form) -> None:
@@ -64,12 +54,6 @@ class Controller(QObject):
         """
         editor = FormEditor(self.main_window, form)
         editor.exec()
-
-
-    @Slot(BasePazzle)
-    def _open_pc_redactor(self, pc:BasePazzle) -> None:
-        print(f"Редактирование PC ID: {pc.id}")
-
 
     @Slot(Point)
     def _open_point_redactor(self, point: Point) -> None:
