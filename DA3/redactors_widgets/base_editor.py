@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Signal
 
 
-class BaseEditor(QDialog, ABC):
+class BaseEditor(QDialog):
     """Базовый класс для редакторов объектов с ID"""
 
     # Сигнал для закрытия редактора
@@ -51,32 +51,32 @@ class BaseEditor(QDialog, ABC):
 
         parent_layout.addLayout(button_layout)
 
-    @abstractmethod
+
     def _create_form_widget(self) -> QWidget:
         """Создание виджета с полями ввода"""
         raise NotImplementedError
 
-    @abstractmethod
+
     def _load_data_to_ui(self) -> None:
         """Загрузка данных из объекта в интерфейс"""
         raise NotImplementedError
 
-    @abstractmethod
+
     def _collect_data_from_ui(self) -> Any:
         """Сбор данных из интерфейса в объект"""
         raise NotImplementedError
 
-    @abstractmethod
+
     def _validate_data(self) -> bool:
         """Проверка корректности данных"""
         raise NotImplementedError
 
-    @abstractmethod
+
     def _emit_add_signal(self, data: Any) -> None:
         """Испускание сигнала добавления нового объекта"""
         raise NotImplementedError
 
-    @abstractmethod
+
     def _emit_update_signal(self, data: Any) -> None:
         """Испускание сигнала обновления существующего объекта"""
         raise NotImplementedError

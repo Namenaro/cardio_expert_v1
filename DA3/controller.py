@@ -6,6 +6,7 @@ from DA3.main_form import MainForm
 from DA3.start_dialog import select_form_from_dialog
 from DA3 import app_signals
 from PySide6.QtCore import QObject, Slot
+from DA3.redactors_widgets import *
 
 
 class Controller(QObject):
@@ -30,6 +31,7 @@ class Controller(QObject):
 
     def _init_signals(self):
         app_signals.request_main_info_redactor.connect(self._open_main_info_redactor)
+        app_signals.request_point_redactor.connect(self._open_point_redactor)
 
     @Slot(object, object)
     def _open_parameter_redactor(self, parameter: Parameter, sender_widget: object) -> None:
@@ -52,24 +54,33 @@ class Controller(QObject):
         else:
             print(f"Редактирование HC ID: {hc.id}")
 
-    @Slot(object, object)
-    def _open_main_info_redactor(self, form: Form, sender_widget: object) -> None:
-        print(f"Редактирование основной информации формы: {form.name}")
+    @Slot(Form)
+    def _open_main_info_redactor(self, form: Form) -> None:
+        """
+        Открытие редактора основной информации формы
+
+        Args:
+            form: объект Form для редактирования
+        """
+        editor = FormEditor(self.main_window, form)
+        editor.exec()
 
 
-    @Slot(object, object)
-    def _open_pc_redactor(self, pc:BasePazzle, sender_widget: object) -> None:
-        if pc.id is None:
-            print("Создание нового PC")
-        else:
-            print(f"Редактирование PC ID: {pc.id}")
+    @Slot(BasePazzle)
+    def _open_pc_redactor(self, pc:BasePazzle) -> None:
+        print(f"Редактирование PC ID: {pc.id}")
 
-    @Slot(object, object)
-    def _open_point_redactor(self, point: Point, sender_widget: object) -> None:
-        if pc is None:
-            print("Создание нового PC")
-        else:
-            print(f"Редактирование PC")
+
+    @Slot(Point)
+    def _open_point_redactor(self, point: Point) -> None:
+        """
+        Открытие редактора точки
+
+        Args:
+            point: объект Point для редактирования
+        """
+        editor = PointEditor(self.main_window, point)
+        editor.exec()
 
     def init_form_from_dialog(self) -> bool:
         """
