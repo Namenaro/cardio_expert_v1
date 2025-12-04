@@ -25,9 +25,9 @@ class AppSignals(QObject):
 
     # ===================== СИГНАЛЫ ДЕЙСТВИЙ С БАЗОЙ =====================
     # СИГНАЛЫ ОБНОВЛЕНИЯ И УДАЛЕНИЯ
-    DatabaseObject = Union[Form, Point, Parameter, Step, BasePazzle, Track]
-    db_delete_object = Signal(DatabaseObject)
-    db_update_object = Signal(DatabaseObject)
+
+    db_delete_object = Signal(object) # Form, Point, Parameter, Step, BasePazzle, Track
+    db_update_object = Signal(object) # Form, Point, Parameter, Step, BasePazzle, Track
     db_update_form_main_info = Signal(Form)
 
     # СИГНАЛЫ ДОБАВЛЕНИЯ
@@ -41,9 +41,3 @@ class AppSignals(QObject):
     db_add_pc = Signal(BasePazzle)
     db_add_sm = Signal(BasePazzle, int, int) # sm, track_id, num_in_track
     db_add_ps = Signal(BasePazzle, int, int) # ps, track_id, num_in_track
-
-
-
-
-
-
