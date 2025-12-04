@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout,
-                               QHBoxLayout, QSizePolicy)
+                               QHBoxLayout, QSizePolicy, QScrollArea)
 from CORE.db_dataclasses import Form
 from DA3.form_widgets import (
     FormInfoWidget, HCsWidget, PCsWidget,
@@ -18,44 +18,63 @@ class MainForm(QMainWindow):
         self.setWindowTitle("Главная форма приложения")
         self.resize(800, 600)
 
-        # Создаем центральный виджет
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
+        # Создаем центральный виджет с прокруткой
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        self.setCentralWidget(scroll_area)
+
+        # Основной контейнер
+        main_widget = QWidget()
+        scroll_area.setWidget(main_widget)
 
         # Главный вертикальный layout
-        main_layout = QVBoxLayout(central_widget)
+        main_layout = QVBoxLayout(main_widget)
         main_layout.setSpacing(10)
         main_layout.setContentsMargins(10, 10, 10, 10)
 
-        # === ВЕРХНИЙ КОНТЕЙНЕР (65% высоты) ===
+        # === ВЕРХНИЙ КОНТЕЙНЕР ===
         top_container = QWidget()
-        top_container.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         top_layout = QHBoxLayout(top_container)
         top_layout.setSpacing(5)
         top_layout.setContentsMargins(0, 0, 0, 0)
 
-        # FormInfoWidget (30% ширины)
+        # FormInfoWidget - минимальный размер по содержимому
         self.form_info_widget = FormInfoWidget()
-        top_layout.addWidget(self.form_info_widget, 30)
+        self.form_info_widget.setSizePolicy(
+            QSizePolicy.Policy.Minimum,
+            QSizePolicy.Policy.Minimum
+        )
+        top_layout.addWidget(self.form_info_widget)
 
-        # PointsWidget (20% ширины)
+        # PointsWidget - расширяемый по горизонтали
         self.points_widget = PointsWidget()
-        top_layout.addWidget(self.points_widget, 20)
+        self.points_widget.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Minimum
+        )
+        top_layout.addWidget(self.points_widget)
 
-        # StepsWidget (50% ширины)
+        # StepsWidget - максимальный приоритет расширения
         self.steps_widget = StepsWidget()
-        top_layout.addWidget(self.steps_widget, 50)
+        self.steps_widget.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Minimum
+        )
+        top_layout.addWidget(self.steps_widget, 2)  # Больший stretch factor
 
-        # === НИЖНИЙ КОНТЕЙНЕР (35% высоты) ===
+        # === НИЖНИЙ КОНТЕЙНЕР ===
         bottom_container = QWidget()
-        bottom_container.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         bottom_layout = QHBoxLayout(bottom_container)
         bottom_layout.setSpacing(5)
         bottom_layout.setContentsMargins(0, 0, 0, 0)
 
-        # ParametersWidget (50% ширины)
+        # ParametersWidget
         self.parameters_widget = ParametersWidget()
-        bottom_layout.addWidget(self.parameters_widget, 50)
+        self.parameters_widget.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Minimum
+        )
+        bottom_layout.addWidget(self.parameters_widget)
 
         # Правый контейнер (для PC и HC виджетов)
         right_container = QWidget()
@@ -63,19 +82,31 @@ class MainForm(QMainWindow):
         right_layout.setSpacing(5)
         right_layout.setContentsMargins(0, 0, 0, 0)
 
-        # PCsWidget (сверху)
+        # PCsWidget
         self.pcs_widget = PCsWidget()
-        right_layout.addWidget(self.pcs_widget, 50)
+        self.pcs_widget.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Minimum
+        )
+        right_layout.addWidget(self.pcs_widget)
 
-        # HCsWidget (снизу)
+        # HCsWidget
         self.hcs_widget = HCsWidget()
-        right_layout.addWidget(self.hcs_widget, 50)
+        self.hcs_widget.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Minimum
+        )
+        right_layout.addWidget(self.hcs_widget)
 
-        bottom_layout.addWidget(right_container, 50)
+        bottom_layout.addWidget(right_container)
 
-        # Добавляем контейнеры в главный layout с пропорциями
-        main_layout.addWidget(top_container, 65)  # 65% высоты
-        main_layout.addWidget(bottom_container, 35)  # 35% высоты
+        # Добавляем контейнеры в главный layout
+        main_layout.addWidget(top_container)
+        main_layout.addWidget(bottom_container)
+
+        # Устанавливаем stretch factors
+        main_layout.setStretch(0, 1)  # top_container
+        main_layout.setStretch(1, 1)  # bottom_container
 
     def refresh(self, form: Form) -> None:
         """
@@ -87,35 +118,4 @@ class MainForm(QMainWindow):
         # Обновляем виджет основной информации
         self.form_info_widget.reset_form(form)
         self.points_widget.reset_points(form.points)
-
-
-
-
-# Пример использования:
-if __name__ == "__main__":
-    import sys
-    from PySide6.QtWidgets import QApplication
-    from CORE.db_dataclasses import Form
-
-    app = QApplication(sys.argv)
-
-    # Создаем тестовую форму
-    test_form = Form(
-        id=1,
-        name="Тестовая форма",
-        comment="Это тестовая форма для демонстрации",
-        path_to_pic="",
-        path_to_dataset="",
-        points=[],
-        parameters=[],
-        steps=[],
-        HC_PC_objects=[]
-    )
-
-    window = MainForm()
-
-    # Пример вызова refresh с тестовой формой
-    window.refresh(test_form)
-
-    window.show()
-    sys.exit(app.exec())
+        # Добавьте обновление других виджетов по необходимости
