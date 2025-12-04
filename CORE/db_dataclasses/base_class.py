@@ -3,14 +3,9 @@ from CORE.db_dataclasses.classes_to_pazzles_helpers import *
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
 
-from enum import Enum
 
 
-class CLASS_TYPES(Enum):
-    PC = "PC"
-    HC = "HC"
-    PS = "PS"
-    SM = "SM"
+
 
 @dataclass
 class BaseClass:

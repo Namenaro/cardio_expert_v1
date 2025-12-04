@@ -28,6 +28,7 @@ class AppSignals(QObject):
     DatabaseObject = Union[Form, Point, Parameter, Step, BasePazzle, Track]
     db_delete_object = Signal(DatabaseObject)
     db_update_object = Signal(DatabaseObject)
+    db_update_form_main_info = Signal(Form)
 
     # СИГНАЛЫ ДОБАВЛЕНИЯ
     db_add_form = Signal(Form)
