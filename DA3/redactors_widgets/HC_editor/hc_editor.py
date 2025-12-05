@@ -18,13 +18,6 @@ class HCEditor(BaseEditor):
         self._form = form
         self._classes_refs = classes_refs or []
 
-        # Проверяем классы на наличие аргументов без ID
-        for class_ref in self._classes_refs:
-            if hasattr(class_ref, 'constructor_arguments'):
-                for arg in class_ref.constructor_arguments:
-                    if arg.id is None:
-                        print(f"ВНИМАНИЕ: Класс {class_ref.name} содержит аргумент без ID: {arg.name}")
-
         # Передаем hc как data_object в родительский класс
         super().__init__(parent, hc)
 

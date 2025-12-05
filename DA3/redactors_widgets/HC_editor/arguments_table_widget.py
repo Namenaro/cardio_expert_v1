@@ -92,8 +92,6 @@ class ArgumentsTableWidget(QWidget):
                 argument_id=arg.id,
                 argument_value=argument_value
             )
-
-
             values.append(obj_arg_value)
 
         return values

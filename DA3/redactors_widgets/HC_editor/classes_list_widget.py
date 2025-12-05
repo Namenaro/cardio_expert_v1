@@ -32,11 +32,8 @@ class ClassesListWidget(QWidget):
         self.list_widget.itemClicked.connect(self.on_item_clicked)
         layout.addWidget(self.list_widget)
 
-        # Метка выбранного класса
-        self.selected_label = QLabel("Выбранный класс: (Не выбран)")
-        self.selected_label.setWordWrap(True)
-        self.selected_label.setStyleSheet("font-weight: bold; color: #0066cc;")
-        layout.addWidget(self.selected_label)
+
+
 
     def populate_list(self, classes: Optional[List[BaseClass]] = None):
         """Заполнение списка классами"""
@@ -45,7 +42,7 @@ class ClassesListWidget(QWidget):
 
         self.list_widget.clear()
         self._selected_class = None
-        self.selected_label.setText("Выбранный класс: (Не выбран)")
+
 
         for class_ref in self._classes:
             if hasattr(class_ref, 'id') and class_ref.id is not None:
@@ -77,15 +74,6 @@ class ClassesListWidget(QWidget):
         if class_ref:
             self._selected_class = class_ref
 
-            # Обновляем метку выбранного класса
-            info_text = f"ID: {class_ref.id}"
-            if hasattr(class_ref, 'name') and class_ref.name:
-                info_text += f", Имя: {class_ref.name}"
-            if hasattr(class_ref, 'type') and class_ref.type:
-                info_text += f", Тип: {class_ref.type}"
-
-            self.selected_label.setText(f"Выбранный класс: {info_text}")
-
             # Испускаем сигнал
             self.class_selected.emit(class_ref)
 
@@ -98,7 +86,6 @@ class ClassesListWidget(QWidget):
         if class_ref is None:
             self.list_widget.clearSelection()
             self._selected_class = None
-            self.selected_label.setText("Выбранный класс: (Не выбран)")
             return
 
         self._selected_class = class_ref
@@ -109,22 +96,13 @@ class ClassesListWidget(QWidget):
             item_class = item.data(Qt.ItemDataRole.UserRole)
             if item_class and hasattr(item_class, 'id') and item_class.id == class_ref.id:
                 self.list_widget.setCurrentItem(item)
-
-                # Обновляем метку
-                info_text = f"ID: {class_ref.id}"
-                if hasattr(class_ref, 'name') and class_ref.name:
-                    info_text += f", Имя: {class_ref.name}"
-                if hasattr(class_ref, 'type') and class_ref.type:
-                    info_text += f", Тип: {class_ref.type}"
-
-                self.selected_label.setText(f"Выбранный класс: {info_text}")
                 break
 
     def clear_selection(self):
         """Очистить выбор"""
         self.list_widget.clearSelection()
         self._selected_class = None
-        self.selected_label.setText("Выбранный класс: (Не выбран)")
+
 
     def get_classes(self) -> List[BaseClass]:
         """Получить список классов"""
