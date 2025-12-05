@@ -52,7 +52,7 @@ class MainForm(QMainWindow):
             QSizePolicy.Policy.Expanding,
             QSizePolicy.Policy.Minimum
         )
-        top_layout.addWidget(self.points_widget)
+        top_layout.addWidget(self.points_widget, stretch=2)
 
         # StepsWidget - максимальный приоритет расширения
         self.steps_widget = StepsWidget()
@@ -60,7 +60,7 @@ class MainForm(QMainWindow):
             QSizePolicy.Policy.Expanding,
             QSizePolicy.Policy.Minimum
         )
-        top_layout.addWidget(self.steps_widget, 2)  # Больший stretch factor
+        top_layout.addWidget(self.steps_widget, stretch=2)
 
         # === НИЖНИЙ КОНТЕЙНЕР ===
         bottom_container = QWidget()
@@ -119,4 +119,5 @@ class MainForm(QMainWindow):
         self.form_info_widget.reset_form(form)
         self.points_widget.reset_points(form.points)
         self.parameters_widget.reset_parameters(form.parameters)
+        self.hcs_widget.reset_form(form)
         # Добавьте обновление других виджетов по необходимости

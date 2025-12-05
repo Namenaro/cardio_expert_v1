@@ -35,11 +35,13 @@ class Controller(QObject):
         app_signals.request_main_info_redactor.connect(self._open_main_info_redactor)
         app_signals.request_point_redactor.connect(self._open_point_redactor)
         app_signals.request_parameter_redactor.connect(self._open_parameter_redactor)
+        app_signals.request_hc_redactor.connect(self._open_hc_redactor)
 
         # Сигналы добавления объектов (теперь с обработкой результата)
         app_signals.db_add_form.connect(self._handle_add_form)
         app_signals.db_add_point.connect(self._handle_add_point)
         app_signals.db_add_parameter.connect(self._handle_add_parameter)
+        app_signals.db_add_hc.connect(self._handle_add_hc)
 
         # Сигналы обновления объектов
         app_signals.db_update_object.connect(self._handle_update_object)
@@ -80,6 +82,10 @@ class Controller(QObject):
             point: объект Point для редактирования
         """
         editor = PointEditor(self.main_window, point)
+        editor.exec()
+
+    def _open_hc_redactor(self, hc:BasePazzle):
+        editor = HCEditor(self.main_window, form=self.current_form, hc=hc, classes_refs=None)
         editor.exec()
 
     # ==================== ИНИЦИАЛИЗАЦИЯ ФОРМЫ ====================
@@ -155,6 +161,16 @@ class Controller(QObject):
         """Обработчик обновления основной информации формы"""
         success, message = self.model.update_main_info(form)
 
+        if success:
+            self._refresh_form_data(form.id)
+            self._show_success(message)
+        else:
+            self._show_error(message)
+
+    @Slot(BasePazzle)
+    def _handle_add_hc(self, hc:BasePazzle):
+        """Обработчик добавления объекта типа HC"""
+        success, message = self.model.add_HC(hc, form_id=self.current_form.id)
         if success:
             self._refresh_form_data(form.id)
             self._show_success(message)

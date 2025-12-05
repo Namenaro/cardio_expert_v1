@@ -2,6 +2,7 @@ from CORE.db_dataclasses.classes_to_pazzles_helpers import *
 
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
+from CORE.enums import CLASS_TYPES
 
 
 
@@ -50,3 +51,6 @@ class BaseClass:
                 lines.append(f"  - {param}")
 
         return "\n".join(lines)
+
+    def is_HC(self):
+        return self.type == CLASS_TYPES.HC

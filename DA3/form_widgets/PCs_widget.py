@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt
 
 
 class PCsWidget(QWidget):
-    """Виджет PC с кнопкой запуска редактора"""
+
 
     def __init__(self):
         super().__init__()
