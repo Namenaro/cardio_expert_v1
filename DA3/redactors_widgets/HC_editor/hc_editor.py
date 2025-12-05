@@ -98,11 +98,27 @@ class HCEditor(BaseEditor):
     def _set_current_class(self):
         """Установка текущего класса в виджете выбора"""
         current_class = self.original_data.class_ref
-        self.classes_widget.set_selected_class(current_class)
 
-        # Загружаем аргументы текущего класса
-        if current_class and hasattr(current_class, 'constructor_arguments'):
-            self.arguments_widget.load_arguments(current_class.constructor_arguments)
+        # Ищем полную версию класса в self._classes_refs
+        full_class = None
+        if current_class and current_class.id:
+            for class_ref in self._classes_refs:
+                if class_ref.id == current_class.id:
+                    full_class = class_ref
+                    break
+
+        if full_class:
+            # Устанавливаем полную версию класса
+            self.classes_widget.set_selected_class(full_class)
+
+            # Загружаем аргументы конструктора
+            if hasattr(full_class, 'constructor_arguments') and full_class.constructor_arguments:
+                self.arguments_widget.load_arguments(full_class.constructor_arguments)
+            else:
+                self.arguments_widget.clear()
+        else:
+            self.classes_widget.set_selected_class(current_class)
+            self.arguments_widget.clear()
 
     def _load_data_to_ui(self) -> None:
         """Загрузка данных из HC объекта в интерфейс"""
@@ -120,27 +136,38 @@ class HCEditor(BaseEditor):
 
     def _load_argument_values(self):
         """Загрузка значений аргументов из существующего объекта в таблицу"""
-        if not self.original_data.argument_values or not self.original_data.class_ref:
+        if not self.original_data.argument_values:
             return
 
         # Создаем словарь значений аргументов для быстрого поиска по argument_id
         arg_values_map = {}
-        for arg_value in self.original_data.argument_values:
+        for i, arg_value in enumerate(self.original_data.argument_values):
             if arg_value.argument_id:
                 arg_values_map[arg_value.argument_id] = arg_value.argument_value
 
+        # Получаем текущий класс из виджета (полная версия)
+        current_class = self.classes_widget.get_selected_class()
+        if not current_class:
+            return
+
         # Устанавливаем значения в таблицу
-        for row in range(self.arguments_widget.table_widget.rowCount()):
+        rows = self.arguments_widget.table_widget.rowCount()
+
+        for row in range(rows):
             id_item = self.arguments_widget.table_widget.item(row, 0)
             if id_item and id_item.text():
-                try:
-                    arg_id = int(id_item.text())
-                    if arg_id in arg_values_map:
-                        value_item = self.arguments_widget.table_widget.item(row, 4)
-                        if value_item:
-                            value_item.setText(arg_values_map[arg_id])
-                except ValueError:
-                    continue
+
+                arg_id = int(id_item.text())
+
+                if arg_id in arg_values_map:
+                    value = arg_values_map[arg_id]
+
+                    value_item = self.arguments_widget.table_widget.item(row, 4)
+                    if value_item:
+                        value_item.setText(value)
+
+
+
 
     def _collect_data_from_ui(self) -> BasePazzle:
         """Сбор данных из интерфейса в объект"""

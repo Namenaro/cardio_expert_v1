@@ -19,21 +19,6 @@ class ClassesListWidget(QWidget):
         self._classes = classes or []
         self._selected_class: Optional[BaseClass] = None
 
-        # Отладка загрузки классов
-        print(f"=== Отладка ClassesListWidget ===")
-        print(f"Получено классов: {len(self._classes)}")
-        for i, class_ref in enumerate(self._classes):
-            print(f"Класс {i}: ID={class_ref.id}, Имя='{class_ref.name}'")
-            if hasattr(class_ref, 'constructor_arguments'):
-                print(f"  Аргументов конструктора: {len(class_ref.constructor_arguments)}")
-                for j, arg in enumerate(class_ref.constructor_arguments):
-                    print(f"    Аргумент {j}: ID={arg.id}, Имя='{arg.name}', Тип='{arg.data_type}'")
-                    if arg.id is None:
-                        print(f"      ВНИМАНИЕ: Аргумент без ID! class_id={arg.class_id}")
-            else:
-                print(f"  Нет constructor_arguments атрибута")
-        print(f"================================")
-
         self.setup_ui()
         self.populate_list()
 
