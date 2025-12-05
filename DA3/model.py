@@ -38,7 +38,8 @@ class Model:
             return form
 
     def get_HCs_classes(self):
-        return self.classes_service.get_classes_by_specific_type(CLASS_TYPES.HC)
+        hc_classes = self.classes_service.get_classes_by_specific_type(CLASS_TYPES.HC)
+        return hc_classes
 
     def get_PCs_classes(self):
         return self.classes_service.get_classes_by_specific_type(CLASS_TYPES.PC)
