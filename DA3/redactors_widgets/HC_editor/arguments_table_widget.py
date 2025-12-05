@@ -81,23 +81,9 @@ class ArgumentsTableWidget(QWidget):
     def get_argument_values(self) -> List[ObjectArgumentValue]:
         """Получить значения аргументов из таблицы"""
         values = []
-
-        print(f"=== Начало get_argument_values ===")
-        print(f"Количество аргументов в списке: {len(self._arguments)}")
-
         for row, arg in enumerate(self._arguments):
-            print(f"Обработка аргумента {row}:")
-            print(f"  ID: {arg.id} (тип: {type(arg.id)})")
-            print(f"  Имя: {arg.name}")
-
             value_item = self.table_widget.item(row, 4)
             argument_value = value_item.text().strip() if value_item else ""
-            print(f"  Значение из таблицы: '{argument_value}'")
-
-            # Проверяем, что у аргумента есть ID
-            if arg.id is None:
-                print(f"  ВНИМАНИЕ: arg.id is None! Пропускаем.")
-                continue
 
             # Создаем ObjectArgumentValue
             obj_arg_value = ObjectArgumentValue(
@@ -107,13 +93,9 @@ class ArgumentsTableWidget(QWidget):
                 argument_value=argument_value
             )
 
-            print(f"  Создан ObjectArgumentValue:")
-            print(f"    argument_id: {obj_arg_value.argument_id}")
-            print(f"    argument_value: '{obj_arg_value.argument_value}'")
 
             values.append(obj_arg_value)
 
-        print(f"=== Конец get_argument_values, создано значений: {len(values)} ===")
         return values
 
     def clear(self):

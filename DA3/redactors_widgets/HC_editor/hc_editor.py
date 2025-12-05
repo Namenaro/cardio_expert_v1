@@ -167,8 +167,6 @@ class HCEditor(BaseEditor):
                         value_item.setText(value)
 
 
-
-
     def _collect_data_from_ui(self) -> BasePazzle:
         """Сбор данных из интерфейса в объект"""
         # Создаем копию оригинального объекта с обновленными данными
