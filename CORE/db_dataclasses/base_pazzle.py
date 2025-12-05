@@ -23,5 +23,5 @@ class BasePazzle:
     input_point_values: List[ObjectInputPointValue] = field(default_factory=list) # value_to_input_point
     output_param_values: List[ObjectOutputParamValue] = field(default_factory=list) # value_to_output_param
 
-    def is_HC(self):
+    def is_HC(self)->bool:
         return self.class_ref.is_HC()

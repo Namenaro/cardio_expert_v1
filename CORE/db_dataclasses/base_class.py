@@ -53,4 +53,4 @@ class BaseClass:
         return "\n".join(lines)
 
     def is_HC(self):
-        return self.type == CLASS_TYPES.HC
+        return self.type == CLASS_TYPES.HC.value

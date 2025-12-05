@@ -1,6 +1,8 @@
 
 from CORE.db.forms_services import FormService, PointService, ParameterService, StepService, TrackService, \
     ObjectsService
+
+from CORE.db.classes_service import ClassesRepoRead
 from CORE.db_dataclasses import *
 
 from CORE.db.db_manager import DBManager
@@ -22,6 +24,8 @@ class Model:
         self.track_service = TrackService()
         self.step_service = StepService()
 
+        self.classes_service = ClassesRepoRead(self.db_manager)
+
     # ================= ГЕТТЕРЫ ======================
     def get_all_forms_summaries(self)-> List[Form]:
         with self.db_manager.get_connection() as conn:
@@ -32,6 +36,19 @@ class Model:
         with self.db_manager.get_connection() as conn:
             form = self.form_service.get_form_by_id(form_id=form_id, conn=conn)
             return form
+
+    def get_HCs_classes(self):
+        return self.classes_service.get_classes_by_specific_type(CLASS_TYPES.HC)
+
+    def get_PCs_classes(self):
+        return self.classes_service.get_classes_by_specific_type(CLASS_TYPES.PC)
+
+    def get_SMs_classes(self):
+        return self.classes_service.get_classes_by_specific_type(CLASS_TYPES.SM)
+
+    def get_PSs_classes(self):
+        return self.classes_service.get_classes_by_specific_type(CLASS_TYPES.PS)
+
 
     # ================= ДОБАВЛЕНИЕ ======================
     def add_SM(self, num_in_track: int, obj: BasePazzle, track_id: int) -> Tuple[bool, str]:

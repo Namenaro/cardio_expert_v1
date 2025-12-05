@@ -163,7 +163,7 @@ class HCsWidget(QWidget):
 
         # Добавляем карточки только для HC объектов
         for hc_object in self._form.HC_PC_objects:
-            if hasattr(hc_object, 'is_HC') and hc_object.is_HC():
+            if hc_object.is_HC():
                 card = PCCard(hc_object, self)
                 self.cards_layout.insertWidget(self.cards_layout.count() - 1, card)
 

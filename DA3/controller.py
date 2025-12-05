@@ -85,7 +85,8 @@ class Controller(QObject):
         editor.exec()
 
     def _open_hc_redactor(self, hc:BasePazzle):
-        editor = HCEditor(self.main_window, form=self.current_form, hc=hc, classes_refs=None)
+        classes_refs = self.model.get_HCs_classes()
+        editor = HCEditor(self.main_window, form=self.current_form, hc=hc, classes_refs=classes_refs)
         editor.exec()
 
     # ==================== ИНИЦИАЛИЗАЦИЯ ФОРМЫ ====================
@@ -172,7 +173,7 @@ class Controller(QObject):
         """Обработчик добавления объекта типа HC"""
         success, message = self.model.add_HC(hc, form_id=self.current_form.id)
         if success:
-            self._refresh_form_data(form.id)
+            self._refresh_form_data(self.current_form.id)
             self._show_success(message)
         else:
             self._show_error(message)
