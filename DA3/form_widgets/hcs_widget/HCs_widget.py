@@ -22,9 +22,30 @@ class HCsWidget(QWidget):
 
     def setup_ui(self):
         """Настройка интерфейса виджета"""
-        main_layout = QHBoxLayout(self)
+        # Основной вертикальный layout
+        main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(10)
+        main_layout.setSpacing(0)
+
+        # Заголовок
+        title_label = QLabel("Жесткие условия на параметры")
+        title_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        title_label.setStyleSheet("""
+            QLabel {
+                font-weight: bold;
+                color: #333;
+                padding: 5px 15px;
+                background-color: #f5f5f5;
+            }
+        """)
+        title_label.setFixedHeight(30)
+        main_layout.addWidget(title_label)
+
+        # Горизонтальный layout для содержимого
+        content_widget = QWidget()
+        content_layout = QHBoxLayout(content_widget)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(10)
 
         # Левая панель с кнопкой добавления
         left_panel = QWidget()
@@ -41,24 +62,31 @@ class HCsWidget(QWidget):
         left_layout.addWidget(add_btn)
         left_layout.addStretch()
 
-        main_layout.addWidget(left_panel)
+        content_layout.addWidget(left_panel)
 
         # Область с карточками
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll_area.setStyleSheet("""
+            QScrollArea {
+                border: none;
+                background-color: #f555f5;
+            }
+        """)
 
         self.cards_widget = QWidget()
+        self.cards_widget.setStyleSheet("background-color: #f5f5f5;")
         self.cards_layout = QHBoxLayout(self.cards_widget)
         self.cards_layout.setContentsMargins(5, 5, 5, 5)
         self.cards_layout.setSpacing(10)
         self.cards_layout.addStretch()
 
         scroll_area.setWidget(self.cards_widget)
-        main_layout.addWidget(scroll_area)
+        content_layout.addWidget(scroll_area)
 
-        self.setStyleSheet("background-color: lightyellow;")
+        main_layout.addWidget(content_widget)
 
     def on_add_clicked(self):
         """Обработчик нажатия кнопки добавления"""
