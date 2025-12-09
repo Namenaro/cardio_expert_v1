@@ -2,10 +2,9 @@ from typing import Optional, List
 from PySide6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QPushButton,
                                QLabel, QMessageBox, QScrollArea, QFrame, QSizePolicy)
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont
 
 from DA3 import app_signals
-from CORE.db_dataclasses import BasePazzle, Form
+from CORE.db_dataclasses import BasePazzle, Form, Parameter
 from DA3.form_widgets.hcs_widget.HC_card import HCCard
 
 
@@ -18,6 +17,7 @@ class HCsWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._form: Optional[Form] = None
+        self._form_parameters: List[Parameter] = []  # Параметры формы
         self.setup_ui()
 
     def setup_ui(self):
@@ -70,7 +70,6 @@ class HCsWidget(QWidget):
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-
         self.cards_widget = QWidget()
         self.cards_widget.setStyleSheet("background-color: #f5f5f5;")
         self.cards_layout = QHBoxLayout(self.cards_widget)
@@ -96,13 +95,13 @@ class HCsWidget(QWidget):
         # Создаем пустой объект BasePazzle
         hc = BasePazzle()
 
-
         # Испускаем сигнал с пустым объектом
         app_signals.request_hc_redactor.emit(hc)
 
     def reset_form(self, form: Form) -> None:
         """Установить новую форму"""
         self._form = form
+        self._form_parameters = form.parameters if hasattr(form, 'parameters') else []
         self.refresh()
 
     def refresh(self):
@@ -116,7 +115,8 @@ class HCsWidget(QWidget):
         # Добавляем карточки только для HC объектов
         for hc_object in self._form.HC_PC_objects:
             if hc_object.is_HC():
-                card = HCCard(hc_object, self)
+                # Создаем карточку с передачей параметров формы
+                card = HCCard(hc_object, self._form_parameters, self)
                 self.cards_layout.insertWidget(self.cards_layout.count() - 1, card)
 
     def clear_cards(self):
@@ -152,3 +152,7 @@ class HCsWidget(QWidget):
     def get_form(self) -> Optional[Form]:
         """Получить текущую форму"""
         return self._form
+
+    def get_form_parameters(self) -> List[Parameter]:
+        """Получить параметры формы"""
+        return self._form_parameters.copy()
