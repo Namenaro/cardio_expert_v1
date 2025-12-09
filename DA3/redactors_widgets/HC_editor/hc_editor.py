@@ -44,6 +44,7 @@ class HCEditor(BaseEditor):
         group_layout.addRow("ID:", self.id_label)
         group_layout.addRow("Имя:", self.name_edit)
         group_layout.addRow("Комментарий:", self.comment_edit)
+
         layout.addWidget(group_box)
 
         # Выбор класса
@@ -56,38 +57,19 @@ class HCEditor(BaseEditor):
         class_layout.addWidget(self.classes_widget)
         layout.addWidget(class_group)
 
-        # Группа "Жесткие условия на параметры"
-        hc_group = QGroupBox("Жесткие условия на параметры")
-        hc_group.setStyleSheet("""
-            QGroupBox {
-                font-weight: bold;
-                font-size: 13px;
-                color: #2c3e50;
-                border: 2px solid #3498db;
-                border-radius: 5px;
-                margin-top: 10px;
-                padding-top: 15px;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 10px 0 10px;
-                background-color: #f8f9fa;
-            }
-        """)
-        hc_layout = QVBoxLayout(hc_group)
-        hc_layout.setContentsMargins(15, 20, 15, 15)
-        hc_layout.setSpacing(10)
+        # Простой заголовок
+        hc_title = QLabel("Жесткие условия на параметры")
+        hc_title.setStyleSheet("font-weight: bold; font-size: 13px; padding: 5px;")
+        layout.addWidget(hc_title)
 
         # Аргументы конструктора
         self.arguments_widget = ArgumentsTableWidget()
-        hc_layout.addWidget(self.arguments_widget)
+        layout.addWidget(self.arguments_widget)
 
         # Входные параметры
         self.input_params_widget = InputParamsWidget()
-        hc_layout.addWidget(self.input_params_widget)
+        layout.addWidget(self.input_params_widget)
 
-        layout.addWidget(hc_group)
         layout.addStretch()
 
         return widget

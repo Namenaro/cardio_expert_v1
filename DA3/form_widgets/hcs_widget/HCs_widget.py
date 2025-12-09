@@ -67,14 +67,9 @@ class HCsWidget(QWidget):
         # Область с карточками
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll_area.setStyleSheet("""
-            QScrollArea {
-                border: none;
-                background-color: #f555f5;
-            }
-        """)
+
 
         self.cards_widget = QWidget()
         self.cards_widget.setStyleSheet("background-color: #f5f5f5;")
