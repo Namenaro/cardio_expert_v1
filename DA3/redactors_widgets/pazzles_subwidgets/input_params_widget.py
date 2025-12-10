@@ -10,8 +10,6 @@ from CORE.db_dataclasses import ClassInputParam, Parameter, ObjectInputParamValu
 class InputParamsWidget(QWidget):
     """Виджет для редактирования входных параметров объекта"""
 
-    # Сигнал для обновления данных
-    data_changed = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -26,16 +24,17 @@ class InputParamsWidget(QWidget):
 
         # Заголовок
         self.title_label = QLabel("Входные параметры:")
-        self.title_label.setStyleSheet("font-weight: bold; color: #333;")
+        self.title_label.setStyleSheet("font-weight: bold; color: #ff0000;")
         layout.addWidget(self.title_label)
 
         # Таблица
         self.table_widget = QTableWidget()
-        self.table_widget.setColumnCount(3)
+        self.table_widget.setColumnCount(4)
         self.table_widget.setHorizontalHeaderLabels([
             "Название параметра КЛАССА",
             "Название параметра ФОРМЫ",
-            "Тип данных"
+            "Тип данных",
+            "Коммент"
         ])
 
         # Настройка внешнего вида таблицы
@@ -43,6 +42,7 @@ class InputParamsWidget(QWidget):
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)  # Имя класса
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)  # Параметр формы
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)  # Тип данных
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents) # Коммент
 
         self.table_widget.setAlternatingRowColors(True)
         self.table_widget.setMinimumHeight(150)
@@ -83,9 +83,8 @@ class InputParamsWidget(QWidget):
             else:
                 combo_widget.setStyleSheet("background-color: #ffcccc;")  # Красный если не выбрано
 
-            combo_widget.currentIndexChanged.connect(
-                lambda index, r=row: self._on_param_selected(r, combo_widget)
-            )
+            combo_widget.currentIndexChanged.connect(self._on_param_selected)
+
 
             self.table_widget.setCellWidget(row, 1, combo_widget)
 
@@ -94,15 +93,11 @@ class InputParamsWidget(QWidget):
             type_item.setFlags(type_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             self.table_widget.setItem(row, 2, type_item)
 
-        # Обновляем заголовок
-        count = len(input_params)
-        self.title_label.setText(f"Входные параметры ({count}):")
+            comment_item = QTableWidgetItem(input_param.comment if input_param.comment else "")
+            comment_item.setFlags(type_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            self.table_widget.setItem(row, 3, comment_item)
 
-        # Подсвечиваем заголовок если есть незаполненные параметры
-        if count > 0 and not self.validate():
-            self.title_label.setStyleSheet("font-weight: bold; color: #ff0000;")
-        else:
-            self.title_label.setStyleSheet("font-weight: bold; color: #333;")
+
 
     def _get_current_param_value(self, input_param_id: int) -> Optional[ObjectInputParamValue]:
         """Получить текущее значение параметра"""
@@ -118,9 +113,13 @@ class InputParamsWidget(QWidget):
                 combo_box.setCurrentIndex(i)
                 break
 
-    def _on_param_selected(self, row: int, combo_box: QComboBox):
+    def _on_param_selected(self, index: int):
         """Обработчик выбора параметра формы"""
+        combo_box = self.sender()
+        if not isinstance(combo_box, QComboBox):
+            return
         parameter_id = combo_box.currentData()
+        row = self.table_widget.indexAt(combo_box.pos()).row()
 
         # Подсветка ячейки в зависимости от выбора
         if parameter_id is None:
@@ -144,14 +143,6 @@ class InputParamsWidget(QWidget):
             else:
                 value.parameter_id = parameter_id
 
-            # Обновляем подсветку заголовка
-            if not self.validate():
-                self.title_label.setStyleSheet("font-weight: bold; color: #ff0000;")
-            else:
-                self.title_label.setStyleSheet("font-weight: bold; color: #333;")
-
-            # Генерируем сигнал об изменении
-            self.data_changed.emit()
 
     def validate(self) -> bool:
         """
@@ -226,24 +217,10 @@ class InputParamsWidget(QWidget):
                             else:
                                 combo_widget.setStyleSheet("background-color: #ffcccc;")  # Красный
 
-        # Обновляем подсветку заголовка
-        if self._input_params and not self.validate():
-            self.title_label.setStyleSheet("font-weight: bold; color: #ff0000;")
-        else:
-            self.title_label.setStyleSheet("font-weight: bold; color: #333;")
-
     def clear(self):
         """Очистить виджет"""
         self._input_params = []
         self._current_values = []
         self.table_widget.setRowCount(0)
-        self.title_label.setText("Входные параметры:")
-        self.title_label.setStyleSheet("font-weight: bold; color: #333;")
 
-    def has_data(self) -> bool:
-        """Проверить, есть ли данные в виджете"""
-        return len(self._input_params) > 0
 
-    def get_input_params_count(self) -> int:
-        """Получить количество входных параметров"""
-        return len(self._input_params)

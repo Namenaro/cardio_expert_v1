@@ -66,6 +66,10 @@ class PCEditor(BaseEditor):
         self.input_params_widget = InputParamsWidget()
         layout.addWidget(self.input_params_widget)
 
+        # Выходные параметры
+        self.output_params_widget = OutputParamsWidget()
+        layout.addWidget(self.output_params_widget)
+
         layout.addStretch()
 
         return widget
@@ -86,12 +90,19 @@ class PCEditor(BaseEditor):
         # Загружаем сохраненные значения входных параметров
         self.input_params_widget.load_current_values(self.original_data.input_param_values)
 
+        # Загружаем сохраненные значения выходных параметров
+        self.output_params_widget.load_current_values(self.original_data.output_param_values)
+
     def _load_class_ref(self):
         if self.original_data.class_ref:
             self.classes_widget.set_selected_class(self.original_data.class_ref)
             self.arguments_widget.load_arguments(self.original_data.class_ref.constructor_arguments)
             self.input_params_widget.load_input_params(
                 self.original_data.class_ref.input_params,
+                self._form.parameters
+            )
+            self.output_params_widget.load_output_params(
+                self.original_data.class_ref.output_params,
                 self._form.parameters
             )
 
@@ -113,6 +124,8 @@ class PCEditor(BaseEditor):
         # Получаем значения входных параметров
         updated_pc.input_param_values = self.input_params_widget.get_input_param_values()
 
+        # Получаем значения выходных параметров
+        updated_pc.output_param_values = self.output_params_widget.get_output_param_values()
 
         return updated_pc
 
@@ -125,14 +138,14 @@ class PCEditor(BaseEditor):
 
         # 2. Проверяем входные параметры через собственный валидатор виджета
         if not self.input_params_widget.validate():
-            errors = self.input_params_widget.get_validation_errors()
-            if errors:
-                params_list = "\n• " + "\n• ".join(errors)
-                QMessageBox.warning(
-                    self,
-                    "Ошибка",
-                    f"Для следующих входных параметров класса необходимо выбрать параметры формы:\n{params_list}"
-                )
+            error = self.input_params_widget.get_validation_errors()
+            QMessageBox.warning(self,"Ошибка", error)
+            return False
+
+        # 3. Проверяем выходные параметры через собственный валидатор виджета
+        if not self.output_params_widget.validate():
+            error = self.output_params_widget.get_validation_errors()
+            QMessageBox.warning( self,"Ошибка", error)
             return False
         return True
 
@@ -153,6 +166,12 @@ class PCEditor(BaseEditor):
         # Загружаем входные параметры, используя параметры из формы
         self.input_params_widget.load_input_params(
             selected_class.input_params,
+            self._form.parameters
+        )
+
+        # Загружаем входные параметры, используя параметры из формы
+        self.output_params_widget.load_output_params(
+            selected_class.output_params,
             self._form.parameters
         )
 
