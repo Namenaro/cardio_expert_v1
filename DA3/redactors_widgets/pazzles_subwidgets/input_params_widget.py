@@ -177,12 +177,12 @@ class InputParamsWidget(QWidget):
 
         return True
 
-    def get_validation_errors(self) -> List[str]:
+    def get_validation_errors(self) -> str:
         """
         Получить список незаполненных параметров
 
         Returns:
-            Список имен параметров, для которых не выбраны параметры формы
+            Сообщение с подробностями проблем валидации
         """
         errors = []
 
@@ -195,7 +195,10 @@ class InputParamsWidget(QWidget):
                 param_name = input_param.name if input_param.name else f"ID:{input_param.id}"
                 errors.append(param_name)
 
-        return errors
+        params_list = "\n• " + "\n• ".join(errors)
+        error_str = f"Для следующих входных параметров класса необходимо выбрать параметры формы:\n{params_list}"
+
+        return error_str
 
     def get_input_param_values(self) -> List[ObjectInputParamValue]:
         """Получить значения входных параметров"""

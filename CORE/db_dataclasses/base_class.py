@@ -54,3 +54,6 @@ class BaseClass:
 
     def is_HC(self):
         return self.type == CLASS_TYPES.HC.value
+
+    def is_PC(self):
+        return self.type == CLASS_TYPES.PC.value

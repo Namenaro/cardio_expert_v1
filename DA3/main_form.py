@@ -120,4 +120,5 @@ class MainForm(QMainWindow):
         self.points_widget.reset_points(form.points)
         self.parameters_widget.reset_parameters(form.parameters)
         self.hcs_widget.reset_form(form)
+        self.pcs_widget.reset_form(form)
         # Добавьте обновление других виджетов по необходимости

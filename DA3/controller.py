@@ -3,6 +3,7 @@ from typing import Optional
 from CORE.db_dataclasses import *
 from DA3.model import Model
 from DA3.main_form import MainForm
+from DA3.redactors_widgets import PCEditor, HCEditor
 from DA3.start_dialog import select_form_from_dialog
 from DA3 import app_signals
 from PySide6.QtCore import QObject, Slot
@@ -36,12 +37,14 @@ class Controller(QObject):
         app_signals.request_point_redactor.connect(self._open_point_redactor)
         app_signals.request_parameter_redactor.connect(self._open_parameter_redactor)
         app_signals.request_hc_redactor.connect(self._open_hc_redactor)
+        app_signals.request_pc_redactor.connect(self._open_pc_redactor)
 
-        # Сигналы добавления объектов (теперь с обработкой результата)
+        # Сигналы добавления объектов ( с обработкой результата)
         app_signals.db_add_form.connect(self._handle_add_form)
         app_signals.db_add_point.connect(self._handle_add_point)
         app_signals.db_add_parameter.connect(self._handle_add_parameter)
         app_signals.db_add_hc.connect(self._handle_add_hc)
+        app_signals.db_add_pc.connect(self._handle_add_pc)
 
         # Сигналы обновления объектов
         app_signals.db_update_object.connect(self._handle_update_object)
@@ -87,6 +90,11 @@ class Controller(QObject):
     def _open_hc_redactor(self, hc:BasePazzle):
         classes_refs = self.model.get_HCs_classes()
         editor = HCEditor(self.main_window, form=self.current_form, hc=hc, classes_refs=classes_refs)
+        editor.exec()
+
+    def _open_pc_redactor(self, pc:BasePazzle):
+        classes_refs = self.model.get_PCs_classes()
+        editor = PCEditor(self.main_window, form=self.current_form, pc=pc, classes_refs=classes_refs)
         editor.exec()
 
     # ==================== ИНИЦИАЛИЗАЦИЯ ФОРМЫ ====================
@@ -172,6 +180,16 @@ class Controller(QObject):
     def _handle_add_hc(self, hc:BasePazzle):
         """Обработчик добавления объекта типа HC"""
         success, message = self.model.add_HC(hc, form_id=self.current_form.id)
+        if success:
+            self._refresh_form_data(self.current_form.id)
+            self._show_success(message)
+        else:
+            self._show_error(message)
+
+    @Slot(BasePazzle)
+    def _handle_add_pc(self, pc: BasePazzle):
+        """Обработчик добавления объекта типа PC"""
+        success, message = self.model.add_PC(pc, form_id=self.current_form.id)
         if success:
             self._refresh_form_data(self.current_form.id)
             self._show_success(message)

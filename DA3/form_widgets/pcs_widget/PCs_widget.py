@@ -5,16 +5,16 @@ from PySide6.QtCore import Qt, Signal
 
 from DA3 import app_signals
 from CORE.db_dataclasses import BasePazzle, Form, Parameter
-from DA3.form_widgets.hcs_widget.HC_card import HCCard
+from DA3.form_widgets.pcs_widget.PC_card import PCCard
 
 
-class HCsWidget(QWidget):
-    """Виджет для отображения HC объектов формы"""
+class PCsWidget(QWidget):
+    """Виджет для отображения PC объектов формы"""
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._form: Optional[Form] = None
+    def __init__(self):
+        super().__init__()
         self.setup_ui()
+        self._form: Optional[Form] = None
 
     def setup_ui(self):
         """Настройка интерфейса виджета"""
@@ -24,16 +24,16 @@ class HCsWidget(QWidget):
         main_layout.setSpacing(0)
 
         # Заголовок
-        title_label = QLabel("Жесткие условия на параметры")
+        title_label = QLabel("Рассчитыватели параметров")
         title_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         title_label.setStyleSheet("""
-            QLabel {
-                font-weight: bold;
-                color: #333;
-                padding: 5px 15px;
-                background-color: #f5f5f5;
-            }
-        """)
+                   QLabel {
+                       font-weight: bold;
+                       color: #333;
+                       padding: 5px 15px;
+                       background-color: #f5f5f5;
+                   }
+               """)
         title_label.setFixedHeight(30)
         main_layout.addWidget(title_label)
 
@@ -52,7 +52,7 @@ class HCsWidget(QWidget):
 
         add_btn = QPushButton("+")
         add_btn.setFixedSize(50, 50)
-        add_btn.setToolTip("Добавить новый HC объект")
+        add_btn.setToolTip("Добавить новый PC объект")
         add_btn.clicked.connect(self.on_add_clicked)
 
         left_layout.addWidget(add_btn)
@@ -78,6 +78,7 @@ class HCsWidget(QWidget):
 
         main_layout.addWidget(content_widget)
 
+
     def on_add_clicked(self):
         """Обработчик нажатия кнопки добавления"""
         if self._form is None:
@@ -89,15 +90,17 @@ class HCsWidget(QWidget):
             return
 
         # Создаем пустой объект BasePazzle
-        hc = BasePazzle()
+        pc = BasePazzle()
 
         # Испускаем сигнал с пустым объектом
-        app_signals.request_hc_redactor.emit(hc)
+        app_signals.request_pc_redactor.emit(pc)
+
 
     def reset_form(self, form: Form) -> None:
         """Установить новую форму"""
         self._form = form
         self.refresh()
+
 
     def refresh(self):
         """Обновить отображение карточек"""
@@ -107,11 +110,14 @@ class HCsWidget(QWidget):
         if self._form is None:
             return
 
-        # Добавляем карточки только для HC объектов
-        for hc_object in self._form.HC_PC_objects:
-            if hc_object.is_HC():
+        # Добавляем карточки только для PC объектов
+        for hcpc_object in self._form.HC_PC_objects:
+            if hcpc_object.is_PC():
                 # Создаем карточку с передачей параметров формы
-                card = HCCard(hc_object, self._form.parameters, self)
+                card = PCCard(pc=hcpc_object,
+                              form_parameters = self._form.parameters,
+                              form_points=self._form.points,
+                              parent=self)
                 self.cards_layout.insertWidget(self.cards_layout.count() - 1, card)
 
     def clear_cards(self):

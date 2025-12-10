@@ -4,7 +4,7 @@
 
 from DA3.form_widgets.form_info_widget import FormInfoWidget
 from DA3.form_widgets.hcs_widget.HCs_widget import HCsWidget
-from DA3.form_widgets.PCs_widget import PCsWidget
+from DA3.form_widgets.pcs_widget.PCs_widget import PCsWidget
 from DA3.form_widgets.points_widget import PointsWidget
 from DA3.form_widgets.parameters_widget import ParametersWidget
 from DA3.form_widgets.steps_widget import StepsWidget

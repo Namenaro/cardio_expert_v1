@@ -18,11 +18,12 @@ class Model:
         self.db_manager = DBManager(db_path)
 
         self.form_service = FormService()
-        self.point_service = PointService()
-        self.parameter_service = ParameterService()
-        self.objects_service = ObjectsService()
-        self.track_service = TrackService()
-        self.step_service = StepService()
+
+        self.point_service =  self.form_service.point_service
+        self.parameter_service = self.form_service.parameter_service
+        self.objects_service = self.form_service.objects_service
+        self.track_service = self.form_service.track_service
+        self.step_service = self.form_service.step_service
 
         self.classes_service = ClassesRepoRead(self.db_manager)
 

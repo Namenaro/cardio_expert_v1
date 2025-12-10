@@ -5,9 +5,7 @@ from PySide6.QtCore import Qt
 from CORE.db_dataclasses import BasePazzle, Form, BaseClass, Parameter
 from DA3 import app_signals
 from DA3.redactors_widgets import BaseEditor
-from DA3.redactors_widgets.HC_editor.arguments_table_widget import ArgumentsTableWidget
-from DA3.redactors_widgets.HC_editor.classes_list_widget import ClassesListWidget
-from DA3.redactors_widgets.HC_editor.input_params_widget import InputParamsWidget
+from DA3.redactors_widgets.pazzles_subwidgets  import (ArgumentsTableWidget, ClassesListWidget, InputParamsWidget)
 
 
 class HCEditor(BaseEditor):
@@ -16,7 +14,7 @@ class HCEditor(BaseEditor):
     def __init__(self, parent: QWidget, form: Form, hc: BasePazzle,
                  classes_refs: List[BaseClass]):
         self._form = form  # Сохраняем форму для доступа к параметрам
-        self._classes_refs = classes_refs  # Гарантированно полные классы
+        self._classes_refs = classes_refs
         super().__init__(parent, hc)
         self.setWindowTitle("Редактор HC объекта")
         self.resize(600, 700)
@@ -99,18 +97,7 @@ class HCEditor(BaseEditor):
         if self.original_data.comment:
             self.comment_edit.setText(self.original_data.comment)
 
-        # Находим полный класс в списке classes_refs
-        if self.original_data.class_ref and self.original_data.class_ref.id:
-            full_class = self._find_full_class(self.original_data.class_ref.id)
-            if full_class:
-                self.classes_widget.set_selected_class(full_class)
-                self.arguments_widget.load_arguments(full_class.constructor_arguments)
-
-                # Загружаем входные параметры класса
-                self.input_params_widget.load_input_params(
-                    full_class.input_params,
-                    self._get_form_parameters()
-                )
+        self._load_class_ref()
 
         # Загружаем сохраненные значения аргументов
         self._load_argument_values()
@@ -118,14 +105,23 @@ class HCEditor(BaseEditor):
         # Загружаем сохраненные значения входных параметров
         self._load_input_param_values()
 
+    def _load_class_ref(self):
+        if self.original_data.class_ref:
+
+            self.classes_widget.set_selected_class(self.original_data.class_ref)
+            self.arguments_widget.load_arguments(self.original_data.class_ref.constructor_arguments)
+
+            # Загружаем входные параметры класса
+            self.input_params_widget.load_input_params(
+                self.original_data.class_ref.input_params,
+                self._get_form_parameters()
+            )
+
     def _load_input_param_values(self):
         """Загрузка значений входных параметров"""
         if hasattr(self.original_data, 'input_param_values') and self.original_data.input_param_values:
             self.input_params_widget.load_current_values(self.original_data.input_param_values)
 
-    def _find_full_class(self, class_id: int) -> Optional[BaseClass]:
-        """Найти полный класс по ID в списке classes_refs"""
-        return next((c for c in self._classes_refs if c.id == class_id), None)
 
     def _load_argument_values(self):
         """Загрузка значений аргументов"""
@@ -173,14 +169,8 @@ class HCEditor(BaseEditor):
 
         # 2. Проверяем входные параметры через собственный валидатор виджета
         if not self.input_params_widget.validate():
-            errors = self.input_params_widget.get_validation_errors()
-            if errors:
-                params_list = "\n• " + "\n• ".join(errors)
-                QMessageBox.warning(
-                    self,
-                    "Ошибка",
-                    f"Для следующих входных параметров класса необходимо выбрать параметры формы:\n{params_list}"
-                )
+            error_str = self.input_params_widget.get_validation_errors()
+            QMessageBox.warning( self, "Ошибка", error_str)
             return False
 
         return True

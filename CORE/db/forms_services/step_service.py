@@ -13,14 +13,14 @@ class StepService:
     Точки (point) не создаются и не удаляются этим сервисом - они считаются существующими.
     """
 
-    def __init__(self):
+    def __init__(self, track_service:TrackService):
         """
         Инициализация сервиса шагов.
 
         Args:
             track_service: Сервис для работы с треками
         """
-        self.track_service = TrackService()
+        self.track_service = track_service
 
     def delete_step(self, conn, step_id: int) -> bool:
         """

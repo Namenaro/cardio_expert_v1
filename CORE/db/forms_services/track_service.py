@@ -13,14 +13,14 @@ class TrackService:
     с сохранением целостности данных и порядковых номеров объектов.
     """
 
-    def __init__(self):
+    def __init__(self, objects_service:ObjectsService):
         """
         Инициализация сервиса треков.
 
         Args:
             objects_service: Сервис для работы с объектами
         """
-        self.objects_service = ObjectsService()
+        self.objects_service = objects_service
 
     def delete_track(self, conn, track_id: int) -> bool:
         """

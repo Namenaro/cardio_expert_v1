@@ -1,4 +1,5 @@
 from CORE.db_dataclasses import *
+from CORE.db.classes_service import ClassesRepoRead
 
 import logging
 from typing import List, Optional, Tuple
@@ -11,8 +12,8 @@ class ObjectRelationService:
     Также содержит методы для загрузки полных данных объектов со всеми связанными значениями.
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, classes_refs_reader:ClassesRepoRead):
+        self.classes_refs_reader = classes_refs_reader
 
     def add_object_to_form(self, cursor, object_id: int, form_id: int):
         """Добавляет связь объекта с формой"""
@@ -43,7 +44,7 @@ class ObjectRelationService:
         object_ids = [row['id'] for row in cursor.fetchall()]
         objects = []
         for obj_id in object_ids:
-            obj = self._get_full_object(cursor, obj_id)
+            obj = self._get_full_object(conn, obj_id)
             if obj:
                 objects.append(obj)
 
@@ -64,7 +65,7 @@ class ObjectRelationService:
 
         results = []
         for row in cursor.fetchall():
-            obj = self._get_full_object(cursor, row['id'])
+            obj = self._get_full_object(conn, row['id'])
             if obj:
                 results.append((obj, row['num_in_track']))
 
@@ -84,13 +85,14 @@ class ObjectRelationService:
             WHERE object_id = ? AND track_id = ?
         ''', (object_id, track_id))
 
-    def _get_full_object(self, cursor, object_id: int) -> Optional[BasePazzle]:
+    def _get_full_object(self, conn, object_id: int) -> Optional[BasePazzle]:
         """
         Получает полный объект BasePazzle со всеми связанными данными
         """
         # Получаем основной объект
+        cursor = conn.cursor()
         cursor.execute('''
-            SELECT o.*, c.id as class_id, c.name as class_name, c.comment as class_comment, c.type as class_type
+            SELECT o.*, c.id as class_id
             FROM object o
             JOIN class c ON o.class_id = c.id
             WHERE o.id = ?
@@ -101,12 +103,9 @@ class ObjectRelationService:
             return None
 
         # Создаем базовый объект
-        class_ref = BaseClass(
-            id=row['class_id'],
-            name=row['class_name'],
-            comment=row['class_comment'] or "",
-            type=row['class_type']
-        )
+        class_id = row['class_id']
+        class_ref = self.classes_refs_reader.get_class_by_id_in_conn(conn, class_id)
+
 
         base_pazzle = BasePazzle(
             id=row['id'],

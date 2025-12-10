@@ -25,3 +25,6 @@ class BasePazzle:
 
     def is_HC(self)->bool:
         return self.class_ref.is_HC()
+
+    def is_PC(self):
+        return self.class_ref.is_PC()
