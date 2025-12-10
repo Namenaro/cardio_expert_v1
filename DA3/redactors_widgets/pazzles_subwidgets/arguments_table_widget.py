@@ -102,8 +102,18 @@ class ArgumentsTableWidget(QWidget):
         self.table_widget.setRowCount(0)
         self.title_label.setText("Аргументы конструктора класса:")
 
-    def has_data(self) -> bool:
-        """Проверить, есть ли данные в таблице"""
-        return len(self._arguments) > 0
+    def load_current_values(self, argument_values:List[ObjectArgumentValue]):
+        # Создаем словарь значений
+        arg_values = {av.argument_id: av.argument_value
+                      for av in argument_values if av.argument_id}
+
+        # Устанавливаем значения в таблицу
+        for row in range(self.table_widget.rowCount()):
+            if id_item := self.table_widget.item(row, 0):
+                if arg_id_str := id_item.text():
+                    if arg_id := int(arg_id_str):
+                        if value := arg_values.get(arg_id):
+                            if value_item := self.table_widget.item(row, 4):
+                                value_item.setText(value)
 
 

@@ -70,7 +70,6 @@ class PCEditor(BaseEditor):
 
         return widget
 
-
     def _load_data_to_ui(self) -> None:
         """Загрузка данных из HC объекта в интерфейс"""
         # Основные поля
@@ -79,9 +78,13 @@ class PCEditor(BaseEditor):
         if self.original_data.comment:
             self.comment_edit.setText(self.original_data.comment)
 
-        #Загружаем все по сигнатуре класса
         self._load_class_ref()
 
+        # Загружаем сохраненные значения аргументов
+        self.arguments_widget.load_current_values(self.original_data.argument_values)
+
+        # Загружаем сохраненные значения входных параметров
+        self.input_params_widget.load_current_values(self.original_data.input_param_values)
 
     def _load_class_ref(self):
         if self.original_data.class_ref:
@@ -89,27 +92,27 @@ class PCEditor(BaseEditor):
             self.arguments_widget.load_arguments(self.original_data.class_ref.constructor_arguments)
             self.input_params_widget.load_input_params(
                 self.original_data.class_ref.input_params,
-                self._get_form_parameters()
+                self._form.parameters
             )
-
-
 
     def _collect_data_from_ui(self) -> BasePazzle:
         """Сбор данных из интерфейса в объект"""
         updated_pc = BasePazzle()
+
+        # Получаем основные поля
         updated_pc.id = self.original_data.id
         updated_pc.name = self.name_edit.text().strip() or None
         updated_pc.comment = self.comment_edit.text().strip()
+
+        # Получаем сигнатуру класса
         updated_pc.class_ref = self.classes_widget.get_selected_class()
+
+        # Получаем значения для аругметов конструктора
         updated_pc.argument_values = self.arguments_widget.get_argument_values()
 
         # Получаем значения входных параметров
         updated_pc.input_param_values = self.input_params_widget.get_input_param_values()
 
-        # Копируем остальные поля
-        for field in ['input_point_values', 'output_param_values']:
-            if hasattr(self.original_data, field):
-                setattr(updated_pc, field, getattr(self.original_data, field).copy())
 
         return updated_pc
 
@@ -131,18 +134,15 @@ class PCEditor(BaseEditor):
                     f"Для следующих входных параметров класса необходимо выбрать параметры формы:\n{params_list}"
                 )
             return False
-
         return True
 
 
     def _emit_add_signal(self, data: BasePazzle) -> None:
         """Испускание сигнала добавления нового объекта"""
-        self.logger.info("Пытаемся добавить PC " + str(data.name))
         app_signals.db_add_pc.emit(data)
 
     def _emit_update_signal(self, data: BasePazzle) -> None:
         """Испускание сигнала обновления существующего HC объекта"""
-        self.logger.info("Пытаемся обновить PC " + str(data.name))
         app_signals.db_update_object.emit(data)
 
     def _on_class_selected(self, selected_class: BaseClass):

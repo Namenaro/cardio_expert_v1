@@ -80,14 +80,9 @@ class HCEditor(BaseEditor):
         # Загружаем входные параметры, используя параметры из формы
         self.input_params_widget.load_input_params(
             selected_class.input_params,
-            self._get_form_parameters()
+            self._form.parameters
         )
 
-    def _get_form_parameters(self) -> List[Parameter]:
-        """Получить параметры из текущей формы"""
-        if self._form and hasattr(self._form, 'parameters'):
-            return self._form.parameters
-        return []
 
     def _load_data_to_ui(self) -> None:
         """Загрузка данных из HC объекта в интерфейс"""
@@ -100,10 +95,10 @@ class HCEditor(BaseEditor):
         self._load_class_ref()
 
         # Загружаем сохраненные значения аргументов
-        self._load_argument_values()
+        self.arguments_widget.load_current_values(self.original_data.argument_values)
 
         # Загружаем сохраненные значения входных параметров
-        self._load_input_param_values()
+        self.input_params_widget.load_current_values(self.original_data.input_param_values)
 
     def _load_class_ref(self):
         if self.original_data.class_ref:
@@ -114,49 +109,28 @@ class HCEditor(BaseEditor):
             # Загружаем входные параметры класса
             self.input_params_widget.load_input_params(
                 self.original_data.class_ref.input_params,
-                self._get_form_parameters()
+                self._form.parameters
             )
 
-    def _load_input_param_values(self):
-        """Загрузка значений входных параметров"""
-        if hasattr(self.original_data, 'input_param_values') and self.original_data.input_param_values:
-            self.input_params_widget.load_current_values(self.original_data.input_param_values)
 
-
-    def _load_argument_values(self):
-        """Загрузка значений аргументов"""
-        if not self.original_data.argument_values:
-            return
-
-        # Создаем словарь значений
-        arg_values = {av.argument_id: av.argument_value
-                      for av in self.original_data.argument_values if av.argument_id}
-
-        # Устанавливаем значения в таблицу
-        for row in range(self.arguments_widget.table_widget.rowCount()):
-            if id_item := self.arguments_widget.table_widget.item(row, 0):
-                if arg_id_str := id_item.text():
-                    if arg_id := int(arg_id_str):
-                        if value := arg_values.get(arg_id):
-                            if value_item := self.arguments_widget.table_widget.item(row, 4):
-                                value_item.setText(value)
 
     def _collect_data_from_ui(self) -> BasePazzle:
         """Сбор данных из интерфейса в объект"""
         updated_hc = BasePazzle()
+
+        # Получаем основные поля
         updated_hc.id = self.original_data.id
         updated_hc.name = self.name_edit.text().strip() or None
         updated_hc.comment = self.comment_edit.text().strip()
+
+        # Получаем сигнатуру класса
         updated_hc.class_ref = self.classes_widget.get_selected_class()
+
+        # Получаем значения для аругметов конструктора
         updated_hc.argument_values = self.arguments_widget.get_argument_values()
 
         # Получаем значения входных параметров
         updated_hc.input_param_values = self.input_params_widget.get_input_param_values()
-
-        # Копируем остальные поля
-        for field in ['input_point_values', 'output_param_values']:
-            if hasattr(self.original_data, field):
-                setattr(updated_hc, field, getattr(self.original_data, field).copy())
 
         return updated_hc
 
