@@ -10,8 +10,5 @@ from CORE.db_dataclasses import *
 class InputPointsWidget(QWidget):
     """Виджет для редактирования входных параметров объекта"""
 
-    # Сигнал для обновления данных
-    data_changed = Signal()
-
     def __init__(self, parent=None):
         super().__init__(parent)
