@@ -39,7 +39,7 @@ class InputParamsWidget(QWidget):
 
         # Настройка внешнего вида таблицы
         header = self.table_widget.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)  # Имя класса
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)  # Параметр формы
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)  # Тип данных
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents) # Коммент
@@ -217,10 +217,5 @@ class InputParamsWidget(QWidget):
                             else:
                                 combo_widget.setStyleSheet("background-color: #ffcccc;")  # Красный
 
-    def clear(self):
-        """Очистить виджет"""
-        self._input_params = []
-        self._current_values = []
-        self.table_widget.setRowCount(0)
 
 

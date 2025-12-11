@@ -1,7 +1,7 @@
 import logging
 from typing import Optional, List, Any
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QFormLayout,
-                               QGroupBox, QLineEdit, QLabel, QMessageBox)
+                               QGroupBox, QLineEdit, QLabel, QMessageBox, QApplication, QHBoxLayout)
 from PySide6.QtCore import Qt
 from CORE.db_dataclasses import *
 from DA3.redactors_widgets import BaseEditor
@@ -16,18 +16,24 @@ class PCEditor(BaseEditor):
                  classes_refs: List[BaseClass]):
 
         self._form = form  # Сохраняем форму для доступа к параметрам
-        self._classes_refs = classes_refs  # Гарантированно полные классы
+        self._classes_refs = classes_refs
         super().__init__(parent, pc)
-        self.setWindowTitle("Редактор HC объекта")
-        self.resize(600, 700)
+        self.setWindowTitle("Редактор PC объекта (parameter calculator)")
+
 
 
     def _create_form_widget(self) -> QWidget:
         """Создание виджета с полями ввода"""
         widget = QWidget()
-        layout = QVBoxLayout(widget)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(15)
+        main_layout = QHBoxLayout(widget)  # Основное горизонтальное расположение
+        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setSpacing(15)
+
+        # Левый столбец
+        left_column = QWidget()
+        left_layout = QVBoxLayout(left_column)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setSpacing(15)
 
         # Основные поля HC объекта
         group_box = QGroupBox("Параметры HC объекта")
@@ -46,7 +52,7 @@ class PCEditor(BaseEditor):
         group_layout.addRow("Имя:", self.name_edit)
         group_layout.addRow("Комментарий:", self.comment_edit)
 
-        layout.addWidget(group_box)
+        left_layout.addWidget(group_box)
 
         # Выбор класса
         class_group = QGroupBox("Выбор класса")
@@ -56,21 +62,39 @@ class PCEditor(BaseEditor):
         self.classes_widget = ClassesListWidget(self._classes_refs)
         self.classes_widget.class_selected.connect(self._on_class_selected)
         class_layout.addWidget(self.classes_widget)
-        layout.addWidget(class_group)
-
-        # Аргументы конструктора
-        self.arguments_widget = ArgumentsTableWidget()
-        layout.addWidget(self.arguments_widget)
-
-        # Входные параметры
-        self.input_params_widget = InputParamsWidget()
-        layout.addWidget(self.input_params_widget)
+        left_layout.addWidget(class_group)
 
         # Выходные параметры
         self.output_params_widget = OutputParamsWidget()
-        layout.addWidget(self.output_params_widget)
+        left_layout.addWidget(self.output_params_widget)
 
-        layout.addStretch()
+        left_layout.addStretch()  # Растягиваем вниз
+
+        # Правый столбец
+        right_column = QWidget()
+        right_layout = QVBoxLayout(right_column)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(15)
+
+        # Аргументы конструктора
+        self.arguments_widget = ArgumentsTableWidget()
+        right_layout.addWidget(self.arguments_widget)
+
+        # Входные параметры
+        self.input_params_widget = InputParamsWidget()
+        right_layout.addWidget(self.input_params_widget)
+
+        # Входные точки
+        self.input_points_widget = InputPointsWidget()
+        right_layout.addWidget(self.input_points_widget)
+
+
+
+        right_layout.addStretch()  # Растягиваем вниз
+
+        # Добавляем колонки в основной макет
+        main_layout.addWidget(left_column, 1)  # Вес 1 (растягиваются пропорционально)
+        main_layout.addWidget(right_column, 1)  # Вес 1
 
         return widget
 
@@ -93,17 +117,30 @@ class PCEditor(BaseEditor):
         # Загружаем сохраненные значения выходных параметров
         self.output_params_widget.load_current_values(self.original_data.output_param_values)
 
+        # Загружаем сохраненные значения входных точек
+        self.input_points_widget.load_current_values(self.original_data.input_point_values)
+
     def _load_class_ref(self):
         if self.original_data.class_ref:
             self.classes_widget.set_selected_class(self.original_data.class_ref)
+
+            # Загружаем сигнатуру аргументов
             self.arguments_widget.load_arguments(self.original_data.class_ref.constructor_arguments)
+
+            # Загружаем сигнатуру входных параметров
             self.input_params_widget.load_input_params(
                 self.original_data.class_ref.input_params,
                 self._form.parameters
             )
+            # Загружаем сигнатуру выходных параметров
             self.output_params_widget.load_output_params(
                 self.original_data.class_ref.output_params,
                 self._form.parameters
+            )
+            # Загружаем сигнатуру входных точек
+            self.input_points_widget.load_input_points(
+                self.original_data.class_ref.input_points,
+                self._form.points
             )
 
     def _collect_data_from_ui(self) -> BasePazzle:
@@ -127,26 +164,26 @@ class PCEditor(BaseEditor):
         # Получаем значения выходных параметров
         updated_pc.output_param_values = self.output_params_widget.get_output_param_values()
 
+        # Получаем значения входных точек
+        updated_pc.input_point_values = self.input_points_widget.get_input_point_values()
+
         return updated_pc
 
     def _validate_data(self) -> bool:
         """Проверка корректности данных"""
-        # 1. Проверяем, что выбран класс
-        if not self.classes_widget.get_selected_class():
-            QMessageBox.warning(self, "Ошибка", "Пожалуйста, выберите класс")
-            return False
+        validators = [
+            (self.classes_widget.get_selected_class, "Пожалуйста, выберите класс"),
+            (self.input_params_widget.validate, self.input_params_widget.get_validation_errors),
+            (self.output_params_widget.validate, self.output_params_widget.get_validation_errors),
+            (self.input_points_widget.validate, self.input_points_widget.get_validation_errors)
+        ]
 
-        # 2. Проверяем входные параметры через собственный валидатор виджета
-        if not self.input_params_widget.validate():
-            error = self.input_params_widget.get_validation_errors()
-            QMessageBox.warning(self,"Ошибка", error)
-            return False
+        for validator, error_getter in validators:
+            if not validator():
+                error_msg = error_getter() if callable(error_getter) else error_getter
+                QMessageBox.warning(self, "Ошибка", error_msg)
+                return False
 
-        # 3. Проверяем выходные параметры через собственный валидатор виджета
-        if not self.output_params_widget.validate():
-            error = self.output_params_widget.get_validation_errors()
-            QMessageBox.warning( self,"Ошибка", error)
-            return False
         return True
 
 
@@ -173,5 +210,11 @@ class PCEditor(BaseEditor):
         self.output_params_widget.load_output_params(
             selected_class.output_params,
             self._form.parameters
+        )
+
+        # Загружаем входные точки, используя точки из формы
+        self.input_points_widget.load_input_points(
+            selected_class.input_points,
+            self._form.points
         )
 
