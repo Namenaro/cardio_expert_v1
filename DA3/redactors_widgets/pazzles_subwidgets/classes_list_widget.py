@@ -1,8 +1,42 @@
 from typing import List
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem, QHBoxLayout, QLabel
 from PySide6.QtCore import Qt, Signal
 from CORE.db_dataclasses import BaseClass
 
+
+class ClassListItemWidget(QWidget):
+    def __init__(self, class_ref, parent=None):
+        super().__init__(parent)
+        self.class_ref = class_ref
+
+        # Основной горизонтальный макет
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(8)
+
+        # Label для ID
+        self.id_label = QLabel(f"ID: {class_ref.id}")
+        self.id_label.setAlignment(Qt.AlignVCenter)
+        layout.addWidget(self.id_label)
+
+        # Label для названия (жирный шрифт)
+        self.name_label = QLabel(class_ref.name)
+        font = self.name_label.font()
+        font.setBold(True)
+        self.name_label.setFont(font)
+        self.name_label.setAlignment(Qt.AlignVCenter)
+        layout.addWidget(self.name_label)
+
+        # Label для комментария (меньший размер шрифта)
+        self.comment_label = QLabel(class_ref.comment)
+        font = self.comment_label.font()
+        font.setPointSize(font.pointSize() - 1)  # на 1 пункт меньше
+        self.comment_label.setFont(font)
+        self.comment_label.setAlignment(Qt.AlignVCenter)
+        layout.addWidget(self.comment_label)
+
+        # Растягиваем последний элемент (комментарий), чтобы заполнить пространство
+        layout.addStretch()
 
 class ClassesListWidget(QWidget):
     """Виджет для отображения и выбора классов"""
@@ -26,15 +60,25 @@ class ClassesListWidget(QWidget):
         self._populate_list()
 
     def _populate_list(self):
-        """Заполнение списка классами"""
+        """Заполнение списка классами с кастомными виджетами"""
         self.list_widget.clear()
+
         for class_ref in self._classes:
-            item = QListWidgetItem(f"ID: {class_ref.id} | {class_ref.name}")
+            # Создаём элемент списка
+            item = QListWidgetItem()
             item.setData(Qt.ItemDataRole.UserRole, class_ref)
+
+            # Создаём виджет для элемента
+            widget = ClassListItemWidget(class_ref, self.list_widget)
+            item.setSizeHint(widget.sizeHint())  # чтобы список корректно учитывал размер
+
+            # Добавляем элемент и привязываем виджет
             self.list_widget.addItem(item)
+            self.list_widget.setItemWidget(item, widget)
 
     def _on_item_clicked(self, item):
         """Обработчик клика по элементу списка"""
+        # Получаем данные из QListWidgetItem, а не из виджета
         if class_ref := item.data(Qt.ItemDataRole.UserRole):
             self._selected_class = class_ref
             self.class_selected.emit(class_ref)

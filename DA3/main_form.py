@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout,
-                               QHBoxLayout, QSizePolicy, QScrollArea)
+                               QHBoxLayout, QSizePolicy, QScrollArea, QApplication)
 from CORE.db_dataclasses import Form
 from DA3.form_widgets import (
     FormInfoWidget, HCsWidget, PCsWidget,
@@ -12,11 +12,17 @@ class MainForm(QMainWindow):
 
     def __init__(self):
         super().__init__()
+
+        # Устанавливаем адаптивный размер (% от экрана)
+        screen = QApplication.primaryScreen().size()
+        width = int(screen.width() * 0.8)
+        height = int(screen.height() * 0.8)
+        self.resize(width, height)
+
         self.setup_ui()
 
     def setup_ui(self):
         self.setWindowTitle("Главная форма приложения")
-        self.resize(800, 600)
 
         # Создаем центральный виджет с прокруткой
         scroll_area = QScrollArea()
@@ -74,7 +80,7 @@ class MainForm(QMainWindow):
             QSizePolicy.Policy.Expanding,
             QSizePolicy.Policy.Minimum
         )
-        bottom_layout.addWidget(self.parameters_widget)
+        bottom_layout.addWidget(self.parameters_widget, 1)
 
         # Правый контейнер (для PC и HC виджетов)
         right_container = QWidget()
@@ -98,7 +104,7 @@ class MainForm(QMainWindow):
         )
         right_layout.addWidget(self.hcs_widget)
 
-        bottom_layout.addWidget(right_container)
+        bottom_layout.addWidget(right_container, 2)
 
         # Добавляем контейнеры в главный layout
         main_layout.addWidget(top_container)
