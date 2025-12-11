@@ -8,8 +8,7 @@ from CORE.db_dataclasses import *
 
 
 class InputPointsWidget(QWidget):
-    """Виджет для редактирования входных параметров объекта"""
-
+    """Виджет для редактирования входных параметров объекгта"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
