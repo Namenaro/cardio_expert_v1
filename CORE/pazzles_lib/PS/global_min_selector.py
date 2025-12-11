@@ -1,11 +1,10 @@
 from CORE.signal_1d import Signal
-from copy import deepcopy
 
 from typing import Optional, List
 
 
-class GlobalMaxSelector:
-    """ Глобальный максимум на интервале"""
+class GlobalMinSelector:
+    """ Глобальный минимум на интервале"""
 
     def run(self, signal: Signal, left_t: Optional[float] = None, right_t: Optional[float] = None) -> List[float]:
         # Переводим left_t и right_t в индексы
@@ -16,13 +15,13 @@ class GlobalMaxSelector:
         left_i = signal.time.index(left_t)
         right_i = signal.time.index(right_t)
 
-        # Находим индексы точек глобального максимума
-        ts_indices = [t for t, x in enumerate(signal.signal_mv) if x == max(signal.signal_mv[left_i:right_i+1]) and t in range(left_i, right_i+1)]
+        # Находим индексы точек глобального минимума
+        ts_indices = [t for t, x in enumerate(signal.signal_mv) if x == min(signal.signal_mv[left_i:right_i+1]) and t in range(left_i, right_i+1)]
 
         # По индексам восстанавливаем точки во времени
-        ts_of_maxs = [signal.time[t] for t in ts_indices]
+        ts_of_mins = [signal.time[t] for t in ts_indices]
 
-        return ts_of_maxs
+        return ts_of_mins
 
 
 # Пример использования
@@ -38,8 +37,8 @@ if __name__ == "__main__":
     old_signal = signal.get_fragment(0.0, 0.9)
 
     # Создаем паззл3
-    gms = GlobalMaxSelector()
-    t_moments = gms.run(signal=old_signal, left_t=0.1, right_t=0.3)
+    gms = GlobalMinSelector()
+    t_moments = gms.run(signal=old_signal, left_t=0.4, right_t=0.8)
 
     # Визуализация
     fig, ax = plt.subplots(figsize=(10, 4))
