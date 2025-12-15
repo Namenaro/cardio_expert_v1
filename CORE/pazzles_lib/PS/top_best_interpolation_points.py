@@ -14,16 +14,15 @@ class TopBestInterpolationPoints:
         self.N = N
 
     def run(self, signal: Signal, left_t: Optional[float] = None, right_t: Optional[float] = None) -> List[float]:
-        # Переводим left_t и right_t в индексы
-        if left_t is None or left_t not in signal.time:
+        # Обработка пустых left_t и right_t
+        if left_t is None:
             left_t = signal.time[0]
-        if right_t is None or right_t not in signal.time:
+        if right_t is None:
             right_t = signal.time[-1]
-        left_i = signal.time.index(left_t)
-        right_i = signal.time.index(right_t)
+        interval = signal.get_fragment(left_t, right_t)
 
         # Переводим временные отрезки и импульсы в точки в двумерном пространстве
-        points = [(x, y) for x, y in list(zip(signal.time, signal.signal_mv))]
+        points = [(x, y) for x, y in list(zip(interval.time, interval.signal_mv))]
 
         # Метод линейной интерполяции
         def interpolate(x, a, b):
@@ -33,19 +32,19 @@ class TopBestInterpolationPoints:
 
         # Вычисляем среднеквадратичную ошибку в каждой точке
         mses = []
-        for i in range(left_i+1, right_i):
+        for i in range(len(interval.time)):
             sum_error = 0.0
-            for (x, y) in points[left_i+1:i]:
-                y_interp = interpolate(x, points[left_i], points[i])
-                sum_error += (y - y_interp)**2
-            for (x, y) in points[i+1:right_i]:
-                y_interp = interpolate(x, points[i], points[right_i])
-                sum_error += (y - y_interp)**2
+            for (x, y) in points[1:i]:
+                y_interp = interpolate(x, points[1], points[i])
+                sum_error += (y - y_interp) ** 2
+            for (x, y) in points[i + 1:len(interval.time)]:
+                y_interp = interpolate(x, points[i], points[len(interval.time) - 1])
+                sum_error += (y - y_interp) ** 2
             mses.append(np.mean(sum_error))
 
         # Выбираем N лучших кандидатов
         ts_indices = np.argsort(mses)[:self.N]
-        ts_of_best = [signal.time[left_i+t] for t in ts_indices]
+        ts_of_best = [interval.time[t] for t in ts_indices]
         return ts_of_best
 
 
@@ -63,7 +62,7 @@ if __name__ == "__main__":
 
     # Создаем паззл
     ps = TopBestInterpolationPoints(N=3)
-    t_moments = ps.run(signal=signal, left_t = 0.8, right_t = 0.9)
+    t_moments = ps.run(signal=signal, left_t = 0.8, right_t = 0.82)
 
     # Визуализация
     fig, ax = plt.subplots(figsize=(10, 4))

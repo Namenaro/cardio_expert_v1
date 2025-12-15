@@ -8,19 +8,18 @@ class GlobalMaxSelector:
     """ Глобальный максимум на интервале"""
 
     def run(self, signal: Signal, left_t: Optional[float] = None, right_t: Optional[float] = None) -> List[float]:
-        # Переводим left_t и right_t в индексы
-        if left_t is None or left_t not in signal.time:
+        # Обработка пустых left_t и right_t
+        if left_t is None:
             left_t = signal.time[0]
-        if right_t is None or right_t not in signal.time:
+        if right_t is None:
             right_t = signal.time[-1]
-        left_i = signal.time.index(left_t)
-        right_i = signal.time.index(right_t)
+        interval = signal.get_fragment(left_t, right_t)
 
         # Находим индексы точек глобального максимума
-        ts_indices = [t for t, x in enumerate(signal.signal_mv) if x == max(signal.signal_mv[left_i:right_i+1]) and t in range(left_i, right_i+1)]
+        ts_indices = [t for t, x in enumerate(interval.signal_mv) if x == max(interval.signal_mv)]
 
         # По индексам восстанавливаем точки во времени
-        ts_of_maxs = [signal.time[t] for t in ts_indices]
+        ts_of_maxs = [interval.time[t] for t in ts_indices]
 
         return ts_of_maxs
 
