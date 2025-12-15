@@ -1,11 +1,12 @@
-from CORE.signal_1d import Signal
-from copy import deepcopy
-
 from typing import Optional, List
+import numpy as np
+from scipy.signal import find_peaks
+
+from CORE.signal_1d import Signal
 
 
-class GlobalMaxSelector:
-    """ Глобальный максимум на интервале"""
+class LocalMaxsSelector:
+    """Все локальные максимумы на интервале"""
 
     def run(self, signal: Signal, left_t: Optional[float] = None, right_t: Optional[float] = None) -> List[float]:
         # Обработка пустых left_t и right_t
@@ -15,12 +16,8 @@ class GlobalMaxSelector:
             right_t = signal.time[-1]
         interval = signal.get_fragment(left_t, right_t)
 
-        # Находим индексы точек глобального максимума
-        ts_indices = [t for t, x in enumerate(interval.signal_mv) if x == max(interval.signal_mv)]
-
-        # По индексам восстанавливаем точки во времени
-        ts_of_maxs = [interval.time[t] for t in ts_indices]
-
+        inds_of_maxs = find_peaks(np.array(interval.signal_mv), threshold=1e-4)[0]
+        ts_of_maxs = [interval.time[x] for x in inds_of_maxs]
         return ts_of_maxs
 
 
@@ -33,17 +30,17 @@ if __name__ == "__main__":
     # Загружаем тестовый сигнал ЭКГ
     ludb = LUDB()
     patients_ids = ludb.get_patients_ids()
-    signal = ludb.get_1d_signal(patient_id=patients_ids[0], lead_name=LEADS_NAMES.i)
-    old_signal = signal.get_fragment(0.0, 0.9)
+    signal = ludb.get_1d_signal(patient_id=patients_ids[3], lead_name=LEADS_NAMES.i)
+    signal = signal.get_fragment(0.0, 0.9)
 
-    # Создаем паззл3
-    gms = GlobalMaxSelector()
-    t_moments = gms.run(signal=old_signal, left_t=0.1, right_t=0.3)
+    # Создаем паззл
+    lms = LocalMaxsSelector()
+    t_moments = lms.run(signal=signal)
 
     # Визуализация
-    fig, ax = plt.subplots(figsize=(10, 4))
+    fig, ax = plt.subplots(figsize=(10, 8))
     drawer = Drawer(ax)
-    drawer.draw_signal(old_signal)
+    drawer.draw_signal(signal)
     for t_moment in t_moments:
         ax.axvline(x=t_moment, ymin=0, ymax=1, color='r', linestyle='--', linewidth=1)
     plt.show()
