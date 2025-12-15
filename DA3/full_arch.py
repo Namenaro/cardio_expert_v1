@@ -248,7 +248,7 @@ class Model:
 # показом сообщений об успехах и ошибках. Он не отправляет сигналов,
 # а только получает и только от редакторов. Получив сигнал от редактора он его парсит
 # чтобы выхвать соотв запрос к сервисам базы. Он же и получает резуоттат транзакций
-class DBController:
+class Controller:
     def __init__(self, inital_form, model: Model, main_window: MainWindow):
         self.model = model
         self.main_window = main_window

@@ -46,6 +46,7 @@ class ClassesRepoRead:
         arguments = []
         for row in rows:
             arguments.append(ClassArgument(
+                id=row['id'],
                 name=row['name'],
                 comment=row['comment'] or '',
                 data_type=row['data_type'],
@@ -61,6 +62,7 @@ class ClassesRepoRead:
         points = []
         for row in rows:
             points.append(ClassInputPoint(
+                id=row['id'],
                 name=row['name'],
                 comment=row['comment'] or ''
             ))
@@ -74,6 +76,7 @@ class ClassesRepoRead:
         params = []
         for row in rows:
             params.append(ClassInputParam(
+                id=row['id'],
                 name=row['name'],
                 comment=row['comment'] or '',
                 data_type=row['data_type']
@@ -88,6 +91,7 @@ class ClassesRepoRead:
         params = []
         for row in rows:
             params.append(ClassOutputParam(
+                id=row['id'],
                 name=row['name'],
                 comment=row['comment'] or '',
                 data_type=row['data_type']

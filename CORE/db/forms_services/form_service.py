@@ -24,6 +24,19 @@ class FormService:
         self.point_service = PointService()
         self.parameter_service = ParameterService()
 
+    def update_form_main_info(self, conn, form: Form) -> Form:
+        cursor = conn.cursor()
+
+        cursor.execute('''
+                   UPDATE form 
+                   SET name = ?, comment = ?, path_to_pic = ?
+                   WHERE id = ?
+               ''', (form.name, form.comment, form.path_to_pic, form.id))
+
+        logging.info(f"Осн. информация о форме {form.id} успешно обновлена")
+        return form
+
+
     def add_form(self, conn, form: Form) -> Form:
         """
         Каскадно добавляет форму со всеми связанными данными.

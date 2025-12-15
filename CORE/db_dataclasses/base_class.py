@@ -2,15 +2,11 @@ from CORE.db_dataclasses.classes_to_pazzles_helpers import *
 
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
+from CORE.enums import CLASS_TYPES
 
-from enum import Enum
 
 
-class CLASS_TYPES(Enum):
-    PC = "PC"
-    HC = "HC"
-    PS = "PS"
-    SM = "SM"
+
 
 @dataclass
 class BaseClass:
@@ -55,3 +51,6 @@ class BaseClass:
                 lines.append(f"  - {param}")
 
         return "\n".join(lines)
+
+    def is_HC(self):
+        return self.type == CLASS_TYPES.HC.value

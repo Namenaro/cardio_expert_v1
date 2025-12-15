@@ -1,10 +1,10 @@
-from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout,
-                               QListWidget, QPushButton, QListWidgetItem,
-                               QLabel, QApplication, QMainWindow, QTextEdit)
-from PySide6.QtCore import Qt
-from typing import List, Optional, Tuple
-
-
+from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout,
+                               QHBoxLayout, QSizePolicy, QScrollArea)
+from CORE.db_dataclasses import Form
+from DA3.form_widgets import (
+    FormInfoWidget, HCsWidget, PCsWidget,
+    PointsWidget, ParametersWidget, StepsWidget
+)
 
 
 class MainForm(QMainWindow):
@@ -12,10 +12,112 @@ class MainForm(QMainWindow):
 
     def __init__(self):
         super().__init__()
-
         self.setup_ui()
 
     def setup_ui(self):
         self.setWindowTitle("Главная форма приложения")
-        self.resize(600, 400)
+        self.resize(800, 600)
 
+        # Создаем центральный виджет с прокруткой
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        self.setCentralWidget(scroll_area)
+
+        # Основной контейнер
+        main_widget = QWidget()
+        scroll_area.setWidget(main_widget)
+
+        # Главный вертикальный layout
+        main_layout = QVBoxLayout(main_widget)
+        main_layout.setSpacing(10)
+        main_layout.setContentsMargins(10, 10, 10, 10)
+
+        # === ВЕРХНИЙ КОНТЕЙНЕР ===
+        top_container = QWidget()
+        top_layout = QHBoxLayout(top_container)
+        top_layout.setSpacing(5)
+        top_layout.setContentsMargins(0, 0, 0, 0)
+
+        # FormInfoWidget - минимальный размер по содержимому
+        self.form_info_widget = FormInfoWidget()
+        self.form_info_widget.setSizePolicy(
+            QSizePolicy.Policy.Minimum,
+            QSizePolicy.Policy.Minimum
+        )
+        top_layout.addWidget(self.form_info_widget)
+
+        # PointsWidget - расширяемый по горизонтали
+        self.points_widget = PointsWidget()
+        self.points_widget.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Minimum
+        )
+        top_layout.addWidget(self.points_widget, stretch=2)
+
+        # StepsWidget - максимальный приоритет расширения
+        self.steps_widget = StepsWidget()
+        self.steps_widget.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Minimum
+        )
+        top_layout.addWidget(self.steps_widget, stretch=2)
+
+        # === НИЖНИЙ КОНТЕЙНЕР ===
+        bottom_container = QWidget()
+        bottom_layout = QHBoxLayout(bottom_container)
+        bottom_layout.setSpacing(5)
+        bottom_layout.setContentsMargins(0, 0, 0, 0)
+
+        # ParametersWidget
+        self.parameters_widget = ParametersWidget()
+        self.parameters_widget.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Minimum
+        )
+        bottom_layout.addWidget(self.parameters_widget)
+
+        # Правый контейнер (для PC и HC виджетов)
+        right_container = QWidget()
+        right_layout = QVBoxLayout(right_container)
+        right_layout.setSpacing(5)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+
+        # PCsWidget
+        self.pcs_widget = PCsWidget()
+        self.pcs_widget.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Minimum
+        )
+        right_layout.addWidget(self.pcs_widget)
+
+        # HCsWidget
+        self.hcs_widget = HCsWidget()
+        self.hcs_widget.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Minimum
+        )
+        right_layout.addWidget(self.hcs_widget)
+
+        bottom_layout.addWidget(right_container)
+
+        # Добавляем контейнеры в главный layout
+        main_layout.addWidget(top_container)
+        main_layout.addWidget(bottom_container)
+
+        # Устанавливаем stretch factors
+        main_layout.setStretch(0, 1)  # top_container
+        main_layout.setStretch(1, 1)  # bottom_container
+
+    def refresh(self, form: Form) -> None:
+        """
+        Обновить все виджеты главной формы на основе переданной формы
+
+        Args:
+            form: Объект Form для отображения
+        """
+        # Обновляем виджет основной информации
+        self.form_info_widget.reset_form(form)
+        self.points_widget.reset_points(form.points)
+        self.parameters_widget.reset_parameters(form.parameters)
+        self.hcs_widget.reset_form(form)
+        # Добавьте обновление других виджетов по необходимости
