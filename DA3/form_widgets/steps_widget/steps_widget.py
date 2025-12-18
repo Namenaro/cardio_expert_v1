@@ -105,42 +105,6 @@ class StepsWidget(QTabWidget):
 
 
 
-class StepCard(QWidget):
-    def __init__(self, step: Step, parent=None):
-        super().__init__(parent)
-        self.step = step
-        self.track_cards = []
-        self.setup_ui()
-
-    def setup_ui(self):
-        main_layout = QHBoxLayout(self)
-        self.setLayout(main_layout)
-
-        self.step_info_card = StepInfoCard(self.step)
-        main_layout.addWidget(self.step_info_card, 1)
-
-        right_layout = QVBoxLayout()
-        main_layout.addLayout(right_layout, 2)
-
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_content = QFrame()
-        self.tracks_layout = QVBoxLayout(scroll_content)
-        self.tracks_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        scroll_area.setWidget(scroll_content)
-        right_layout.addWidget(scroll_area)
-
-        for track in self.step.tracks:
-            track_card = TrackCard(track)
-            self.track_cards.append(track_card)
-            self.tracks_layout.addWidget(track_card)
-
-        self.add_track_button = QPushButton("Добавить новый трек")
-        self.add_track_button.clicked.connect(self.on_add_track_clicked)
-        right_layout.addWidget(self.add_track_button, alignment=Qt.AlignmentFlag.AlignBottom)
-
-    def on_add_track_clicked(self):
-        print("Кнопка 'Добавить новый трек' нажата. Реализация пока отсутствует.")
 
 
 

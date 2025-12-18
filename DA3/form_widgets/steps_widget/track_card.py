@@ -2,15 +2,30 @@ from CORE.db_dataclasses import *
 from dataclasses import dataclass, field
 from typing import Optional, List
 from PySide6.QtWidgets import (
-    QFrame, QVBoxLayout, QFormLayout, QLabel, QPushButton, QApplication, QHBoxLayout
+    QFrame, QVBoxLayout, QFormLayout, QLabel, QApplication, QWidget
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QEvent
+from PySide6.QtGui import QMouseEvent
 
 
 class TrackCard(QFrame):
+    # Начальный стиль виджета
+    _DEFAULT_STYLE = """
+            TrackCard {
+                background-color: #f0f0f0;
+                border-radius: 4px;
+                border: 1px solid #dcdcdc;
+            }
+        """
     def __init__(self, track: Track, parent=None):
         super().__init__(parent)
         self.track = track
+        self.setMouseTracking(True)  # Включаем отслеживание мыши
+        self._is_hovered = False  # Флаг наведения курсора
+
+        # Устанавливаем начальный стиль
+        self.setStyleSheet(self._DEFAULT_STYLE)
+
         self.setup_ui()
 
     def setup_ui(self):
@@ -38,28 +53,40 @@ class TrackCard(QFrame):
         self.pss_count_label.setNum(len(self.track.PSs))
         form_layout.addRow("Количество PS:", self.pss_count_label)
 
-        # Горизонтальный макет для кнопок
-        buttons_layout = QHBoxLayout()
+    # Обработчик события наведения курсора
+    def enterEvent(self, event: QEvent):
+        self._is_hovered = True
+        self._update_style()
+        super().enterEvent(event)
 
-        # Кнопка "редактировать"
-        self.edit_button = QPushButton("Редактировать")
-        self.edit_button.clicked.connect(self.on_edit_clicked)
-        buttons_layout.addWidget(self.edit_button)
+    # Обработчик события ухода курсора
+    def leaveEvent(self, event: QEvent):
+        self._is_hovered = False
+        self._update_style()
+        super().leaveEvent(event)
 
-        # Кнопка "удалить трек"
-        self.delete_button = QPushButton("Удалить трек")
-        self.delete_button.clicked.connect(self.on_delete_clicked)
-        buttons_layout.addWidget(self.delete_button)
+    # Обработчик клика по виджету
+    def mousePressEvent(self, event: QMouseEvent):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.on_click()
+        super().mousePressEvent(event)
 
-        layout.addLayout(buttons_layout)
+    # Метод-заглушка для обработки клика
+    def on_click(self):
+        print(f"Виджет TrackCard кликнут. ID трека: {self.track.id}")
 
-    def on_edit_clicked(self):
-        # Заглушка для обработчика нажатия "редактировать"
-        print(f"Кнопка 'Редактировать' нажата для трека ID={self.track.id}. Реализация пока отсутствует.")
-
-    def on_delete_clicked(self):
-        # Заглушка для обработчика нажатия "удалить трек"
-        print(f"Кнопка 'Удалить трек' нажата для трека ID={self.track.id}. Реализация пока отсутствует.")
+    def _update_style(self):
+        if self._is_hovered:
+            self.setStyleSheet("""
+                TrackCard {
+                    background-color: #e0e0e0;
+                    border-radius: 4px;
+                    border: 1px solid #b0b0b0;
+                }
+            """)
+        else:
+            # Используем сохранённый начальный стиль
+            self.setStyleSheet(self._DEFAULT_STYLE)
 
 
 # Mock-тестирование
