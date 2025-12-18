@@ -1,15 +1,13 @@
 import logging
-from typing import Optional
 from CORE.db_dataclasses import *
 from DA3.model import Model
 from DA3.main_form import MainForm
-from DA3.redactors_widgets import PCEditor, HCEditor
 from DA3.start_dialog import select_form_from_dialog
 from DA3 import app_signals
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QMessageBox
 from DA3.redactors_widgets import *
-from DA3.dialog_new_step import AddStepDialog
+from DA3.form_widgets.dialog_new_step import AddStepDialog
 
 
 class Controller(QObject):
