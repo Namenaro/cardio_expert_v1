@@ -1,4 +1,5 @@
 from CORE.db_dataclasses import *
+from DA3 import app_signals
 from dataclasses import dataclass, field
 from typing import Optional, List
 from PySide6.QtWidgets import (
@@ -104,7 +105,7 @@ class StepInfoCard(QFrame):
         print("Кнопка 'Редактировать' нажата. Реализация пока отсутствует.")
 
     def on_delete_clicked(self):
-        print("Кнопка 'Удалить шаг' нажата. Реализация пока отсутствует.")
+        app_signals.db_delete_object.emit(self.step)
 
 
 # Mock-тестирование
