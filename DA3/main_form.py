@@ -58,7 +58,7 @@ class MainForm(QMainWindow):
             QSizePolicy.Policy.Expanding,
             QSizePolicy.Policy.Minimum
         )
-        top_layout.addWidget(self.points_widget, stretch=2)
+        top_layout.addWidget(self.points_widget, stretch=1)
 
         # StepsWidget - максимальный приоритет расширения
         self.steps_widget = StepsWidget()

@@ -21,7 +21,6 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 
 
-
 class StepsWidget(QTabWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -72,10 +71,6 @@ class StepsWidget(QTabWidget):
         """)
         self.btn_add_step.clicked.connect(self.on_add_step_clicked)
         main_layout.addWidget(self.btn_add_step)
-
-
-
-
 
     def reset_steps(self, steps: List[Step]) -> None:
         self._steps = steps
