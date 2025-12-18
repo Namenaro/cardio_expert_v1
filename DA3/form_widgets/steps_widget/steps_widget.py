@@ -12,7 +12,7 @@ from CORE.db_dataclasses import Step, Point
 from DA3.form_widgets.steps_widget.track_card import TrackCard
 from DA3.form_widgets.steps_widget.step_info_card import StepInfoCard
 from CORE.db_dataclasses import *
-
+from DA3 import app_signals
 from typing import List, Optional
 from dataclasses import field
 from PySide6.QtWidgets import (
@@ -34,7 +34,7 @@ class StepsWidget(QTabWidget):
         self.tab_widget = QTabWidget()
         main_layout.addWidget(self.tab_widget, 1)
 
-        button_layout = QHBoxLayout()
+
         self.btn_add_step = QPushButton("Добавить шаг")
         self.btn_add_step.setStyleSheet("""
             QPushButton {
@@ -54,30 +54,11 @@ class StepsWidget(QTabWidget):
             }
         """)
         self.btn_add_step.clicked.connect(self.on_add_step_clicked)
-        button_layout.addWidget(self.btn_add_step)
+        main_layout.addWidget(self.btn_add_step)
 
-        self.btn_remove_step = QPushButton("Удалить шаг")
-        self.btn_remove_step.setStyleSheet("""
-            QPushButton {
-                background-color: #f44336;  /* Красный */
-                color: white;
-                border: none;
-                padding: 8px 16px;
-                text-align: center;
-                text-decoration: none;
-                display: inline-block;
-                font-size: 14px;
-                margin: 4px 2px;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #d32f2f;
-            }
-        """)
-        self.btn_remove_step.clicked.connect(self.on_remove_step_clicked)
-        button_layout.addWidget(self.btn_remove_step)
 
-        main_layout.addLayout(button_layout)
+
+
 
     def reset_steps(self, steps: List[Step]) -> None:
         self._steps = steps
@@ -98,10 +79,9 @@ class StepsWidget(QTabWidget):
             self.tab_widget.addTab(step_card, tab_title)
 
     def on_add_step_clicked(self):
-        print("Кнопка 'Добавить шаг' нажата. Реализация пока отсутствует.")
+        app_signals.request_new_step_dialog.emit()
 
-    def on_remove_step_clicked(self):
-        print("Кнопка 'Удалить шаг' нажата. Реализация пока отсутствует.")
+
 
 
 

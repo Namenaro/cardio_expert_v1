@@ -2,7 +2,7 @@ from CORE.db_dataclasses import *
 from dataclasses import dataclass, field
 from typing import Optional, List
 from PySide6.QtWidgets import (
-    QFrame, QVBoxLayout, QFormLayout, QLabel, QPushButton, QApplication
+    QFrame, QVBoxLayout, QFormLayout, QLabel, QPushButton, QApplication, QHBoxLayout, QWidget
 )
 from PySide6.QtCore import Qt
 
@@ -72,14 +72,39 @@ class StepInfoCard(QFrame):
             self.right_point_name_label.setText(self.step.right_point.name)
         form_layout.addRow("Правая точка:", self.right_point_name_label)
 
+        # Контейнер для кнопок (горизонтальный макет)
+        buttons_layout = QHBoxLayout()
+
         # Кнопка "редактировать"
         self.edit_button = QPushButton("Редактировать")
         self.edit_button.clicked.connect(self.on_edit_clicked)
-        layout.addWidget(self.edit_button, alignment=Qt.AlignmentFlag.AlignRight)
+        buttons_layout.addWidget(self.edit_button)
+
+        # Контейнер для кнопок (горизонтальный макет)
+        buttons_layout = QHBoxLayout()
+
+        # Добавляем растяжимый пробел слева → кнопки «прижмутся» вправо
+        buttons_layout.addStretch()
+
+        # Кнопка "редактировать"
+        self.edit_button = QPushButton("Редактировать")
+        self.edit_button.clicked.connect(self.on_edit_clicked)
+        buttons_layout.addWidget(self.edit_button)
+
+        # Кнопка "удалить шаг"
+        self.delete_button = QPushButton("Удалить шаг")
+        self.delete_button.clicked.connect(self.on_delete_clicked)
+        buttons_layout.addWidget(self.delete_button)
+
+        # Добавляем горизонтальный макет прямо в основной (без контейнера)
+        layout.addLayout(buttons_layout)
+
 
     def on_edit_clicked(self):
-        # Заглушка для обработчика нажатия
-        print("Кнопка 'Редактировать' нажата. Реалиация пока отсутствует.")
+        print("Кнопка 'Редактировать' нажата. Реализация пока отсутствует.")
+
+    def on_delete_clicked(self):
+        print("Кнопка 'Удалить шаг' нажата. Реализация пока отсутствует.")
 
 
 # Mock-тестирование

@@ -15,13 +15,14 @@ class AppSignals(QObject):
     request_main_info_redactor = Signal(Form)
     request_point_redactor = Signal(Point)
     request_parameter_redactor = Signal(Parameter)
-    request_step_redactor = Signal(Step)
     request_track_redactor = Signal(Track)
 
     request_hc_redactor = Signal(BasePazzle)
     request_pc_redactor = Signal(BasePazzle)
     request_sm_redactor = Signal(BasePazzle)
     request_ps_redactor = Signal(BasePazzle)
+
+    request_new_step_dialog = Signal()
 
     # ===================== СИГНАЛЫ ДЕЙСТВИЙ С БАЗОЙ =====================
     # СИГНАЛЫ ОБНОВЛЕНИЯ И УДАЛЕНИЯ

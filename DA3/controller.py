@@ -9,6 +9,7 @@ from DA3 import app_signals
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QMessageBox
 from DA3.redactors_widgets import *
+from DA3.dialog_new_step import AddStepDialog
 
 
 class Controller(QObject):
@@ -38,6 +39,7 @@ class Controller(QObject):
         app_signals.request_parameter_redactor.connect(self._open_parameter_redactor)
         app_signals.request_hc_redactor.connect(self._open_hc_redactor)
         app_signals.request_pc_redactor.connect(self._open_pc_redactor)
+        app_signals.request_new_step_dialog.connect(self._open_step_add_gialog)
 
         # Сигналы добавления объектов ( с обработкой результата)
         app_signals.db_add_form.connect(self._handle_add_form)
@@ -45,6 +47,7 @@ class Controller(QObject):
         app_signals.db_add_parameter.connect(self._handle_add_parameter)
         app_signals.db_add_hc.connect(self._handle_add_hc)
         app_signals.db_add_pc.connect(self._handle_add_pc)
+        app_signals.db_add_step.connect(self._handle_add_step)
 
         # Сигналы обновления объектов
         app_signals.db_update_object.connect(self._handle_update_object)
@@ -61,9 +64,9 @@ class Controller(QObject):
         editor.exec()
 
     @Slot(Step)
-    def _open_step_redactor(self, step: Step) -> None:
-        print(f"Редактирование шага ID: {step.id}")
-
+    def _open_step_add_gialog(self) -> None:
+        dialog = AddStepDialog(parent=self.main_window, points=self.current_form.points)
+        dialog.exec()
 
     @Slot(Form)
     def _open_main_info_redactor(self, form: Form) -> None:
@@ -218,6 +221,21 @@ class Controller(QObject):
             return
 
         success, message = self.model.add_point(point, self.current_form.id)
+
+        if success:
+            self._refresh_form_data(self.current_form.id)
+            self._show_success(message)
+        else:
+            self._show_error(message)
+
+    @Slot(Step)
+    def _handle_add_step(self, step:Step) ->None:
+        """Обработчик добавления шага"""
+        if self.current_form is None or self.current_form.id is None:
+            self._show_error("Нет текущей формы для добавления шага")
+            return
+
+        success, message = self.model.add_step(step, self.current_form.id)
 
         if success:
             self._refresh_form_data(self.current_form.id)
