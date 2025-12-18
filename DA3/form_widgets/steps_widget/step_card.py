@@ -11,7 +11,7 @@ from PySide6.QtCore import Qt
 class StepCard(QWidget):
     def __init__(self, step: Step, parent=None):
         super().__init__(parent)
-        self.step = step
+        self.step:Step = step
         self.track_cards = []
         self.setup_ui()
 
