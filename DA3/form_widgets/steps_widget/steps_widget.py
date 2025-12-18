@@ -34,7 +34,24 @@ class StepsWidget(QTabWidget):
         self.tab_widget = QTabWidget()
         main_layout.addWidget(self.tab_widget, 1)
 
-
+        # Применяем стили
+        self.tab_widget.setStyleSheet("""
+        /* Стиль выбранной вкладки */
+        QTabBar::tab:selected {
+            padding: 8px 16px;
+            background-color: white;
+            color: black;               
+            font-weight: bold;          
+            border: 1px solid #c8c8c8;  
+            border-bottom: none;        /* Убираем нижнюю границу (чтобы не конфликтовала с pane) */
+        }
+        
+        /* Эффект наведения (не выбрана, но курсор над вкладкой) */
+        QTabBar::tab:hover:!selected {
+            background-color: #d0d0d0;
+            border: 1px solid #a8a8a8;
+        }
+            """)
         self.btn_add_step = QPushButton("Добавить шаг")
         self.btn_add_step.setStyleSheet("""
             QPushButton {
@@ -80,11 +97,6 @@ class StepsWidget(QTabWidget):
 
     def on_add_step_clicked(self):
         app_signals.request_new_step_dialog.emit()
-
-
-
-
-
 
 
 
