@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QScrollArea
 )
 from PySide6.QtCore import Qt
+import logging
 
 
 class StepInfoCard(QFrame):
@@ -157,14 +158,14 @@ class StepInfoCard(QFrame):
         main_layout.addLayout(buttons_layout)
 
     def on_edit_clicked(self):
-        print("Кнопка 'Редактировать' нажата. Реализация пока отсутствует.")
-
+        logging.info(f"Запуск редактора основной информации о шаге {self.step.id}")
+        app_signals.request_step_info_redactor.emit(self.step)
 
     def on_delete_clicked(self):
         app_signals.db_delete_object.emit(self.step)
 
 
-# Mock-тестирование (остаётся без изменений)
+# тестирование
 if __name__ == "__main__":
     import sys
 

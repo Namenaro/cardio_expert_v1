@@ -23,6 +23,7 @@ class AppSignals(QObject):
     request_ps_redactor = Signal(BasePazzle)
 
     request_new_step_dialog = Signal()
+    request_step_info_redactor = Signal(Step)
 
     # ===================== СИГНАЛЫ ДЕЙСТВИЙ С БАЗОЙ =====================
     # СИГНАЛЫ ОБНОВЛЕНИЯ И УДАЛЕНИЯ

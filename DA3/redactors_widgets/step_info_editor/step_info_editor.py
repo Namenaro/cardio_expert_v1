@@ -14,10 +14,7 @@ class StepInfoEditor(BaseEditor):
     """Редактор основной информации о шаге"""
 
     def __init__(self, parent: QWidget, step: Step, points: List[Point]):
-        if not points:
-            raise ValueError("Список точек не может быть пустым")
-
-        self._points: List[Point] = points
+        self._points = points
         super().__init__(parent, step)
         self.setWindowTitle("Редактирование параметра")
         self.resize(400, 300)
@@ -35,7 +32,6 @@ class StepInfoEditor(BaseEditor):
         hlayout.addWidget(self.point_combo)
         layout.addLayout(hlayout)
 
-
         # 2. Комментарий
         layout.addWidget(QLabel("Комментарий:"))
         self.comment_edit = QTextEdit()
@@ -45,7 +41,6 @@ class StepInfoEditor(BaseEditor):
         # 3. Левое ограничение
         self.left_limit = LimitWidget(self, self._points, "Ограничение слева")
         layout.addWidget(self.left_limit)
-
 
         # 4. Правое ограничение
         self.right_limit = LimitWidget(self, self._points, "Ограничение справа")
@@ -59,10 +54,24 @@ class StepInfoEditor(BaseEditor):
         for point in self._points:
             combo.addItem(point.name, point)
 
+    def _find_combo_index_and_data_by_id(self, combo: QComboBox, target_id: int) -> tuple[int, Point | None]:
+        """
+        Ищет индекс и данные в комбобоксе по id точки.
+        Возвращает (индекс, точка) или (-1, None), если не найдено.
+        """
+        if target_id is None:
+            return -1, None
+        for i in range(combo.count()):
+            point = combo.itemData(i)
+            if point and point.id == target_id:
+                return i, point
+        return -1, None
+
     def _load_data_to_ui(self) -> None:
-        # 1. Имя точки
-        if self.original_data.target_point:
-            idx = self.point_combo.findData(self.original_data.target_point)
+        # 1. Имя точки (target_point)
+        target_point = self.original_data.target_point
+        if target_point:
+            idx, _ = self._find_combo_index_and_data_by_id(self.point_combo, target_point.id)
             if idx != -1:
                 self.point_combo.setCurrentIndex(idx)
         else:
@@ -71,17 +80,36 @@ class StepInfoEditor(BaseEditor):
         # 2. Комментарий
         self.comment_edit.setText(self.original_data.comment or "")
 
-        # 3. Левое ограничение
-        self.left_limit.set_value(
-            point=self.original_data.left_point,
-            padding=self.original_data.left_padding_t
-        )
+        # 3. Левое ограничение (left_point)
+        left_point = self.original_data.left_point
+        if left_point:
+            idx, found_point = self._find_combo_index_and_data_by_id(
+                self.left_limit.point_combo, left_point.id
+            )
+            if idx != -1:
+                self.left_limit.set_value(point=found_point)  # Используем найденный объект!
+            else:
+                self.left_limit.set_value()  # пустой вариант
+        elif self.original_data.left_padding_t is not None:
+            self.left_limit.set_value(padding=self.original_data.left_padding_t)
+        else:
+            self.left_limit.set_value()
 
-        # 4. Правое ограничение
-        self.right_limit.set_value(
-            point=self.original_data.right_point,
-            padding=self.original_data.right_padding_t
-        )
+        # 4. Правое ограничение (right_point)
+        right_point = self.original_data.right_point
+        if right_point:
+            idx, found_point = self._find_combo_index_and_data_by_id(
+                self.right_limit.point_combo, right_point.id
+            )
+            if idx != -1:
+                self.right_limit.set_value(point=found_point)  # Используем найденный объект!
+            else:
+                self.right_limit.set_value()  # пустой вариант
+        elif self.original_data.right_padding_t is not None:
+            self.right_limit.set_value(padding=self.original_data.right_padding_t)
+        else:
+            self.right_limit.set_value()
+
 
     def _collect_data_from_ui(self) -> Step:
         step_copy = deepcopy(self.original_data)
@@ -107,15 +135,13 @@ class StepInfoEditor(BaseEditor):
     def _validate_data(self) -> bool:
         return self.point_combo.currentData() is not None
 
-    def _emit_add_signal(self, form_data: Form) -> None:
-        app_signals.db_add_form.emit(form_data)
 
-    def _emit_update_signal(self, form_data: Form) -> None:
-        app_signals.db_update_form_main_info.emit(form_data)
+    def _emit_update_signal(self,step: Step) -> None:
+        app_signals.db_update_object.emit(step)
 
 
 
-# Mock-тестирование
+# тестирование
 if __name__ == "__main__":
     import sys
     from PySide6.QtWidgets import QApplication, QWidget
@@ -145,13 +171,7 @@ if __name__ == "__main__":
     # Инициализируем приложение
     app = QApplication(sys.argv)
 
-    # Вариант 1: без родителя (модальное окно)
     editor = StepInfoEditor(parent=None, step=original_step, points=points)
-
-    # Вариант 2: с родителем (если нужно встроить в другой виджет)
-    # parent_widget = QWidget()
-    # editor = StepInfoEditor(parent=parent_widget, step=original_step, points=points)
-    # parent_widget.show()
 
     editor.show()
     sys.exit(app.exec())

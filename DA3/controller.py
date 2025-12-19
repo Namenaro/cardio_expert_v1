@@ -38,6 +38,7 @@ class Controller(QObject):
         app_signals.request_hc_redactor.connect(self._open_hc_redactor)
         app_signals.request_pc_redactor.connect(self._open_pc_redactor)
         app_signals.request_new_step_dialog.connect(self._open_step_add_gialog)
+        app_signals.request_step_info_redactor.connect(self._open_step_info_redactor)
 
         # Сигналы добавления объектов ( с обработкой результата)
         app_signals.db_add_form.connect(self._handle_add_form)
@@ -65,6 +66,13 @@ class Controller(QObject):
     def _open_step_add_gialog(self) -> None:
         dialog = AddStepDialog(parent=self.main_window, points=self.current_form.points)
         dialog.exec()
+
+    @Slot(Step)
+    def _open_step_info_redactor(self, step:Step)->None:
+        editor = StepInfoEditor(parent=self.main_window,
+                                points=self.current_form.points,
+                                step=step)
+        editor.exec()
 
     @Slot(Form)
     def _open_main_info_redactor(self, form: Form) -> None:
