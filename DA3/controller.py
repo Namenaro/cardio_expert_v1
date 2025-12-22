@@ -167,57 +167,32 @@ class Controller(QObject):
             return
 
         success, message = self.model.add_parameter(parameter, self.current_form.id)
-
-        if success:
-            self._refresh_form_data(self.current_form.id)
-            self._show_success(message)
-        else:
-            self._show_error(message)
+        self._handle_db_result(success, message)
 
     @Slot(Form)
     def _handle_update_form_main_info(self, form: Form) -> None:
         """Обработчик обновления основной информации формы"""
         success, message = self.model.update_main_info(form)
-
-        if success:
-            self._refresh_form_data(form.id)
-            self._show_success(message)
-        else:
-            self._show_error(message)
+        self._handle_db_result(success, message)
 
     @Slot(BasePazzle)
     def _handle_add_hc(self, hc:BasePazzle):
         """Обработчик добавления объекта типа HC"""
         success, message = self.model.add_HC(hc, form_id=self.current_form.id)
-        if success:
-            self._refresh_form_data(self.current_form.id)
-            self._show_success(message)
-        else:
-            self._show_error(message)
+        self._handle_db_result( success, message)
 
     @Slot(BasePazzle)
     def _handle_add_pc(self, pc: BasePazzle):
         """Обработчик добавления объекта типа PC"""
         success, message = self.model.add_PC(pc, form_id=self.current_form.id)
-        if success:
-            self._refresh_form_data(self.current_form.id)
-            self._show_success(message)
-        else:
-            self._show_error(message)
+        self._handle_db_result( success, message)
 
     @Slot(Form)
     def _handle_add_form(self, form: Form) -> None:
         """Обработчик добавления новой формы"""
         success, message = self.model.add_form(form)
 
-        if success:
-            # После добавления формы нужно загрузить ее из БД с новым ID
-            # В этом случае form.id уже должен быть установлен сервисом
-            if form.id is not None:
-                self._refresh_form_data(form.id)
-            self._show_success(message)
-        else:
-            self._show_error(message)
+        self._handle_db_result( success, message)
 
     @Slot(Point)
     def _handle_add_point(self, point: Point) -> None:
@@ -228,11 +203,7 @@ class Controller(QObject):
 
         success, message = self.model.add_point(point, self.current_form.id)
 
-        if success:
-            self._refresh_form_data(self.current_form.id)
-            self._show_success(message)
-        else:
-            self._show_error(message)
+        self._handle_db_result( success, message)
 
     @Slot(Step)
     def _handle_add_step(self, step:Step) ->None:
@@ -243,51 +214,23 @@ class Controller(QObject):
 
         success, message = self.model.add_step(step, self.current_form.id)
 
-        if success:
-            self._refresh_form_data(self.current_form.id)
-            self._show_success(message)
-        else:
-            self._show_error(message)
+        self._handle_db_result( success, message)
 
     @Slot(object)
     def _handle_update_object(self, obj) -> None:
         """Обработчик обновления любого объекта"""
         success, message = self.model.update_object(obj)
 
-        if success:
-            # Определяем, какую форму нужно обновить
-            form_id = self._get_form_id_for_object(obj)
-            if form_id:
-                self._refresh_form_data(form_id)
-            self._show_success(message)
-        else:
-            self._show_error(message)
+        self._handle_db_result( success, message)
 
     @Slot(object)
     def _handle_delete_object(self, obj) -> None:
         """Обработчик удаления объекта"""
         success, message = self.model.delete_object(obj)
 
-        if success:
-            # Определяем, какую форму нужно обновить после удаления
-            form_id = self._get_form_id_for_object(obj)
-            if form_id:
-                self._refresh_form_data(form_id)
-            self._show_success(message)
-        else:
-            self._show_error(message)
+        self._handle_db_result( success, message)
 
     # ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
-
-    def _get_form_id_for_object(self, obj) -> Optional[int]:
-        """Получить ID формы, связанной с объектом"""
-        if isinstance(obj, Form):
-            return obj.id
-        elif hasattr(obj, 'form_id') and obj.form_id is not None:
-            return obj.form_id
-        elif self.current_form and self.current_form.id is not None:
-            return self.current_form.id
-        return None
 
     def _refresh_form_data(self, form_id: int) -> None:
         """Загрузить актуальную форму из БД и обновить интерфейс"""
@@ -325,5 +268,15 @@ class Controller(QObject):
             QMessageBox.StandardButton.Ok
         )
         self.logger.error(f"Ошибка: {message}")
+
+
+    def _handle_db_result(self, success, message):
+        if success:
+            self._refresh_form_data(self.current_form.id)
+            self._show_success(message)
+        else:
+            self._show_error(message)
+
+
 
 
