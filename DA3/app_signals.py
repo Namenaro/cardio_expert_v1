@@ -5,7 +5,7 @@ from typing import Optional, Union, NamedTuple
 from CORE.db_dataclasses import *
 
 
-# Вспомогательные типы для явной документации аргументов
+# Вспомогательные типы для явной документации аргументов сигналов
 class AddSMParams(NamedTuple):
     sm: BasePazzle
     track_id: int
@@ -55,11 +55,13 @@ class AppSignals:
         db_add_step = Signal(Step)
 
     class _BasePazzle(_SignalCategory):
+        # Запросы на показ модальных редакторов
         request_hc_redactor = Signal(BasePazzle)
         request_pc_redactor = Signal(BasePazzle)
         request_sm_redactor = Signal(BasePazzle)
         request_ps_redactor = Signal(BasePazzle)
 
+        # Запрос на добавление в базу нового пазла
         db_add_hc = Signal(BasePazzle)
         db_add_pc = Signal(BasePazzle)
         db_add_sm = Signal(AddSMParams)
