@@ -1,7 +1,5 @@
 from PySide6.QtCore import QObject, Signal
-
 from typing import Optional, Union, NamedTuple
-
 from CORE.db_dataclasses import *
 
 
@@ -12,14 +10,13 @@ class AddSMParams(NamedTuple):
     num_in_track: int
 
 class AddPSParams(NamedTuple):
-    sm: BasePazzle
+    ps: BasePazzle
     track_id: int
     num_in_track: int
 
 class AddTrackParams(NamedTuple):
     track: Track
     step_id: int
-
 
 
 class _SignalCategory(QObject):
