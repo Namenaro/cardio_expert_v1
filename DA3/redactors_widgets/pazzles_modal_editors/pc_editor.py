@@ -189,11 +189,11 @@ class PCEditor(BaseEditor):
 
     def _emit_add_signal(self, data: BasePazzle) -> None:
         """Испускание сигнала добавления нового объекта"""
-        app_signals.db_add_pc.emit(data)
+        app_signals.base_pazzle.db_add_pc.emit(data)
 
     def _emit_update_signal(self, data: BasePazzle) -> None:
         """Испускание сигнала обновления существующего HC объекта"""
-        app_signals.db_update_object.emit(data)
+        app_signals.db_actions.db_update_object.emit(data)
 
     def _on_class_selected(self, selected_class: BaseClass):
         """Обработчик выбора класса"""

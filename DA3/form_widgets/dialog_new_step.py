@@ -92,7 +92,7 @@ class AddStepDialog(QDialog):
         )
 
         # Эмитируем сигнал и закрываем диалог
-        app_signals.db_add_step.emit(self._step)
+        app_signals.step.db_add_step.emit(self._step)
         self.accept()
 
 

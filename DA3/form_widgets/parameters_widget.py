@@ -129,7 +129,7 @@ class ParametersWidget(QWidget):
     @Slot(Parameter)
     def on_edit_parameter_clicked(self, parameter: Parameter) -> None:
         """Обработчик нажатия кнопки редактирования параметра"""
-        app_signals.request_parameter_redactor.emit(parameter)
+        app_signals.parameter.request_parameter_redactor.emit(parameter)
 
     @Slot(Parameter)
     def on_delete_parameter_clicked(self, parameter: Parameter) -> None:
@@ -148,11 +148,11 @@ class ParametersWidget(QWidget):
 
         if reply == QMessageBox.StandardButton.Yes:
             # Испускаем сигнал с объектом Parameter
-            app_signals.db_delete_object.emit(parameter)
+            app_signals.db_actions.db_delete_object.emit(parameter)
 
     @Slot()
     def on_add_parameter_clicked(self) -> None:
         """Обработчик нажатия кнопки добавления нового параметра"""
         # Создаем новый параметр и отправляем в редактор
         new_parameter = Parameter()
-        app_signals.request_parameter_redactor.emit(new_parameter)
+        app_signals.parameter.request_parameter_redactor.emit(new_parameter)

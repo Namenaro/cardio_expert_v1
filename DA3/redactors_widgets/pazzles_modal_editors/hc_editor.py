@@ -151,8 +151,8 @@ class HCEditor(BaseEditor):
 
     def _emit_add_signal(self, data: BasePazzle) -> None:
         """Испускание сигнала добавления нового HC объекта"""
-        app_signals.db_add_hc.emit(data)
+        app_signals.base_pazzle.db_add_hc.emit(data)
 
     def _emit_update_signal(self, data: BasePazzle) -> None:
         """Испускание сигнала обновления существующего HC объекта"""
-        app_signals.db_update_object.emit(data)
+        app_signals.db_actions.db_update_object.emit(data)

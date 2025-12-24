@@ -91,7 +91,7 @@ class StepsWidget(QTabWidget):
             self.tab_widget.addTab(step_card, tab_title)
 
     def on_add_step_clicked(self):
-        app_signals.request_new_step_dialog.emit()
+        app_signals.step.request_new_step_dialog.emit()
 
 
 

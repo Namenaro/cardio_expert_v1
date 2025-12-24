@@ -202,4 +202,4 @@ class FormInfoWidget(QWidget):
     @Slot()
     def on_edit_clicked(self) -> None:
         if self._form is not None:
-            app_signals.request_main_info_redactor.emit(self._form)
+            app_signals.form.request_main_info_redactor.emit(self._form)

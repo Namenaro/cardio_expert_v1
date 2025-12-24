@@ -72,7 +72,7 @@ class PCCard(QFrame):
 
     def on_edit_clicked(self):
         """Обработчик нажатия кнопки редактирования"""
-        app_signals.request_pc_redactor.emit(self.pc)
+        app_signals.base_pazzle.request_pc_redactor.emit(self.pc)
 
     def on_delete_clicked(self):
         """Обработчик нажатия кнопки удаления"""
@@ -88,7 +88,7 @@ class PCCard(QFrame):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            app_signals.db_delete_object.emit(self.pc)
+            app_signals.db_actions.db_delete_object.emit(self.pc)
 
 
 

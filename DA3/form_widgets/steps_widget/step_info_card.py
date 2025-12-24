@@ -159,10 +159,10 @@ class StepInfoCard(QFrame):
 
     def on_edit_clicked(self):
         logging.info(f"Запуск редактора основной информации о шаге {self.step.id}")
-        app_signals.request_step_info_redactor.emit(self.step)
+        app_signals.step.request_step_info_redactor.emit(self.step)
 
     def on_delete_clicked(self):
-        app_signals.db_delete_object.emit(self.step)
+        app_signals.db_actions.db_delete_object.emit(self.step)
 
 
 # тестирование

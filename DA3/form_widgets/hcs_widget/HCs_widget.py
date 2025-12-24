@@ -92,7 +92,7 @@ class HCsWidget(QWidget):
         hc = BasePazzle()
 
         # Испускаем сигнал с пустым объектом
-        app_signals.request_hc_redactor.emit(hc)
+        app_signals.base_pazzle.request_hc_redactor.emit(hc)
 
     def reset_form(self, form: Form) -> None:
         """Установить новую форму"""

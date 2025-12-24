@@ -107,7 +107,7 @@ class HCCard(QFrame):
 
     def on_edit_clicked(self):
         """Обработчик нажатия кнопки редактирования"""
-        app_signals.request_hc_redactor.emit(self.hc)
+        app_signals.base_pazzle.request_hc_redactor.emit(self.hc)
 
     def on_delete_clicked(self):
         """Обработчик нажатия кнопки удаления"""
@@ -123,4 +123,4 @@ class HCCard(QFrame):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            app_signals.db_delete_object.emit(self.hc)
+            app_signals.db_actions.db_delete_object.emit(self.hc)

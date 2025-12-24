@@ -137,7 +137,7 @@ class StepInfoEditor(BaseEditor):
 
 
     def _emit_update_signal(self,step: Step) -> None:
-        app_signals.db_update_object.emit(step)
+        app_signals.db_actions.db_update_object.emit(step)
 
 
 

@@ -106,7 +106,7 @@ class PointsWidget(QWidget):
     @Slot(Point)
     def on_edit_point_clicked(self, point: Point) -> None:
         """Обработчик нажатия кнопки редактирования точки"""
-        app_signals.request_point_redactor.emit(point)
+        app_signals.point.request_point_redactor.emit(point)
 
     @Slot(Point)
     def on_delete_point_clicked(self, point: Point) -> None:
@@ -125,11 +125,11 @@ class PointsWidget(QWidget):
 
         if reply == QMessageBox.StandardButton.Yes:
             # Испускаем сигнал с объектом Point
-            app_signals.db_delete_object.emit(point)
+            app_signals.db_actions.db_delete_object.emit(point)
 
     @Slot(Point)
     def on_add_point_clicked(self) -> None:
         """Обработчик нажатия кнопки добавления новой точки"""
         # Создаем новую точку и отправляем в редактор
         new_point = Point()
-        app_signals.request_point_redactor.emit(new_point)
+        app_signals.point.request_point_redactor.emit(new_point)

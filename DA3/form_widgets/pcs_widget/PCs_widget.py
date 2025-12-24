@@ -93,7 +93,7 @@ class PCsWidget(QWidget):
         pc = BasePazzle()
 
         # Испускаем сигнал с пустым объектом
-        app_signals.request_pc_redactor.emit(pc)
+        app_signals.base_pazzle.request_pc_redactor.emit(pc)
 
 
     def reset_form(self, form: Form) -> None:
