@@ -148,7 +148,7 @@ class ParametersWidget(QWidget):
 
         if reply == QMessageBox.StandardButton.Yes:
             # Испускаем сигнал с объектом Parameter
-            app_signals.db_actions.db_delete_object.emit(parameter)
+            app_signals.parameter.db_delete_parameter.emit(parameter)
 
     @Slot()
     def on_add_parameter_clicked(self) -> None:

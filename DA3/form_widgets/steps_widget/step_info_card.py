@@ -162,7 +162,7 @@ class StepInfoCard(QFrame):
         app_signals.step.request_step_info_redactor.emit(self.step)
 
     def on_delete_clicked(self):
-        app_signals.db_actions.db_delete_object.emit(self.step)
+        app_signals.step.db_delete_step.emit(self.step)
 
 
 # тестирование

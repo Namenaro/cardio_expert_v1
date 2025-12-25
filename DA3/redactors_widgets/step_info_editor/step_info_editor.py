@@ -135,9 +135,8 @@ class StepInfoEditor(BaseEditor):
     def _validate_data(self) -> bool:
         return self.point_combo.currentData() is not None
 
-
-    def _emit_update_signal(self,step: Step) -> None:
-        app_signals.db_actions.db_update_object.emit(step)
+    def _emit_update_signal(self, step: Step) -> None:
+        app_signals.step.db_update_step.emit(step)
 
 
 

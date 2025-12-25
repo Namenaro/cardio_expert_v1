@@ -49,11 +49,17 @@ class Controller(QObject):
         app_signals.step.db_add_step.connect(self._handle_add_step)
 
         # Сигналы обновления объектов
-        app_signals.db_actions.db_update_object.connect(self._handle_update_object)
+        app_signals.point.db_opdate_point.connect(self._handle_update_object)
+        app_signals.parameter.db_update_parameter.connect(self._handle_update_object)
+        app_signals.step.db_update_step.connect(self._handle_update_object)
         app_signals.form.db_update_form_main_info.connect(self._handle_update_form_main_info)
+        app_signals.base_pazzle.db_update_pazzle.connect(self._handle_update_object)
 
         # Сигналы удаления объектов
-        app_signals.db_actions.db_delete_object.connect(self._handle_delete_object)
+        app_signals.point.db_delete_point.connect(self._handle_delete_object)
+        app_signals.parameter.db_delete_parameter.connect(self._handle_delete_object)
+        app_signals.step.db_delete_step.connect(self._handle_delete_object)
+        app_signals.base_pazzle.db_delete_pazzle.connect(self._handle_delete_object)
 
     # ==================== ОТКРЫТИЕ РЕДАКТОРОВ ====================
 

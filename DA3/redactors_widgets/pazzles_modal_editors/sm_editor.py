@@ -123,11 +123,11 @@ class SMEditor(BaseEditor):
 
     def _emit_add_signal(self, data: BasePazzle) -> None:
         """Испускание сигнала добавления нового объекта"""
-        app_signals.db_add_sm.emit(data) #TODO не к контроллеру!
+        app_signals.base_pazzle.db_add_sm.emit(data) #TODO не его а объект с номером
 
     def _emit_update_signal(self, data: BasePazzle) -> None:
         """Испускание сигнала обновления существующего объекта"""
-        app_signals.db_update_object.emit(data)  #TODO не к контроллеру!
+        app_signals.base_pazzle.db_update_pazzle.emit(data)   #TODO не его а объект с номером
 
 # тестирование
 if __name__ == "__main__":

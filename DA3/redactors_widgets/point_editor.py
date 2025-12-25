@@ -87,4 +87,4 @@ class PointEditor(BaseEditor):
 
     def _emit_update_signal(self, point_data: Point) -> None:
         """Испускание сигнала обновления точки"""
-        app_signals.db_actions.db_update_object.emit(point_data)
+        app_signals.point.db_opdate_point.emit(point_data)

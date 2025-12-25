@@ -88,7 +88,7 @@ class PCCard(QFrame):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            app_signals.db_actions.db_delete_object.emit(self.pc)
+            app_signals.base_pazzle.db_delete_pazzle.emit(self.pc)
 
 
 

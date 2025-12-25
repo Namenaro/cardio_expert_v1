@@ -125,7 +125,7 @@ class PointsWidget(QWidget):
 
         if reply == QMessageBox.StandardButton.Yes:
             # Испускаем сигнал с объектом Point
-            app_signals.db_actions.db_delete_object.emit(point)
+            app_signals.point.db_delete_point.emit(point)
 
     @Slot(Point)
     def on_add_point_clicked(self) -> None:
