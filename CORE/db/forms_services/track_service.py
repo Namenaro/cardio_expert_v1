@@ -126,7 +126,6 @@ class TrackService:
         # Сортируем по порядковому номеру
         track.SMs.sort(key=lambda x: next((num for obj, num in track_objects if obj.id == x.id), 0))
 
-
         return track
 
     def update_track(self, conn, track: Track) -> Track:

@@ -31,35 +31,34 @@ class Controller(QObject):
         self._init_signals()
 
     def _init_signals(self):
-        # Сигналы открытия редакторов
+
         app_signals.form.request_main_info_redactor.connect(self._open_main_info_redactor)
+        app_signals.form.db_add_form.connect(self._handle_add_form)
+        app_signals.form.db_update_form_main_info.connect(self._handle_update_form_main_info)
+
         app_signals.point.request_point_redactor.connect(self._open_point_redactor)
+        app_signals.point.db_add_point.connect(self._handle_add_point)
+        app_signals.point.db_opdate_point.connect(self._handle_update_object)
+        app_signals.point.db_delete_point.connect(self._handle_delete_object)
+
         app_signals.parameter.request_parameter_redactor.connect(self._open_parameter_redactor)
+        app_signals.parameter.db_add_parameter.connect(self._handle_add_parameter)
+        app_signals.parameter.db_update_parameter.connect(self._handle_update_object)
+        app_signals.parameter.db_delete_parameter.connect(self._handle_delete_object)
+
         app_signals.base_pazzle.request_hc_redactor.connect(self._open_hc_redactor)
         app_signals.base_pazzle.request_pc_redactor.connect(self._open_pc_redactor)
-        app_signals.step.request_new_step_dialog.connect(self._open_step_add_gialog)
-        app_signals.step.request_step_info_redactor.connect(self._open_step_info_redactor)
-
-        # Сигналы добавления объектов (с обработкой результата)
-        app_signals.form.db_add_form.connect(self._handle_add_form)
-        app_signals.point.db_add_point.connect(self._handle_add_point)
-        app_signals.parameter.db_add_parameter.connect(self._handle_add_parameter)
         app_signals.base_pazzle.db_add_hc.connect(self._handle_add_hc)
         app_signals.base_pazzle.db_add_pc.connect(self._handle_add_pc)
-        app_signals.step.db_add_step.connect(self._handle_add_step)
-
-        # Сигналы обновления объектов
-        app_signals.point.db_opdate_point.connect(self._handle_update_object)
-        app_signals.parameter.db_update_parameter.connect(self._handle_update_object)
-        app_signals.step.db_update_step.connect(self._handle_update_object)
-        app_signals.form.db_update_form_main_info.connect(self._handle_update_form_main_info)
         app_signals.base_pazzle.db_update_pazzle.connect(self._handle_update_object)
-
-        # Сигналы удаления объектов
-        app_signals.point.db_delete_point.connect(self._handle_delete_object)
-        app_signals.parameter.db_delete_parameter.connect(self._handle_delete_object)
-        app_signals.step.db_delete_step.connect(self._handle_delete_object)
         app_signals.base_pazzle.db_delete_pazzle.connect(self._handle_delete_object)
+
+        app_signals.step.request_new_step_dialog.connect(self._open_step_add_gialog)
+        app_signals.step.request_step_info_redactor.connect(self._open_step_info_redactor)
+        app_signals.step.db_add_step.connect(self._handle_add_step)
+        app_signals.step.db_update_step.connect(self._handle_update_object)
+        app_signals.step.db_delete_step.connect(self._handle_delete_object)
+
 
     # ==================== ОТКРЫТИЕ РЕДАКТОРОВ ====================
 
