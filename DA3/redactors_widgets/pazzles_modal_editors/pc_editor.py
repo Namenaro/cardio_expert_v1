@@ -193,7 +193,7 @@ class PCEditor(BaseEditor):
 
     def _emit_update_signal(self, data: BasePazzle) -> None:
         """Испускание сигнала обновления существующего HC объекта"""
-        app_signals.db_actions.db_update_object.emit(data)
+        app_signals.base_pazzle.db_update_pazzle.emit(data)
 
     def _on_class_selected(self, selected_class: BaseClass):
         """Обработчик выбора класса"""

@@ -77,10 +77,6 @@ class AppSignals:
 
 
 
-    class _DBActions(_SignalCategory):
-        db_delete_object = Signal(object)
-        db_update_object = Signal(object)
-
     # Экземпляры категорий
     form = _Form()
     point = _Point()
@@ -88,4 +84,3 @@ class AppSignals:
     track = _Track()
     step = _Step()
     base_pazzle = _BasePazzle()
-    db_actions = _DBActions()
