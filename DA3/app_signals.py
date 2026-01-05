@@ -75,8 +75,6 @@ class AppSignals:
         db_delete_pazzle = Signal(BasePazzle)
         db_update_pazzle = Signal(BasePazzle)
 
-
-
     # Экземпляры категорий
     form = _Form()
     point = _Point()

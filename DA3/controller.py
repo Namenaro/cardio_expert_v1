@@ -1,19 +1,22 @@
 import logging
+from typing import Optional
 from CORE.db_dataclasses import *
 from DA3.model import Model
 from DA3.main_form import MainForm
 from DA3.start_dialog import select_form_from_dialog
-from DA3 import app_signals
-from PySide6.QtCore import QObject, Slot
+from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QMessageBox
-from DA3.redactors_widgets import *
-from DA3.form_widgets.dialog_new_step import AddStepDialog
+
+from DA3.specialized_controllers import *
+
+# Импортируем app_signals для типизации
+import DA3.app_signals as app_signals
 
 
 class Controller(QObject):
     def __init__(self, model: Model, main_window: MainForm):
         """
-        Контроллер, связывающий модель и представление
+        Главный контроллер, координирующий работу специализированных контроллеров
 
         Args:
             model: Модель данных
@@ -27,89 +30,98 @@ class Controller(QObject):
         self.main_window = main_window
         self.current_form: Optional[Form] = None
 
-        # Инициализируем сигналы
-        self._init_signals()
+        # Инициализируем специализированные контроллеры
+        self._init_specialized_controllers()
 
-    def _init_signals(self):
+        # Инициализируем сигналы в контроллерах
+        self._init_controller_signals()
 
-        app_signals.form.request_main_info_redactor.connect(self._open_main_info_redactor)
-        app_signals.form.db_add_form.connect(self._handle_add_form)
-        app_signals.form.db_update_form_main_info.connect(self._handle_update_form_main_info)
+    def _init_specialized_controllers(self):
+        """Инициализация всех специализированных контроллеров"""
+        # Создаем контроллеры, передавая себя в качестве родителя
+        self.form_controller = FormController(self)
+        self.point_controller = PointController(self)
+        self.parameter_controller = ParameterController(self)
+        self.pazzle_controller = PazzleController(self)
+        self.step_controller = StepController(self)
 
-        app_signals.point.request_point_redactor.connect(self._open_point_redactor)
-        app_signals.point.db_add_point.connect(self._handle_add_point)
-        app_signals.point.db_opdate_point.connect(self._handle_update_object)
-        app_signals.point.db_delete_point.connect(self._handle_delete_object)
+        # Объединяем контроллеры для удобного доступа
+        self.controllers = {
+            'form': self.form_controller,
+            'point': self.point_controller,
+            'parameter': self.parameter_controller,
+            'pazzle': self.pazzle_controller,
+            'step': self.step_controller
+        }
 
-        app_signals.parameter.request_parameter_redactor.connect(self._open_parameter_redactor)
-        app_signals.parameter.db_add_parameter.connect(self._handle_add_parameter)
-        app_signals.parameter.db_update_parameter.connect(self._handle_update_object)
-        app_signals.parameter.db_delete_parameter.connect(self._handle_delete_object)
-
-        app_signals.base_pazzle.request_hc_redactor.connect(self._open_hc_redactor)
-        app_signals.base_pazzle.request_pc_redactor.connect(self._open_pc_redactor)
-        app_signals.base_pazzle.db_add_hc.connect(self._handle_add_hc)
-        app_signals.base_pazzle.db_add_pc.connect(self._handle_add_pc)
-        app_signals.base_pazzle.db_update_pazzle.connect(self._handle_update_object)
-        app_signals.base_pazzle.db_delete_pazzle.connect(self._handle_delete_object)
-
-        app_signals.step.request_new_step_dialog.connect(self._open_step_add_gialog)
-        app_signals.step.request_step_info_redactor.connect(self._open_step_info_redactor)
-        app_signals.step.db_add_step.connect(self._handle_add_step)
-        app_signals.step.db_update_step.connect(self._handle_update_object)
-        app_signals.step.db_delete_step.connect(self._handle_delete_object)
-
-
-    # ==================== ОТКРЫТИЕ РЕДАКТОРОВ ====================
-
-    @Slot(Parameter)
-    def _open_parameter_redactor(self, parameter: Parameter) -> None:
-        editor = ParameterEditor(self.main_window, parameter)
-        editor.exec()
-
-    @Slot(Step)
-    def _open_step_add_gialog(self) -> None:
-        dialog = AddStepDialog(parent=self.main_window, points=self.current_form.points)
-        dialog.exec()
-
-    @Slot(Step)
-    def _open_step_info_redactor(self, step:Step)->None:
-        editor = StepInfoEditor(parent=self.main_window,
-                                points=self.current_form.points,
-                                step=step)
-        editor.exec()
-
-    @Slot(Form)
-    def _open_main_info_redactor(self, form: Form) -> None:
+    def _init_controller_signals(self):
         """
-        Открытие редактора основной информации формы
-
-        Args:
-            form: объект Form для редактирования
+        Явная инициализация сигналов в специализированных контроллерах.
+        Здесь четко видно, какие группы сигналов передаются каждому контроллеру.
         """
-        editor = FormEditor(self.main_window, form)
-        editor.exec()
 
-    @Slot(Point)
-    def _open_point_redactor(self, point: Point) -> None:
-        """
-        Открытие редактора точки
+        # Форма: передаем app_signals.form (объект класса AppSignals._Form)
+        self.form_controller.init_signals(app_signals.form)
 
-        Args:
-            point: объект Point для редактирования
-        """
-        editor = PointEditor(self.main_window, point)
-        editor.exec()
+        # Точки: передаем app_signals.point (объект класса AppSignals._Point)
+        self.point_controller.init_signals(app_signals.point)
 
-    def _open_hc_redactor(self, hc:BasePazzle):
-        classes_refs = self.model.get_HCs_classes()
-        editor = HCEditor(self.main_window, form=self.current_form, hc=hc, classes_refs=classes_refs)
-        editor.exec()
+        # Параметры: передаем app_signals.parameter (объект класса AppSignals._Parameter)
+        self.parameter_controller.init_signals(app_signals.parameter)
 
-    def _open_pc_redactor(self, pc:BasePazzle):
-        classes_refs = self.model.get_PCs_classes()
-        editor = PCEditor(self.main_window, form=self.current_form, pc=pc, classes_refs=classes_refs)
-        editor.exec()
+        # Головоломки: передаем app_signals.base_pazzle (объект класса AppSignals._BasePazzle)
+        self.pazzle_controller.init_signals(app_signals.base_pazzle)
+
+        # Шаги: передаем app_signals.step (объект класса AppSignals._Step)
+        self.step_controller.init_signals(app_signals.step)
+
+        # Примечание: Сигналы треков (track) остаются нераспределенными
+        # TODO: Создать TrackController и добавить его инициализацию здесь
+
+        self.logger.info("Сигналы инициализированы в специализированных контроллерах")
+
+    # ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
+
+    def _refresh_form_data(self, form_id: int) -> None:
+        """Загрузить актуальную форму из БД и обновить интерфейс"""
+        try:
+            updated_form = self.model.get_form_by_id(form_id)
+
+            if updated_form:
+                self.current_form = updated_form
+                self.main_window.refresh(updated_form)
+                self.logger.info(f"Форма ID:{form_id} обновлена в интерфейсе")
+            else:
+                self._show_error(f"Не удалось загрузить форму ID:{form_id} из базы данных")
+
+        except Exception as e:
+            error_msg = f"Ошибка при обновлении формы: {str(e)}"
+            self.logger.error(error_msg)
+            self._show_error(error_msg)
+
+    def _show_success(self, message: str) -> None:
+        """Показать сообщение об успехе"""
+        QMessageBox.information(
+            self.main_window,
+            "Успешно",
+            message,
+            QMessageBox.StandardButton.Ok
+        )
+        self.logger.info(f"Успех: {message}")
+
+    def _show_error(self, message: str) -> None:
+        """Показать сообщение об ошибке"""
+        QMessageBox.critical(
+            self.main_window,
+            "Ошибка",
+            message,
+            QMessageBox.StandardButton.Ok
+        )
+        self.logger.error(f"Ошибка: {message}")
+
+    def refresh_form_data(self, form_id: int) -> None:
+        """Обновить данные формы (публичный метод для доступа из специализированных контроллеров)"""
+        self._refresh_form_data(form_id)
 
     # ==================== ИНИЦИАЛИЗАЦИЯ ФОРМЫ ====================
 
@@ -163,125 +175,16 @@ class Controller(QObject):
             self.logger.exception(f"Ошибка при инициализации формы: {e}")
             return False
 
-    # ==================== ОБРАБОТЧИКИ ОПЕРАЦИЙ С БАЗОЙ ====================
-    @Slot(Parameter)
-    def _handle_add_parameter(self, parameter: Parameter) -> None:
-        """Обработчик добавления параметра"""
-        if self.current_form is None or self.current_form.id is None:
-            self._show_error("Нет текущей формы для добавления параметра")
-            return
+    # ==================== ПУБЛИЧНЫЕ МЕТОДЫ ====================
 
-        success, message = self.model.add_parameter(parameter, self.current_form.id)
-        self._handle_db_result(success, message)
+    def get_controller(self, controller_type: str):
+        """
+        Получить специализированный контроллер по типу
 
-    @Slot(Form)
-    def _handle_update_form_main_info(self, form: Form) -> None:
-        """Обработчик обновления основной информации формы"""
-        success, message = self.model.update_main_info(form)
-        self._handle_db_result(success, message)
+        Args:
+            controller_type: тип контроллера ('form', 'point', 'parameter', 'pazzle', 'step')
 
-    @Slot(BasePazzle)
-    def _handle_add_hc(self, hc:BasePazzle):
-        """Обработчик добавления объекта типа HC"""
-        success, message = self.model.add_HC(hc, form_id=self.current_form.id)
-        self._handle_db_result( success, message)
-
-    @Slot(BasePazzle)
-    def _handle_add_pc(self, pc: BasePazzle):
-        """Обработчик добавления объекта типа PC"""
-        success, message = self.model.add_PC(pc, form_id=self.current_form.id)
-        self._handle_db_result( success, message)
-
-    @Slot(Form)
-    def _handle_add_form(self, form: Form) -> None:
-        """Обработчик добавления новой формы"""
-        success, message = self.model.add_form(form)
-
-        self._handle_db_result( success, message)
-
-    @Slot(Point)
-    def _handle_add_point(self, point: Point) -> None:
-        """Обработчик добавления точки"""
-        if self.current_form is None or self.current_form.id is None:
-            self._show_error("Нет текущей формы для добавления точки")
-            return
-
-        success, message = self.model.add_point(point, self.current_form.id)
-
-        self._handle_db_result( success, message)
-
-    @Slot(Step)
-    def _handle_add_step(self, step:Step) ->None:
-        """Обработчик добавления шага"""
-        if self.current_form is None or self.current_form.id is None:
-            self._show_error("Нет текущей формы для добавления шага")
-            return
-
-        success, message = self.model.add_step(step, self.current_form.id)
-
-        self._handle_db_result( success, message)
-
-    @Slot(object)
-    def _handle_update_object(self, obj) -> None:
-        """Обработчик обновления любого объекта"""
-        success, message = self.model.update_object(obj)
-
-        self._handle_db_result( success, message)
-
-    @Slot(object)
-    def _handle_delete_object(self, obj) -> None:
-        """Обработчик удаления объекта"""
-        success, message = self.model.delete_object(obj)
-
-        self._handle_db_result( success, message)
-
-    # ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
-
-    def _refresh_form_data(self, form_id: int) -> None:
-        """Загрузить актуальную форму из БД и обновить интерфейс"""
-        try:
-            updated_form = self.model.get_form_by_id(form_id)
-
-            if updated_form:
-                self.current_form = updated_form
-                self.main_window.refresh(updated_form)
-                self.logger.info(f"Форма ID:{form_id} обновлена в интерфейсе")
-            else:
-                self._show_error(f"Не удалось загрузить форму ID:{form_id} из базы данных")
-
-        except Exception as e:
-            error_msg = f"Ошибка при обновлении формы: {str(e)}"
-            self.logger.error(error_msg)
-            self._show_error(error_msg)
-
-    def _show_success(self, message: str) -> None:
-        """Показать сообщение об успехе"""
-        QMessageBox.information(
-            self.main_window,
-            "Успешно",
-            message,
-            QMessageBox.StandardButton.Ok
-        )
-        self.logger.info(f"Успех: {message}")
-
-    def _show_error(self, message: str) -> None:
-        """Показать сообщение об ошибке"""
-        QMessageBox.critical(
-            self.main_window,
-            "Ошибка",
-            message,
-            QMessageBox.StandardButton.Ok
-        )
-        self.logger.error(f"Ошибка: {message}")
-
-
-    def _handle_db_result(self, success, message):
-        if success:
-            self._refresh_form_data(self.current_form.id)
-            self._show_success(message)
-        else:
-            self._show_error(message)
-
-
-
-
+        Returns:
+            Специализированный контроллер или None
+        """
+        return self.controllers.get(controller_type)
