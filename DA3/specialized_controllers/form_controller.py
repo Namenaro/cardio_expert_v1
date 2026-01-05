@@ -2,15 +2,11 @@
 Контроллер для управления формами
 """
 from PySide6.QtCore import Slot
-from typing import TYPE_CHECKING
 
 from DA3.redactors_widgets import FormEditor
 from CORE.db_dataclasses import Form
-from .base_controller import BaseController
-
-# Импортируем для типизации
-if TYPE_CHECKING:
-    from DA3.app_signals import AppSignals
+from DA3.specialized_controllers.base_controller import BaseController
+from DA3.app_signals import AppSignals
 
 
 class FormController(BaseController):
@@ -19,7 +15,7 @@ class FormController(BaseController):
     def __init__(self, parent):
         super().__init__(parent)
 
-    def init_signals(self, form_signals: 'AppSignals._Form'):
+    def init_signals(self, form_signals: AppSignals._Form):
         """
         Инициализация сигналов для работы с формами
 

@@ -2,14 +2,13 @@
 Контроллер для управления параметрами
 """
 from PySide6.QtCore import Slot
-from typing import TYPE_CHECKING
+
 
 from DA3.redactors_widgets import ParameterEditor
 from CORE.db_dataclasses import Parameter
 from DA3.specialized_controllers.base_controller import BaseController
 
-if TYPE_CHECKING:
-    from DA3.app_signals import AppSignals
+from DA3.app_signals import AppSignals
 
 
 class ParameterController(BaseController):
@@ -18,7 +17,7 @@ class ParameterController(BaseController):
     def __init__(self, parent):
         super().__init__(parent)
 
-    def init_signals(self, parameter_signals: 'AppSignals._Parameter'):
+    def init_signals(self, parameter_signals: AppSignals._Parameter):
         """
         Инициализация сигналов для работы с параметрами
 

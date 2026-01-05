@@ -4,13 +4,15 @@
 from .form_controller import FormController
 from .point_controller import PointController
 from .parameter_controller import ParameterController
-from .pazzle_controller import PazzleController
+from .PC_HC_controller import PC_HC_Controller
 from .step_controller import StepController
+from .track_controller import TrackController
 
 __all__ = [
     'FormController',
     'PointController',
     'ParameterController',
-    'PazzleController',
-    'StepController'
+    'PC_HC_Controller',
+    'StepController',
+    'TrackController'
 ]

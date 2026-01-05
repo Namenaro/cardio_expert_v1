@@ -1,12 +1,14 @@
 """
 Базовый класс для всех специализированных контроллеров
 """
+
 import logging
 from typing import Optional
 from PySide6.QtCore import QObject, Slot
 
 from CORE.db_dataclasses import Form
 
+from DA3.model import Model
 
 class BaseController(QObject):
     """Базовый контроллер с общими методами"""
@@ -25,7 +27,7 @@ class BaseController(QObject):
         """
         raise NotImplementedError("Метод init_signals должен быть реализован в дочернем классе")
 
-    def get_model(self):
+    def get_model(self)->Model:
         """Получить модель из родительского контроллера"""
         return self.parent_controller.model if hasattr(self.parent_controller, 'model') else None
 

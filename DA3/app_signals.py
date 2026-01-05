@@ -6,18 +6,29 @@ from CORE.db_dataclasses import *
 # Вспомогательные типы для явной документации аргументов сигналов
 class AddSMParams(NamedTuple):
     sm: BasePazzle
-    track_id: int
+    track_id: Optional[int]
     num_in_track: int
+    step_id: int
 
 class AddPSParams(NamedTuple):
     ps: BasePazzle
-    track_id: int
+    track_id: Optional[int]
     num_in_track: int
+    step_id: int
 
 class AddTrackParams(NamedTuple):
     track: Track
     step_id: int
 
+class ParamsInitTrackEditor(NamedTuple):
+    track:Track
+    step_id: int
+
+
+class TrackDbResult(NamedTuple):
+    track: Track
+    success: bool
+    message: str
 
 class _SignalCategory(QObject):
     """Базовый класс для категорий сигналов."""
@@ -47,10 +58,13 @@ class AppSignals:
         db_update_parameter = Signal(Parameter)
 
     class _Track(_SignalCategory):
-        request_track_redactor = Signal(Track)
+        request_track_redactor = Signal(ParamsInitTrackEditor)
+        track_redactor_closed = Signal()
         db_add_track = Signal(AddTrackParams)
         db_delete_track = Signal(Track)
         db_update_track = Signal(Track)
+        need_handle_db_track_result = Signal(TrackDbResult)
+
 
     class _Step(_SignalCategory):
         request_new_step_dialog = Signal()
@@ -75,7 +89,7 @@ class AppSignals:
         db_delete_pazzle = Signal(BasePazzle)
         db_update_pazzle = Signal(BasePazzle)
 
-    # Экземпляры категорий
+    # Экземпляры категорий сигналов
     form = _Form()
     point = _Point()
     parameter = _Parameter()

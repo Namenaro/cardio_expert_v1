@@ -2,14 +2,13 @@
 Контроллер для управления точками
 """
 from PySide6.QtCore import Slot
-from typing import TYPE_CHECKING
+
 
 from DA3.redactors_widgets import PointEditor
 from CORE.db_dataclasses import Point
 from DA3.specialized_controllers.base_controller import BaseController
 
-if TYPE_CHECKING:
-    from DA3.app_signals import AppSignals
+from DA3.app_signals import AppSignals
 
 
 class PointController(BaseController):
@@ -18,7 +17,7 @@ class PointController(BaseController):
     def __init__(self, parent):
         super().__init__(parent)
 
-    def init_signals(self, point_signals: 'AppSignals._Point'):
+    def init_signals(self, point_signals: AppSignals._Point):
         """
         Инициализация сигналов для работы с точками
 

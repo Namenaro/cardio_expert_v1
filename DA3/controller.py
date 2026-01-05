@@ -13,6 +13,7 @@ from DA3.specialized_controllers import *
 import DA3.app_signals as app_signals
 
 
+
 class Controller(QObject):
     def __init__(self, model: Model, main_window: MainForm):
         """
@@ -42,17 +43,9 @@ class Controller(QObject):
         self.form_controller = FormController(self)
         self.point_controller = PointController(self)
         self.parameter_controller = ParameterController(self)
-        self.pazzle_controller = PazzleController(self)
+        self.pazzle_controller = PC_HC_Controller(self)
         self.step_controller = StepController(self)
 
-        # Объединяем контроллеры для удобного доступа
-        self.controllers = {
-            'form': self.form_controller,
-            'point': self.point_controller,
-            'parameter': self.parameter_controller,
-            'pazzle': self.pazzle_controller,
-            'step': self.step_controller
-        }
 
     def _init_controller_signals(self):
         """
@@ -175,16 +168,3 @@ class Controller(QObject):
             self.logger.exception(f"Ошибка при инициализации формы: {e}")
             return False
 
-    # ==================== ПУБЛИЧНЫЕ МЕТОДЫ ====================
-
-    def get_controller(self, controller_type: str):
-        """
-        Получить специализированный контроллер по типу
-
-        Args:
-            controller_type: тип контроллера ('form', 'point', 'parameter', 'pazzle', 'step')
-
-        Returns:
-            Специализированный контроллер или None
-        """
-        return self.controllers.get(controller_type)

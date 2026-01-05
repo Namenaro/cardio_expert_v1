@@ -2,15 +2,13 @@
 Контроллер для управления шагами
 """
 from PySide6.QtCore import Slot
-from typing import TYPE_CHECKING
 
 from DA3.redactors_widgets import StepInfoEditor
 from DA3.form_widgets.dialog_new_step import AddStepDialog
 from CORE.db_dataclasses import Step
 from .base_controller import BaseController
 
-if TYPE_CHECKING:
-    from DA3.app_signals import AppSignals
+from DA3.app_signals import AppSignals
 
 
 class StepController(BaseController):
@@ -19,7 +17,7 @@ class StepController(BaseController):
     def __init__(self, parent):
         super().__init__(parent)
 
-    def init_signals(self, step_signals: 'AppSignals._Step'):
+    def init_signals(self, step_signals: AppSignals._Step):
         """
         Инициализация сигналов для работы с шагами
 
