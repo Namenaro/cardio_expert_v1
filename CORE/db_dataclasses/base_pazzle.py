@@ -28,3 +28,9 @@ class BasePazzle:
 
     def is_PC(self):
         return self.class_ref.is_PC()
+
+    def is_SM(self):
+        return self.class_ref.is_SM()
+
+    def is_PS(self):
+        return self.class_ref.is_PS()
