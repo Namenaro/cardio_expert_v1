@@ -83,6 +83,24 @@ class TrackCard(QFrame):
         # Размерная политика — может расширяться по горизонтали и вертикали
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
+    def refresh(self, track: Track):
+        """Обновляет данные трека и полностью пересоздаёт UI."""
+        self.track = track
+
+        # Полностью очищаем текущий layout
+        if self.layout():
+            # Удаляем все дочерние виджеты
+            while self.layout().count():
+                item = self.layout().takeAt(0)
+                if item.widget():
+                    item.widget().deleteLater()
+
+        # Пересоздаём UI с новыми данными
+        self.setup_ui()
+
+        # Обновляем геометрию
+        self.updateGeometry()
+
 # Мок-тест
 if __name__ == "__main__":
     import sys
