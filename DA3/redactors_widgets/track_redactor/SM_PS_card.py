@@ -1,16 +1,20 @@
 
 from PySide6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout,
-                              QWidget, QFrame, QLabel, QSizePolicy)
-from PySide6.QtCore import Qt
+                              QWidget, QFrame, QLabel, QSizePolicy, QMenu)
+from PySide6.QtCore import Qt, QEvent
 from PySide6.QtGui import QPalette, QColor
 from typing import List, Optional
 
-from CORE.db_dataclasses import *
+from CORE.db_dataclasses import BaseClass, BasePazzle
+from DA3 import app_signals
+from DA3.app_signals import AddSMParams, AddPSParams
 
 
 class SM_PS_Card(QFrame):
     def __init__(self, puzzle: BasePazzle, refs: List[BaseClass],
-                 track_id: Optional[int], step_id: int, parent=None):
+                 track_id: Optional[int], step_id: int,
+                 num_in_track: int,
+                 parent=None):
         super().__init__(parent)
 
         # Сохраняем все аргументы как поля класса
@@ -18,9 +22,107 @@ class SM_PS_Card(QFrame):
         self.SMs_refs = refs
         self.track_id = track_id
         self.step_id = step_id
+        self.num_in_track = num_in_track
 
         # Инициализируем UI
         self.setup_ui()
+
+        # Устанавливаем фильтр событий для обработки кликов
+        self.installEventFilter(self)
+
+    def eventFilter(self, obj, event):
+        """Обработчик событий для фильтрации кликов по карточке."""
+        if obj is self and event.type() == QEvent.MouseButtonPress:
+            if event.button() == Qt.LeftButton:
+                self._on_left_click(event)
+            elif event.button() == Qt.RightButton:
+                self._on_right_click(event)
+        return super().eventFilter(obj, event)
+
+    def _on_left_click(self, event):
+        """Обработка левого клика — эмитируем соответствующий сигнал."""
+        if self.is_SM():
+            params = AddSMParams(
+                sm=self.puzzle,
+                track_id=self.track_id,
+                num_in_track=self.num_in_track,
+                step_id=self.step_id
+            )
+            app_signals.base_pazzle.request_sm_redactor.emit(params)
+        elif self.is_PS():
+            params = AddPSParams(
+                ps=self.puzzle,
+                track_id=self.track_id,
+                step_id=self.step_id
+            )
+            app_signals.base_pazzle.request_ps_redactor.emit(params)
+
+    def _on_right_click(self, event):
+        """Обработка правого клика — показываем контекстное меню."""
+        menu = QMenu(self)
+
+        # Действия для добавления SM
+        add_sm_left = menu.addAction("Добавить SM слева")
+        add_sm_right = menu.addAction("Добавить SM справа")
+
+        # Действия для добавления PS
+        add_ps_left = menu.addAction("Добавить PS слева")
+        add_ps_right = menu.addAction("Добавить PS справа")
+
+        # Действие для удаления
+        delete_action = menu.addAction("Удалить карту")
+
+        # Подключаем обработчики
+        add_sm_left.triggered.connect(self._add_sm_left)
+        add_sm_right.triggered.connect(self._add_sm_right)
+        add_ps_left.triggered.connect(self._add_ps_left)
+        add_ps_right.triggered.connect(self._add_ps_right)
+        delete_action.triggered.connect(self._delete_card)
+
+        # Показываем меню в позиции курсора
+        menu.exec(event.globalPos())
+
+    def _add_sm_left(self):
+        """Эмитируем сигнал для добавления SM слева."""
+        params = AddSMParams(
+            sm=None,
+            track_id=self.track_id,
+            num_in_track=self.num_in_track - 1,
+            step_id=self.step_id
+        )
+        app_signals.base_pazzle.request_sm_redactor.emit(params)
+
+    def _add_sm_right(self):
+        """Эмитируем сигнал для добавления SM справа."""
+        params = AddSMParams(
+            sm=None,
+            track_id=self.track_id,
+            num_in_track=self.num_in_track + 1,
+            step_id=self.step_id
+        )
+        app_signals.base_pazzle.request_sm_redactor.emit(params)
+
+    def _add_ps_left(self):
+        """Эмитируем сигнал для добавления PS слева."""
+        params = AddPSParams(
+            ps=None,
+            track_id=self.track_id,
+            step_id=self.step_id
+        )
+        app_signals.base_pazzle.request_ps_redactor.emit(params)
+
+    def _add_ps_right(self):
+        """Эмитируем сигнал для добавления PS справа."""
+        params = AddPSParams(
+            ps=None,
+            track_id=self.track_id,
+            step_id=self.step_id
+        )
+        app_signals.base_pazzle.request_ps_redactor.emit(params)
+
+    def _delete_card(self):
+        """Эмитируем сигнал для удаления карты."""
+        app_signals.base_pazzle.db_delete_pazzle.emit(self.puzzle)
 
     def setup_ui(self):
         """Инициализация пользовательского интерфейса карточки."""
@@ -95,6 +197,9 @@ if __name__ == "__main__":
         def is_PS(self):
             return self.is_ps
 
+        def is_SM(self):
+            return not self.is_ps
+
 
     class BaseClass:
         def __init__(self, name: str):
@@ -129,7 +234,7 @@ if __name__ == "__main__":
     step_id = 101
 
     # Создаём экземпляр карточки
-    card = SM_PS_Card(puzzle, refs, track_id, step_id)
+    card = SM_PS_Card(puzzle, refs, track_id, step_id, num_in_track=0)
 
     # Добавляем карточку в макет
     main_layout.addWidget(card)

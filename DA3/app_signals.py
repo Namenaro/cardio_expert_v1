@@ -5,15 +5,14 @@ from CORE.db_dataclasses import *
 
 # Вспомогательные типы для явной документации аргументов сигналов
 class AddSMParams(NamedTuple):
-    sm: BasePazzle
+    sm: Optional[BasePazzle]
     track_id: Optional[int]
     num_in_track: int
     step_id: int
 
 class AddPSParams(NamedTuple):
-    ps: BasePazzle
+    ps: Optional[BasePazzle]
     track_id: Optional[int]
-    num_in_track: int
     step_id: int
 
 class AddTrackParams(NamedTuple):
@@ -77,8 +76,8 @@ class AppSignals:
         # Запросы на показ модальных редакторов
         request_hc_redactor = Signal(BasePazzle)
         request_pc_redactor = Signal(BasePazzle)
-        request_sm_redactor = Signal(BasePazzle)
-        request_ps_redactor = Signal(BasePazzle)
+        request_sm_redactor = Signal(AddSMParams)
+        request_ps_redactor = Signal(AddPSParams)
 
         # Запрос на добавление в базу нового пазла
         db_add_hc = Signal(BasePazzle)
