@@ -107,11 +107,10 @@ class TrackRedactor(QDialog):
         # Обновляем геометрию
         self.updateGeometry()
 
+
 # Мок-тест
 if __name__ == "__main__":
     import sys
-    from dataclasses import dataclass
-
 
     # Mock-заглушки для используемых классов (для теста)
     class BasePazzle:
@@ -131,22 +130,6 @@ if __name__ == "__main__":
     class BaseClass:
         def __init__(self, name: str):
             self.name = name
-
-
-    app = QApplication(sys.argv)
-
-    window = QMainWindow()
-    window.setWindowTitle("Тест TrackCard")
-    window.resize(800, 400)
-
-    # Создаём центральный виджет
-    central_widget = QWidget()
-    window.setCentralWidget(central_widget)
-
-    # Вертикальный макет для главного окна
-    main_layout = QVBoxLayout(central_widget)
-    main_layout.setAlignment(Qt.AlignTop)
-    main_layout.setSpacing(15)
 
     # Создаём тестовые данные
     # SM паззлы
@@ -170,6 +153,20 @@ if __name__ == "__main__":
 
     step_id = 202
 
+    app = QApplication(sys.argv)
+
+    window = QMainWindow()
+    window.setWindowTitle("Тест TrackCard")
+    window.resize(800, 400)
+
+    # Создаём центральный виджет
+    central_widget = QWidget()
+    window.setCentralWidget(central_widget)
+
+    # Вертикальный макет для главного окна
+    main_layout = QVBoxLayout(central_widget)
+    main_layout.setAlignment(Qt.AlignTop)
+    main_layout.setSpacing(15)
 
     track_card = TrackRedactor(track, step_id, ps_refs, sm_refs)
 
@@ -178,4 +175,3 @@ if __name__ == "__main__":
 
     window.show()
     sys.exit(app.exec())
-
