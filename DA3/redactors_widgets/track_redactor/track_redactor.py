@@ -1,12 +1,14 @@
 from PySide6.QtWidgets import (QApplication, QMainWindow, QHBoxLayout,
-                               QVBoxLayout, QWidget, QFrame, QLabel, QSizePolicy, QDialog)
+                               QVBoxLayout, QWidget, QFrame, QLabel, QSizePolicy, QDialog, QPushButton)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette, QColor
 from typing import List, Optional
 from dataclasses import field
+import logging
 
 from CORE.db_dataclasses import Track, BasePazzle, BaseClass
 from DA3 import app_signals
+from DA3.app_signals import AddSMParams, AddPSParams
 from DA3.redactors_widgets.track_redactor.SM_PS_card import SM_PS_Card
 
 
@@ -27,6 +29,8 @@ class TrackRedactor(QDialog):
         :param parent: окно-родитель для этого QDialog-а
         """
         super().__init__(parent)
+        # Получаем логгер
+        self.logger = logging.getLogger(__name__)
 
         # Сохраняем аргументы как поля класса
         self.track = track
@@ -51,7 +55,11 @@ class TrackRedactor(QDialog):
         main_layout.setSpacing(8)
 
         # Заголовок с ID трека
-        self.id_label = QLabel(f"Track ID: {self.track.id or 'N/A'}")
+        if self.track is None:
+            track_id = 'N/A'
+        else:
+            track_id = self.track.id
+        self.id_label = QLabel(f"Track ID: {track_id or 'N/A'}")
         self.id_label.setAlignment(Qt.AlignCenter)
         self.id_label.setStyleSheet("font-weight: bold; font-size: 16px; color: #444;")
         main_layout.addWidget(self.id_label)
@@ -61,7 +69,8 @@ class TrackRedactor(QDialog):
         cards_layout.setSpacing(10)
 
         # Добавляем карточки SM (в порядке из списка SMs)
-        for idx, puzzle in enumerate(self.track.SMs):
+        SMs = self.track.SMs if self.track else []
+        for idx, puzzle in enumerate(SMs):
             card = SM_PS_Card(
                 puzzle=puzzle,
                 refs=self.SMs_refs,
@@ -72,7 +81,8 @@ class TrackRedactor(QDialog):
             cards_layout.addWidget(card)
 
         # Добавляем карточки PS
-        for puzzle in self.track.PSs:
+        PSs = self.track.PSs if self.track else []
+        for puzzle in PSs:
             card = SM_PS_Card(
                 puzzle=puzzle,
                 refs=self.PSs_refs,
@@ -83,6 +93,22 @@ class TrackRedactor(QDialog):
             cards_layout.addWidget(card)
 
         main_layout.addLayout(cards_layout)
+
+        # Добавляем кнопки только если track is None (создаётся новый трек)
+        if self.track is None:
+            buttons_layout = QHBoxLayout()
+            buttons_layout.setSpacing(10)
+
+            self.add_sm_button = QPushButton("Добавить SM")
+            self.add_sm_button.clicked.connect(self.on_add_sm)
+            buttons_layout.addWidget(self.add_sm_button)
+
+            self.add_ps_button = QPushButton("Добавить PS")
+            self.add_ps_button.clicked.connect(self.on_add_ps)
+            buttons_layout.addWidget(self.add_ps_button)
+
+            main_layout.addLayout(buttons_layout)
+
         self.setLayout(main_layout)
 
         # Фиксируем минимальный размер
@@ -107,6 +133,18 @@ class TrackRedactor(QDialog):
 
         # Обновляем геометрию
         self.updateGeometry()
+
+    def on_add_sm(self):
+        """Обработчик кнопки 'Добавить SM'"""
+        self.logger.info(f"Нажата кнопка 'Добавить SM'-> новый трек в шаг {self.step_id}")
+        app_sm_params =  AddSMParams(sm=None, num_in_track=0, step_id=self.step_id, track_id=None)
+        app_signals.base_pazzle.request_sm_redactor.emit(app_sm_params)
+
+    def on_add_ps(self):
+        """Обработчик кнопки 'Добавить PS'"""
+        self.logger.info(f"Нажата кнопка 'Добавить PS'-> новый трек в шаг {self.step_id}")
+        add_ps_params = AddPSParams(ps=None, track_id=None, step_id=self.step_id)
+        app_signals.base_pazzle.request_ps_redactor.emit(add_ps_params)
 
     def closeEvent(self, event):
         """

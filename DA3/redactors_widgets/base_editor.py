@@ -142,7 +142,7 @@ class BaseEditor(QDialog):
 
     def _is_new_object(self) -> bool:
         """Проверка, является ли объект новым (не сохраненным в БД)"""
-        return self.original_data.id is None
+        return self.original_data is None
 
     def closeEvent(self, event: Any) -> None:
         """Обработчик закрытия окна"""

@@ -42,7 +42,7 @@ class SMEditor(BaseEditor):
         group_layout.setSpacing(10)
         group_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
 
-        self.id_label = QLabel(str(self.original_data.id) if self.original_data.id else "Новый")
+        self.id_label = QLabel(str(self.original_data.id) if self.original_data else "Новый")
         self.name_edit = QLineEdit()
         self.name_edit.setPlaceholderText("Введите имя SM объекта")
         self.comment_edit = QLineEdit()
@@ -86,19 +86,20 @@ class SMEditor(BaseEditor):
     def _load_data_to_ui(self) -> None:
         """Загрузка данных из объекта в интерфейс"""
         # Основные поля
-        if self.original_data.name:
+        if self.original_data:
             self.name_edit.setText(self.original_data.name)
-        if self.original_data.comment:
+        if self.original_data:
             self.comment_edit.setText(self.original_data.comment)
 
         self._load_class_ref()
 
         # Загружаем сохраненные значения аргументов
-        self.arguments_widget.load_current_values(self.original_data.argument_values)
+        if self.original_data:
+            self.arguments_widget.load_current_values(self.original_data.argument_values)
 
 
     def _load_class_ref(self):
-        if self.original_data.class_ref:
+        if self.original_data:
 
             self.classes_widget.set_selected_class(self.original_data.class_ref)
             self.arguments_widget.load_arguments(self.original_data.class_ref.constructor_arguments)
@@ -109,7 +110,7 @@ class SMEditor(BaseEditor):
         updated_sm = BasePazzle()
 
         # Получаем основные поля
-        updated_sm.id = self.original_data.id
+        updated_sm.id = self.original_data.id if self.original_data else None
         updated_sm.name = self.name_edit.text().strip() or None
         updated_sm.comment = self.comment_edit.text().strip()
 

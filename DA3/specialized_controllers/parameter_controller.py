@@ -3,11 +3,9 @@
 """
 from PySide6.QtCore import Slot
 
-
 from DA3.redactors_widgets import ParameterEditor
 from CORE.db_dataclasses import Parameter
 from DA3.specialized_controllers.base_controller import BaseController
-
 from DA3.app_signals import AppSignals
 
 

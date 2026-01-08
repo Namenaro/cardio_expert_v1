@@ -45,6 +45,7 @@ class Controller(QObject):
         self.parameter_controller = ParameterController(self)
         self.pazzle_controller = PC_HC_Controller(self)
         self.step_controller = StepController(self)
+        self.track_controller = TrackController(self)
 
 
     def _init_controller_signals(self):
@@ -62,14 +63,14 @@ class Controller(QObject):
         # Параметры: передаем app_signals.parameter (объект класса AppSignals._Parameter)
         self.parameter_controller.init_signals(app_signals.parameter)
 
-        # Головоломки: передаем app_signals.base_pazzle (объект класса AppSignals._BasePazzle)
+        #Пазлы: передаем app_signals.base_pazzle (объект класса AppSignals._BasePazzle)
         self.pazzle_controller.init_signals(app_signals.base_pazzle)
 
         # Шаги: передаем app_signals.step (объект класса AppSignals._Step)
         self.step_controller.init_signals(app_signals.step)
 
-        # Примечание: Сигналы треков (track) остаются нераспределенными
-        # TODO: Создать TrackController и добавить его инициализацию здесь
+        # Треки, включая менеджмент добавления пазлов в них
+        self.track_controller.init_signals(track_signals=app_signals.track, pazzle_signals=app_signals.base_pazzle)
 
         self.logger.info("Сигналы инициализированы в специализированных контроллерах")
 

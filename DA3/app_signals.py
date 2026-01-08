@@ -22,11 +22,6 @@ class ParamsInitTrackEditor(NamedTuple):
     step_id: int
 
 
-class TrackDbResult(NamedTuple):
-    track: Track
-    success: bool
-    message: str
-
 class _SignalCategory(QObject):
     """Базовый класс для категорий сигналов."""
     pass
@@ -59,7 +54,6 @@ class AppSignals:
         track_redactor_closed = Signal()
         db_delete_track = Signal(Track)
         db_update_track = Signal(Track)
-        need_handle_db_track_result = Signal(TrackDbResult)
 
 
     class _Step(_SignalCategory):
