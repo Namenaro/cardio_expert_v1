@@ -64,36 +64,6 @@ class TrackRedactor(QDialog):
         self.id_label.setStyleSheet("font-weight: bold; font-size: 16px; color: #444;")
         main_layout.addWidget(self.id_label)
 
-        # Горизонтальный макет для карточек SM и PS
-        cards_layout = QHBoxLayout()
-        cards_layout.setSpacing(10)
-
-        # Добавляем карточки SM (в порядке из списка SMs)
-        SMs = self.track.SMs if self.track else []
-        for idx, puzzle in enumerate(SMs):
-            card = SM_PS_Card(
-                puzzle=puzzle,
-                refs=self.SMs_refs,
-                track_id=self.track.id,
-                step_id=self.step_id,
-                num_in_track=idx  # ← Правильный индекс (int)
-            )
-            cards_layout.addWidget(card)
-
-        # Добавляем карточки PS
-        PSs = self.track.PSs if self.track else []
-        for puzzle in PSs:
-            card = SM_PS_Card(
-                puzzle=puzzle,
-                refs=self.PSs_refs,
-                track_id=self.track.id,
-                step_id=self.step_id,
-                num_in_track=-1
-            )
-            cards_layout.addWidget(card)
-
-        main_layout.addLayout(cards_layout)
-
         # Добавляем кнопки только если track is None (создаётся новый трек)
         if self.track is None:
             buttons_layout = QHBoxLayout()
@@ -108,6 +78,39 @@ class TrackRedactor(QDialog):
             buttons_layout.addWidget(self.add_ps_button)
 
             main_layout.addLayout(buttons_layout)
+        else:
+            # +++ ДОБАВЛЕНО: Добавляем карточки для существующих пазлов +++
+
+            # Горизонтальный макет для карточек SM и PS
+            cards_layout = QHBoxLayout()
+            cards_layout.setSpacing(10)
+
+            # Добавляем карточки SM (в порядке из списка SMs)
+            SMs = self.track.SMs if self.track else []
+            for idx, puzzle in enumerate(SMs):
+                card = SM_PS_Card(
+                    puzzle=puzzle,
+                    refs=self.SMs_refs,
+                    track_id=self.track.id,
+                    step_id=self.step_id,
+                    num_in_track=idx  # ← Правильный индекс (int)
+                )
+                cards_layout.addWidget(card)
+
+            # Добавляем карточки PS
+            PSs = self.track.PSs if self.track else []
+            for puzzle in PSs:
+                card = SM_PS_Card(
+                    puzzle=puzzle,
+                    refs=self.PSs_refs,
+                    track_id=self.track.id,
+                    step_id=self.step_id,
+                    num_in_track=-1
+                )
+                cards_layout.addWidget(card)
+
+            main_layout.addLayout(cards_layout)
+
 
         self.setLayout(main_layout)
 
@@ -115,6 +118,7 @@ class TrackRedactor(QDialog):
         self.setMinimumSize(300, 200)
         # Размерная политика — может расширяться по горизонтали и вертикали
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        print(f"Добавлен id_label: '{self.id_label.text()}', visible={self.id_label.isVisible()}")
 
     def refresh(self, track: Track):
         """Обновляет данные трека, очищая и перезаполняя существующий layout."""
@@ -128,22 +132,77 @@ class TrackRedactor(QDialog):
         # Отключаем обновления на время изменений
         self.setUpdatesEnabled(False)
 
-        # Получаем или создаем основной layout
+        # Получаем основной layout (он уже должен существовать после setup_ui())
         main_layout = self.layout()
         if not main_layout:
+            # На случай, если layout по какой-то причине отсутствует
             main_layout = QVBoxLayout()
             self.setLayout(main_layout)
 
-        # Очищаем основной layout
-        while main_layout.count():
-            item = main_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
-            elif item.layout():
-                self._clear_layout(item.layout())
+        # Сохраняем margins и spacing перед очисткой
+        old_margins = main_layout.getContentsMargins()
+        old_spacing = main_layout.spacing()
 
-        # Теперь вызываем setup_ui, который добавит новые виджеты
-        self.setup_ui()
+        # Очищаем основной layout
+        self._clear_layout(main_layout)
+
+        # Восстанавливаем margins и spacing
+        main_layout.setContentsMargins(*old_margins)
+        main_layout.setSpacing(old_spacing)
+
+        # Обновляем ID в заголовке
+        track_id = self.track.id if self.track else 'N/A'
+        self.id_label = QLabel(f"Track ID: {track_id or 'N/A'}")
+        self.id_label.setAlignment(Qt.AlignCenter)
+        self.id_label.setStyleSheet("font-weight: bold; font-size: 16px; color: #444;")
+        main_layout.addWidget(self.id_label)
+
+        # Добавляем кнопки только если track был None (создаётся новый трек)
+        if self.track is None:
+            buttons_layout = QHBoxLayout()
+            buttons_layout.setSpacing(10)
+
+            self.add_sm_button = QPushButton("Добавить SM")
+            self.add_sm_button.clicked.connect(self.on_add_sm)
+            buttons_layout.addWidget(self.add_sm_button)
+
+            self.add_ps_button = QPushButton("Добавить PS")
+            self.add_ps_button.clicked.connect(self.on_add_ps)
+            buttons_layout.addWidget(self.add_ps_button)
+
+            main_layout.addLayout(buttons_layout)
+        else:
+            # +++ ДОБАВЛЕНО: Добавляем карточки для существующих пазлов +++
+
+            # Горизонтальный макет для карточек SM и PS
+            cards_layout = QHBoxLayout()
+            cards_layout.setSpacing(10)
+
+            # Добавляем карточки SM (в порядке из списка SMs)
+            SMs = self.track.SMs if self.track else []
+            for idx, puzzle in enumerate(SMs):
+                card = SM_PS_Card(
+                    puzzle=puzzle,
+                    refs=self.SMs_refs,
+                    track_id=self.track.id,
+                    step_id=self.step_id,
+                    num_in_track=idx  # ← Правильный индекс (int)
+                )
+                cards_layout.addWidget(card)
+
+            # Добавляем карточки PS
+            PSs = self.track.PSs if self.track else []
+            for puzzle in PSs:
+                card = SM_PS_Card(
+                    puzzle=puzzle,
+                    refs=self.PSs_refs,
+                    track_id=self.track.id,
+                    step_id=self.step_id,
+                    num_in_track=-1
+                )
+                cards_layout.addWidget(card)
+
+            main_layout.addLayout(cards_layout)
 
         # Включаем обновления
         self.setUpdatesEnabled(True)
