@@ -2,24 +2,33 @@ from CORE.db_dataclasses import *
 from dataclasses import dataclass, field
 from typing import Optional, List
 from PySide6.QtWidgets import (
-    QFrame, QVBoxLayout, QFormLayout, QLabel, QApplication, QWidget
+    QFrame, QVBoxLayout, QFormLayout, QLabel, QApplication, QWidget, QMenu
 )
-from PySide6.QtCore import Qt, QEvent
+from PySide6.QtCore import Qt, QEvent, Slot
 from PySide6.QtGui import QMouseEvent
+
+from DA3 import app_signals
+from DA3.app_signals import ParamsInitTrackEditor
 
 
 class TrackCard(QFrame):
     # Начальный стиль виджета
     _DEFAULT_STYLE = """
-            TrackCard {
-                background-color: #f0f0f0;
-                border-radius: 4px;
-                border: 1px solid #dcdcdc;
-            }
-        """
-    def __init__(self, track: Track, parent=None):
+        TrackCard {
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            border: 1px solid #dcdcdc;
+        }
+    """
+
+    def __init__(self, track: Track,
+                 step_id: int,
+                 parent=None):
         super().__init__(parent)
+
         self.track = track
+        self.step_id = step_id
+
         self.setMouseTracking(True)  # Включаем отслеживание мыши
         self._is_hovered = False  # Флаг наведения курсора
 
@@ -54,26 +63,43 @@ class TrackCard(QFrame):
         form_layout.addRow("Количество PS:", self.pss_count_label)
 
     # Обработчик события наведения курсора
+    @Slot(QEvent)
     def enterEvent(self, event: QEvent):
         self._is_hovered = True
         self._update_style()
         super().enterEvent(event)
 
-    # Обработчик события ухода курсора
+
+    @Slot(QEvent)
     def leaveEvent(self, event: QEvent):
+        """Обработчик события ухода курсора"""
         self._is_hovered = False
         self._update_style()
         super().leaveEvent(event)
 
-    # Обработчик клика по виджету
+    @Slot(QMouseEvent)
     def mousePressEvent(self, event: QMouseEvent):
+        """Обработчик клика по виджету"""
         if event.button() == Qt.MouseButton.LeftButton:
-            self.on_click()
+            self.open_track_editor()
+        elif event.button() == Qt.MouseButton.RightButton:
+            self.show_context_menu(event.globalPosition().toPoint())
         super().mousePressEvent(event)
 
-    # Метод-заглушка для обработки клика
-    def on_click(self):
-        print(f"Виджет TrackCard кликнут. ID трека: {self.track.id}")
+    def open_track_editor(self):
+        req_track_params = ParamsInitTrackEditor(track=self.track, step_id=self.step_id)
+        app_signals.track.request_track_redactor.emit(req_track_params)
+
+    def show_context_menu(self, pos):
+        """Показать контекстное меню в позиции pos."""
+        menu = QMenu(self)
+        delete_action = menu.addAction("Удалить трек")
+        delete_action.triggered.connect(self.delete_track)
+        menu.exec(pos)
+
+    def delete_track(self):
+        """Эмитировать сигнал удаления трека."""
+        app_signals.track.db_delete_track.emit(self.track)
 
     def _update_style(self):
         if self._is_hovered:
@@ -109,7 +135,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     # Создаем и показываем виджет
-    widget = TrackCard(track)
+    widget = TrackCard(track, step_id=0)
     widget.setWindowTitle("TrackCard Test")
     widget.resize(300, 200)
     widget.show()

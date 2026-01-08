@@ -43,11 +43,11 @@ class TrackController(BaseController):
         if model and current_form:
             PSs_refs = model.get_PSs_classes()
             SMs_refs = model.get_SMs_classes()
-            self._track_redactor = TrackRedactor(self.get_main_window(),
+            self._track_redactor = TrackRedactor(parent=self.get_main_window(),
                                                  track=req_track_params.track,
                                                  step_id=req_track_params.step_id,
-                                                 PSs =PSs_refs,
-                                                 SMs = SMs_refs)
+                                                 PSs_refs =PSs_refs,
+                                                 SMs_refs = SMs_refs)
             self._track_redactor.exec()
 
     @Slot()

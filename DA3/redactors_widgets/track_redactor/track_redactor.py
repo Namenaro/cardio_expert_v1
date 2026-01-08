@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (QApplication, QMainWindow, QHBoxLayout,
-                              QVBoxLayout, QWidget, QFrame, QLabel, QSizePolicy)
+                               QVBoxLayout, QWidget, QFrame, QLabel, QSizePolicy, QDialog)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette, QColor
 from typing import List, Optional
@@ -9,11 +9,11 @@ from CORE.db_dataclasses import Track, BasePazzle, BaseClass
 from DA3.redactors_widgets.track_redactor.SM_PS_card import SM_PS_Card
 
 
-
-
-class TrackRedactor(QFrame):
-    def __init__(self, track: Track, step_id: int,
-                 PSs_refs: List[BaseClass], SMs_refs: List[BaseClass],
+class TrackRedactor(QDialog):
+    def __init__(self, track: Track,
+                 step_id: int,
+                 PSs_refs: List[BaseClass],
+                 SMs_refs: List[BaseClass],
                  parent=None):
         super().__init__(parent)
 
@@ -28,13 +28,9 @@ class TrackRedactor(QFrame):
 
     def setup_ui(self):
         """Инициализация пользовательского интерфейса карточки трека."""
-        # Настройка внешнего вида карточки
-        self.setFrameStyle(QFrame.StyledPanel | QFrame.Raised)
-        self.setLineWidth(2)
-
         # Светло‑серый фон для карточки трека
         palette = self.palette()
-        palette.setColor(QPalette.Window, QColor(240, 240, 240))
+        palette.setColor(QPalette.Window, QColor(230, 240, 240))
         self.setPalette(palette)
         self.setAutoFillBackground(True)
 
