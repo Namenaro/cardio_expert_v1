@@ -274,7 +274,6 @@ if __name__ == "__main__":
         def is_SM(self):
             return not self.is_ps
 
-
     class BaseClass:
         def __init__(self, name: str):
             self.name = name
