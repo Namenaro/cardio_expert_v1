@@ -117,22 +117,62 @@ class TrackRedactor(QDialog):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
     def refresh(self, track: Track):
-        """Обновляет данные трека и полностью пересоздаёт UI."""
+        """Обновляет данные трека, очищая и перезаполняя существующий layout."""
+        if track is None:
+            raise ValueError("track cannot be None")
+        assert track.id is not None, "track.id cannot be None"
+
         self.track = track
+        self.logger.info(f"TrackRedactor.refresh() для трека {self.track.id}")
 
-        # Полностью очищаем текущий layout
-        if self.layout():
-            # Удаляем все дочерние виджеты
-            while self.layout().count():
-                item = self.layout().takeAt(0)
-                if item.widget():
-                    item.widget().deleteLater()
+        # Отключаем обновления на время изменений
+        self.setUpdatesEnabled(False)
 
-        # Пересоздаём UI с новыми данными
+        # Получаем или создаем основной layout
+        main_layout = self.layout()
+        if not main_layout:
+            main_layout = QVBoxLayout()
+            self.setLayout(main_layout)
+
+        # Очищаем основной layout
+        while main_layout.count():
+            item = main_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+            elif item.layout():
+                self._clear_layout(item.layout())
+
+        # Теперь вызываем setup_ui, который добавит новые виджеты
         self.setup_ui()
 
-        # Обновляем геометрию
+        # Включаем обновления
+        self.setUpdatesEnabled(True)
+
+        # Принудительное обновление
         self.updateGeometry()
+        self.adjustSize()
+
+        # Показываем виджет, если он скрыт
+        if not self.isVisible():
+            self.show()
+
+        # Обработка событий
+        QApplication.processEvents()
+
+        self.logger.info("Refresh completed")
+
+    def _clear_layout(self, layout):
+        """Рекурсивно очищает layout."""
+        if layout is None:
+            return
+
+        while layout.count():
+            item = layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+            elif item.layout():
+                self._clear_layout(item.layout())
+
 
     def on_add_sm(self):
         """Обработчик кнопки 'Добавить SM'"""
