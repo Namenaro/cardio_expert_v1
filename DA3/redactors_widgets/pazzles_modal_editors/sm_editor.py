@@ -2,6 +2,7 @@ from typing import Optional, List
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QFormLayout,
                                QGroupBox, QLineEdit, QLabel, QMessageBox)
 from PySide6.QtCore import Qt
+
 from CORE.db_dataclasses import BasePazzle, Form, BaseClass, Parameter, ClassArgument, ObjectArgumentValue
 from DA3 import app_signals
 from DA3.redactors_widgets import BaseEditor
@@ -11,11 +12,11 @@ from DA3.redactors_widgets.pazzles_subwidgets  import (ArgumentsTableWidget, Cla
 class SMEditor(BaseEditor):
     """Редактор для SM объектов """
 
-    def __init__(self, parent: QWidget, hc: BasePazzle,
+    def __init__(self, parent: QWidget, sm: BasePazzle,
                  classes_refs: List[BaseClass]):
         self._classes_refs = classes_refs
-        super().__init__(parent, hc)
-        self.setWindowTitle("Редактор SM объекта")
+        super().__init__(parent, sm)
+        self.setWindowTitle("Редактор SM объекта (signal modification)")
         self.resize(600, 700)
 
     def _create_form_widget(self) -> QWidget:
@@ -63,7 +64,6 @@ class SMEditor(BaseEditor):
         self.arguments_widget = ArgumentsTableWidget()
         layout.addWidget(self.arguments_widget)
 
-
         layout.addStretch()
 
         return widget
@@ -97,20 +97,20 @@ class SMEditor(BaseEditor):
 
     def _collect_data_from_ui(self) -> BasePazzle:
         """Сбор данных из интерфейса в объект"""
-        updated_hc = BasePazzle()
+        updated_sm = BasePazzle()
 
         # Получаем основные поля
-        updated_hc.id = self.original_data.id
-        updated_hc.name = self.name_edit.text().strip() or None
-        updated_hc.comment = self.comment_edit.text().strip()
+        updated_sm.id = self.original_data.id
+        updated_sm.name = self.name_edit.text().strip() or None
+        updated_sm.comment = self.comment_edit.text().strip()
 
         # Получаем сигнатуру класса
-        updated_hc.class_ref = self.classes_widget.get_selected_class()
+        updated_sm.class_ref = self.classes_widget.get_selected_class()
 
         # Получаем значения для аругметов конструктора
-        updated_hc.argument_values = self.arguments_widget.get_argument_values()
+        updated_sm.argument_values = self.arguments_widget.get_argument_values()
 
-        return updated_hc
+        return updated_sm
 
     def _validate_data(self) -> bool:
         """Проверка корректности данных"""
@@ -132,11 +132,10 @@ class SMEditor(BaseEditor):
 # тестирование
 if __name__ == "__main__":
     import sys
-    # Создаём приложение Qt
     from PySide6.QtWidgets import QApplication
     app = QApplication(sys.argv)
 
-    # 1. Создаём тестовый класс (BaseClass)
+    # Создаём тестовые объекты
     test_class = BaseClass(
         id=1,
         name="TestClass",
@@ -148,9 +147,8 @@ if __name__ == "__main__":
         ]
     )
 
-    # 2. Создаём тестовый объект BasePazzle (может быть новым или существующим)
     test_pazzle = BasePazzle(
-        id=None,  # None означает новый объект (ещё не сохранён)
+        id=None,
         name="Тестовый SM объект",
         comment="Это тестовый объект для SMEditor",
         class_ref=test_class,
@@ -159,20 +157,13 @@ if __name__ == "__main__":
             ObjectArgumentValue(argument_value="dfdf", argument_id=1, id=1),
         ]
     )
-
-    # 3. Создаём список классов (classes_refs) — в тесте только один класс
     classes_refs = [test_class]
 
     #  Создаём экземпляр редактора
     editor = SMEditor(
-        parent=None,  # родительское окно (None — главное окно)
-
-        hc=test_pazzle,
+        parent=None,
+        sm=test_pazzle,
         classes_refs=classes_refs
     )
-
-    # 6. Показываем редактор
     editor.show()
-
-    # 7. Запускаем цикл обработки событий
     sys.exit(app.exec())

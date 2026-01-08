@@ -10,7 +10,7 @@ from DA3 import app_signals
 
 
 class PCEditor(BaseEditor):
-    """Редактор для HC объектов (работает ТОЛЬКО с полными классами)"""
+    """Редактор для HC объектов """
 
     def __init__(self, parent: QWidget, form: Form, pc: BasePazzle,
                  classes_refs: List[BaseClass]):
@@ -87,7 +87,6 @@ class PCEditor(BaseEditor):
         # Входные точки
         self.input_points_widget = InputPointsWidget()
         right_layout.addWidget(self.input_points_widget)
-
 
 
         right_layout.addStretch()  # Растягиваем вниз
