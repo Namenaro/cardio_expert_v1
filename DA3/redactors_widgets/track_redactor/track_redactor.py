@@ -10,11 +10,21 @@ from DA3.redactors_widgets.track_redactor.SM_PS_card import SM_PS_Card
 
 
 class TrackRedactor(QDialog):
-    def __init__(self, track: Track,
+    def __init__(self, track: Optional[Track],
                  step_id: int,
                  PSs_refs: List[BaseClass],
                  SMs_refs: List[BaseClass],
                  parent=None):
+        """
+        Модальный редактор одного трека.
+        Позволяет запускать операции добавления/удаленя/редактирвоаня пазлов в треке.
+
+        :param track: Если None, то будет создаваться с нуля новый трек
+        :param step_id: номер шага, к которому этот трек принадлежит в форме
+        :param PSs_refs: библиотека PS-классов
+        :param SMs_refs: библиотека SM-классов
+        :param parent: окно-родитель для этого QDialog-а
+        """
         super().__init__(parent)
 
         # Сохраняем аргументы как поля класса
