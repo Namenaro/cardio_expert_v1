@@ -6,6 +6,7 @@ from typing import List, Optional
 from dataclasses import field
 
 from CORE.db_dataclasses import Track, BasePazzle, BaseClass
+from DA3 import app_signals
 from DA3.redactors_widgets.track_redactor.SM_PS_card import SM_PS_Card
 
 
@@ -106,6 +107,16 @@ class TrackRedactor(QDialog):
 
         # Обновляем геометрию
         self.updateGeometry()
+
+    def closeEvent(self, event):
+        """
+        Обрабатывает событие закрытия окна.
+        """
+        # Испускаем сигнал о закрытии редактора трека
+        app_signals.track.track_redactor_closed.emit()
+
+        # Разрешаем стандартное закрытие окна
+        super().closeEvent(event)
 
 
 # Мок-тест

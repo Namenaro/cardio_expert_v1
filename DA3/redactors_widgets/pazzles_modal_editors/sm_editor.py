@@ -3,8 +3,9 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QFormLayout,
                                QGroupBox, QLineEdit, QLabel, QMessageBox)
 from PySide6.QtCore import Qt
 
-from CORE.db_dataclasses import BasePazzle, Form, BaseClass, Parameter, ClassArgument, ObjectArgumentValue
+from CORE.db_dataclasses import BasePazzle, Form, BaseClass, Parameter, ClassArgument, ObjectArgumentValue, Track
 from DA3 import app_signals
+from DA3.app_signals import  AddSMParams
 from DA3.redactors_widgets import BaseEditor
 from DA3.redactors_widgets.pazzles_subwidgets  import (ArgumentsTableWidget, ClassesListWidget, InputParamsWidget)
 
@@ -12,9 +13,17 @@ from DA3.redactors_widgets.pazzles_subwidgets  import (ArgumentsTableWidget, Cla
 class SMEditor(BaseEditor):
     """Редактор для SM объектов """
 
-    def __init__(self, parent: QWidget, sm: BasePazzle,
-                 classes_refs: List[BaseClass]):
+    def __init__(self, parent: QWidget,
+                 sm: BasePazzle,
+                 classes_refs: List[BaseClass],
+                 track: Optional[Track],
+                 step_id:int,
+                 num_in_track: int):
         self._classes_refs = classes_refs
+        self.track = track
+        self.step_id = step_id
+        self.num_in_track = num_in_track
+
         super().__init__(parent, sm)
         self.setWindowTitle("Редактор SM объекта (signal modification)")
         self.resize(600, 700)
@@ -122,12 +131,27 @@ class SMEditor(BaseEditor):
         return True
 
     def _emit_add_signal(self, data: BasePazzle) -> None:
-        """Испускание сигнала добавления нового объекта"""
-        app_signals.base_pazzle.db_add_sm.emit(data) #TODO не его а объект с номером
+        """Испускание сигнала добавления нового объекта. """
+
+        # Тут два варианта:
+        # 1) пазл добавляется в существующий трек
+        # 2) трек создается новый и в него кладется этот пазл
+
+        if self.track is None:
+            add_sm_params = AddSMParams(sm=data,
+                                        track_id=None,
+                                        num_in_track=0,
+                                        step_id=self.step_id)
+        else:
+            add_sm_params = AddSMParams(sm=data,
+                                        track_id=self.track.id,
+                                        num_in_track=self.num_in_track,
+                                        step_id=self.step_id)
+        app_signals.base_pazzle.db_add_sm.emit(add_sm_params)
 
     def _emit_update_signal(self, data: BasePazzle) -> None:
         """Испускание сигнала обновления существующего объекта"""
-        app_signals.base_pazzle.db_update_pazzle.emit(data)   #TODO не его а объект с номером
+        app_signals.base_pazzle.db_update_pazzle.emit(data)
 
 # тестирование
 if __name__ == "__main__":
@@ -163,7 +187,10 @@ if __name__ == "__main__":
     editor = SMEditor(
         parent=None,
         sm=test_pazzle,
-        classes_refs=classes_refs
+        classes_refs=classes_refs,
+        num_in_track=0,
+        step_id=9,
+        track=None
     )
     editor.show()
     sys.exit(app.exec())

@@ -1,3 +1,5 @@
+from DA3 import app_signals
+from DA3.app_signals import ParamsInitTrackEditor
 from DA3.form_widgets.steps_widget.track_card import TrackCard
 from DA3.form_widgets.steps_widget.step_info_card import StepInfoCard
 from CORE.db_dataclasses import *
@@ -6,7 +8,8 @@ from typing import List
 from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QScrollArea, QFrame, QApplication
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Slot
+
 
 class StepCard(QWidget):
     def __init__(self, step: Step, parent=None):
@@ -39,7 +42,7 @@ class StepCard(QWidget):
 
         # Заполняем TrackCard для каждого трека
         for track in self.step.tracks:
-            track_card = TrackCard(track)
+            track_card = TrackCard(track=track, step_id=self.step.id)
             self.track_cards.append(track_card)
             self.tracks_layout.addWidget(track_card)
 
@@ -48,9 +51,11 @@ class StepCard(QWidget):
         self.add_track_button.clicked.connect(self.on_add_track_clicked)
         right_layout.addWidget(self.add_track_button, alignment=Qt.AlignmentFlag.AlignBottom)
 
+    @Slot()
     def on_add_track_clicked(self):
-        # Заглушка для обработчика нажатия
-        print("Кнопка 'Добавить новый трек' нажата. Реализация пока отсутствует.")
+        # Обработчика нажатия кнопки добавления нового трека в шаг
+        req_track_params = ParamsInitTrackEditor(track=None, step_id=self.step.id)
+        app_signals.track.request_track_redactor.emit(req_track_params)
 
 
 

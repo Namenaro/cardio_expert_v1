@@ -15,12 +15,10 @@ class AddPSParams(NamedTuple):
     track_id: Optional[int]
     step_id: int
 
-class AddTrackParams(NamedTuple):
-    track: Track
-    step_id: int
+
 
 class ParamsInitTrackEditor(NamedTuple):
-    track:Track
+    track:Optional[Track]
     step_id: int
 
 
@@ -59,7 +57,6 @@ class AppSignals:
     class _Track(_SignalCategory):
         request_track_redactor = Signal(ParamsInitTrackEditor)
         track_redactor_closed = Signal()
-        db_add_track = Signal(AddTrackParams)
         db_delete_track = Signal(Track)
         db_update_track = Signal(Track)
         need_handle_db_track_result = Signal(TrackDbResult)
