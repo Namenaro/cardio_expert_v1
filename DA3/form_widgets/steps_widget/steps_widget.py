@@ -77,6 +77,10 @@ class StepsWidget(QTabWidget):
         self.refresh()
 
     def refresh(self) -> None:
+        # Сохраняем индекс текущей выбранной вкладки
+        current_index = self.tab_widget.currentIndex()
+
+        # Удаляем все вкладки
         while self.tab_widget.count() > 0:
             self.tab_widget.removeTab(0)
 
@@ -89,6 +93,10 @@ class StepsWidget(QTabWidget):
             tab_title = f"{step.num_in_form}. {target_point_name}"
             step_card = StepCard(step)
             self.tab_widget.addTab(step_card, tab_title)
+
+        # Восстанавливаем выбранную вкладку, если индекс валиден
+        if 0 <= current_index < self.tab_widget.count():
+            self.tab_widget.setCurrentIndex(current_index)
 
     def on_add_step_clicked(self):
         app_signals.step.request_new_step_dialog.emit()
