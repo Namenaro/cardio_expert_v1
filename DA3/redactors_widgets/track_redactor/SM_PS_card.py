@@ -148,7 +148,7 @@ class SM_PS_Card(QFrame):
         layout.setSpacing(8)  # Расстояние между элементами
 
         # Поле ID (используем step_id)
-        self.id_label = QLabel(f"ID: {self.step_id}")
+        self.id_label = QLabel(f"ID: {self.puzzle.id}")
         self.id_label.setAlignment(Qt.AlignLeft)
         self.id_label.setStyleSheet("font-weight: bold; font-size: 14px;")
 
