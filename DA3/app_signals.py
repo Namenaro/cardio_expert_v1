@@ -16,7 +16,6 @@ class AddPSParams(NamedTuple):
     step_id: int
 
 
-
 class ParamsInitTrackEditor(NamedTuple):
     track:Optional[Track]
     step_id: int

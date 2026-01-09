@@ -11,6 +11,7 @@ from .base_controller import BaseController
 from DA3.app_signals import AppSignals, ParamsInitTrackEditor, AddSMParams, AddPSParams, Del_Upd_SM_PS_Params
 from ..model import TrackDbResult
 from ..redactors_widgets.pazzles_modal_editors import SMEditor
+from ..redactors_widgets.pazzles_modal_editors.ps_editor import PSEditor
 
 
 class TrackController(BaseController):
@@ -59,7 +60,15 @@ class TrackController(BaseController):
 
     def _open_ps_redactor(self, add_ps_params: AddPSParams)-> None:
         self.logger.info("Открываем редактор PS объекта")
-        #TODO
+        model = self.get_model()
+        ps_refs = model.get_PSs_classes()
+        track = None if add_ps_params.track_id is None else model.get_track_by_id(add_ps_params.track_id)
+        editor = PSEditor(ps=add_ps_params.ps,
+                          step_id=add_ps_params.step_id,
+                          classes_refs=ps_refs,
+                          track=track,
+                          parent=self.get_main_window())
+        editor.exec()
 
     @Slot(AddSMParams)
     def _add_sm(self, add_sm_params: AddSMParams)-> None:
