@@ -92,7 +92,7 @@ class ObjectsService:
         logging.info(f"Объект {object_id} успешно добавлен")
         return result
 
-    def update_object(self, conn, base_pazzle: BasePazzle) -> BasePazzle:
+    def update_object(self, conn, base_pazzle: BasePazzle, num_in_track: int = -1) -> BasePazzle:
         """
         Обновляет объект в базе данных каскадно
         """
@@ -123,6 +123,9 @@ class ObjectsService:
         else:
             # Если класс не изменился - точечно обновляем связанные данные
             self.data_service._update_related_data(cursor, base_pazzle.id, base_pazzle, current_object)
+
+        if current_object.is_SM():
+            self.relation_service.change_num_in_track(cursor, current_object.id, num_in_track)
 
         # Получаем обновленный объект
         result = self.relation_service._get_full_object(conn, base_pazzle.id)

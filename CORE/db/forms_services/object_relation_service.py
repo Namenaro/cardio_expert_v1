@@ -29,6 +29,27 @@ class ObjectRelationService:
             VALUES (?, ?, ?)
         ''', (track_id, object_id, num_in_track))
 
+    def change_num_in_track(self, cursor, object_id: int, num_in_track: int):
+        """
+        Изменяет порядковый номер объекта в треке (num_in_track).
+
+        Args:
+            cursor: курсор базы данных
+            object_id: ID объекта, для которого меняется номер
+            num_in_track: новый порядковый номер в треке (должен быть ≥ 0)
+
+
+        Raises:
+            AssertionError: если num_in_track < 0
+        """
+        assert num_in_track >= 0, "Попытка записать в базу SM с отрицательным порядковым номером в треке"
+
+        cursor.execute('''
+            UPDATE object_to_track
+            SET num_in_track = ?
+            WHERE object_id = ?
+        ''', (num_in_track, object_id))
+
     def get_objects_by_form(self, conn, form_id: int) -> List[BasePazzle]:
         """
         Получает все объекты связанные с формой

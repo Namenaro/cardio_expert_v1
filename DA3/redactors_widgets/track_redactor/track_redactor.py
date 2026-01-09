@@ -50,8 +50,16 @@ class TrackRedactor(QDialog):
         self.main_layout.setSpacing(8)
 
         self.setLayout(self.main_layout)
-        self.setMinimumSize(300, 200)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+
+        # Получаем размер экрана
+        screen = QApplication.primaryScreen().size()
+        width = int(screen.width() * 0.8)
+        height = int(screen.height() * 0.8)
+
+        # Устанавливаем фиксированный размер окна
+        self.setFixedSize(width, height)
+
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
 
         self.refresh_ui()
 

@@ -171,7 +171,7 @@ class TrackService:
             track_id: ID трека
             track: Объект трека с SMs и PSs
         """
-        num_in_track = 1
+        num_in_track = 0
 
         # Добавляем SMs
         for sm in track.SMs:
@@ -204,55 +204,40 @@ class TrackService:
             num_in_track += 1
 
     def _update_track_objects(self, conn, track_id: int, new_track: Track, current_track: Track):
-        """
-        Точечно обновляет объекты трека.
+        # 1. Собираем ID из старого трека
+        current_sm_ids = {sm.id for sm in current_track.SMs if sm.id}
+        current_ps_ids = {ps.id for ps in current_track.PSs if ps.id}
 
-        Args:
-            conn: Соединение с базой данных
-            track_id: ID трека
-            new_track: Новый объект трека
-            current_track: Текущий объект трека из БД
-        """
-        cursor = conn.cursor()
+        # 2. Находим ID для удаления
+        deleted_sm_ids = current_sm_ids - {sm.id for sm in new_track.SMs if sm.id}
+        deleted_ps_ids = current_ps_ids - {ps.id for ps in new_track.PSs if ps.id}
 
-        # Создаем словари для быстрого поиска текущих объектов
-        current_sms = {sm.id: sm for sm in current_track.SMs if sm.id}
-        current_pss = {ps.id: ps for ps in current_track.PSs if ps.id}
-
-        # Обновляем SMs
-        new_sm_ids = set()
-        for i, new_sm in enumerate(new_track.SMs):
-            if new_sm.id and new_sm.id in current_sms:
-                # Обновляем существующий SM
-                updated_sm = self.objects_service.update_object(conn, new_sm)
-                new_track.SMs[i] = updated_sm
-            else:
-                # Добавляем новый SM
-                added_sm = self.objects_service.add_object(conn, new_sm, track_id=track_id, num_in_track=i + 1)
-                new_track.SMs[i] = added_sm
-            if new_track.SMs[i].id:
-                new_sm_ids.add(new_track.SMs[i].id)
-
-        # Обновляем PSs
-        new_ps_ids = set()
-        start_num = len(new_track.SMs)
-        for i, new_ps in enumerate(new_track.PSs):
-            if new_ps.id and new_ps.id in current_pss:
-                # Обновляем существующий PS
-                updated_ps = self.objects_service.update_object(conn, new_ps)
-                new_track.PSs[i] = updated_ps
-            else:
-                # Добавляем новый PS
-                added_ps = self.objects_service.add_object(conn, new_ps, track_id=track_id,
-                                                           num_in_track=start_num + i + 1)
-                new_track.PSs[i] = added_ps
-            if new_track.PSs[i].id:
-                new_ps_ids.add(new_track.PSs[i].id)
-
-        # Удаляем объекты, которых больше нет в треке
-        all_current_ids = set(current_sms.keys()) | set(current_pss.keys())
-        all_new_ids = new_sm_ids | new_ps_ids
-        deleted_ids = all_current_ids - all_new_ids
-
-        for obj_id in deleted_ids:
+        # 3. Удаляем лишние объекты
+        for obj_id in deleted_sm_ids:
             self.objects_service.delete_object(conn, obj_id)
+        for obj_id in deleted_ps_ids:
+            self.objects_service.delete_object(conn, obj_id)
+
+        # 4. Обрабатываем SMs: добавляем/обновляем с num_in_track
+        for idx, sm in enumerate(new_track.SMs):
+            num_in_track = idx + 1
+
+            if sm.id and sm.id in current_sm_ids:
+                updated_sm = self.objects_service.update_object(
+                    conn, sm, num_in_track=num_in_track
+                )
+                new_track.SMs[idx] = updated_sm  # Сохраняем актуальный объект
+            else:
+                added_sm = self.objects_service.add_object(
+                    conn, sm, track_id=track_id, num_in_track=num_in_track
+                )
+                new_track.SMs[idx] = added_sm  # Сохраняем актуальный объект
+
+        # 5. Обрабатываем PSs: добавляем/обновляем (без num_in_track)
+        for idx, ps in enumerate(new_track.PSs):
+            if ps.id and ps.id in current_ps_ids:
+                updated_ps = self.objects_service.update_object(conn, ps)
+                new_track.PSs[idx] = updated_ps  # Сохраняем актуальный объект!
+            else:
+                added_ps = self.objects_service.add_object(conn, ps, track_id=track_id)
+                new_track.PSs[idx] = added_ps  # Сохраняем актуальный объект!
