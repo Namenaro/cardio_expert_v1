@@ -66,8 +66,8 @@ class SM_PS_Card(QFrame):
         add_sm_right = menu.addAction("Добавить SM справа")
 
         # Действия для добавления PS
-        add_ps_left = menu.addAction("Добавить PS слева")
-        add_ps_right = menu.addAction("Добавить PS справа")
+        add_ps = menu.addAction("Добавить PS")
+
 
         # Действие для удаления
         delete_action = menu.addAction("Удалить карту")
@@ -75,8 +75,7 @@ class SM_PS_Card(QFrame):
         # Подключаем обработчики
         add_sm_left.triggered.connect(self._add_sm_left)
         add_sm_right.triggered.connect(self._add_sm_right)
-        add_ps_left.triggered.connect(self._add_ps_left)
-        add_ps_right.triggered.connect(self._add_ps_right)
+        add_ps.triggered.connect(self._add_ps)
         delete_action.triggered.connect(self._delete_card)
 
         # Показываем меню в позиции курсора
@@ -102,7 +101,7 @@ class SM_PS_Card(QFrame):
         )
         app_signals.base_pazzle.request_sm_redactor.emit(params)
 
-    def _add_ps_left(self):
+    def _add_ps(self):
         """Эмитируем сигнал для добавления PS слева."""
         params = AddPSParams(
             ps=None,
@@ -111,14 +110,6 @@ class SM_PS_Card(QFrame):
         )
         app_signals.base_pazzle.request_ps_redactor.emit(params)
 
-    def _add_ps_right(self):
-        """Эмитируем сигнал для добавления PS справа."""
-        params = AddPSParams(
-            ps=None,
-            track_id=self.track_id,
-            step_id=self.step_id
-        )
-        app_signals.base_pazzle.request_ps_redactor.emit(params)
 
     def _delete_card(self):
         """Эмитируем сигнал для удаления карты."""
