@@ -169,11 +169,6 @@ class Model:
                 if step.num_in_form < 0 or step.num_in_form > len(form.steps):
                     return False, f"Некорректный номер шага: {step.num_in_form}"
 
-                # Изменим нумерацию шагов, следующих после вставляемого
-                for old_step in form.steps:
-                    if old_step.num_in_form >= step.num_in_form:
-                        old_step.num_in_form += 1
-                        self.step_service.update_step(conn=conn, step=old_step)
 
                 # Добавим новый шаг
                 self.step_service.add_step(conn=conn, step=step, form_id=form_id)

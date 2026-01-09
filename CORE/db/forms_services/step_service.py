@@ -78,6 +78,12 @@ class StepService:
         if step.right_point and not step.right_point.id:
             raise ValueError("Right point must have ID if provided")
 
+        # Сдвинем на один вправо номера шагов после добаленного
+        cursor.execute("""
+                    UPDATE step
+                    SET num_in_form = num_in_form + 1
+                    WHERE form_id = ? AND num_in_form >=? """, (form_id, step.num_in_form))
+
         # Добавляем основной шаг
         cursor.execute('''
             INSERT INTO step (form_id, target_point_id, left_point_id, right_point_id, 
@@ -97,8 +103,12 @@ class StepService:
         step_id = cursor.lastrowid
         step.id = step_id
 
+
+
         # Добавляем треки шага через track_service
         self._add_step_tracks(conn, step_id, step)
+
+
 
         # Получаем полный шаг с заполненными ID треков
         result = self.get_step_by_id(conn, step_id)
