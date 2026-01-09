@@ -48,6 +48,8 @@ class StepService:
         for track_id in track_ids:
             self.track_service.delete_track(conn, track_id)
 
+        self._update_steps_numeration(cursor, step_id, was_deleted=True)
+
         # Удаляем сам шаг
         cursor.execute("DELETE FROM step WHERE id = ?", (step_id,))
 
@@ -279,3 +281,41 @@ class StepService:
 
         for track_id in deleted_track_ids:
             self.track_service.delete_track(conn, track_id)
+
+    def _update_steps_numeration(self, cursor, step_id, was_deleted: bool):
+        """
+        Обновляет нумерацию шагов в форме после добавления или удаления шага.
+
+        :param conn: соединение с базой данных
+        :param step_id: ID шага, который был добавлен или удалён
+        :param was_deleted: True — шаг удалён (нумерация сдвигается влево),
+                            False — шаг добавлен (нумерация сдвигается вправо)
+        :return: None
+        """
+        # Получаем form_id для указанного шага
+
+        cursor.execute(
+            "SELECT form_id, num_in_form FROM step WHERE id = ?",
+            (step_id,)
+        )
+        result = cursor.fetchone()
+
+        if not result:
+            return  # Шаг не найден, ничего не делаем
+
+        form_id, step_num = result
+
+        if was_deleted:
+            # Шаг удалён — сдвигаем нумерацию влево (уменьшаем num_in_form для шагов с большим номером)
+            cursor.execute("""
+                UPDATE step
+                SET num_in_form = num_in_form - 1
+                WHERE form_id = ? AND num_in_form > ?
+            """, (form_id, step_num))
+        else:
+            # Шаг добавлен — сдвигаем нумерацию вправо (увеличиваем num_in_form для шагов с равным или большим номером)
+            cursor.execute(""" UPDATE step 
+            SET num_in_form = num_in_form + 1
+            WHERE form_id = ? AND num_in_form >= ?
+            """, (form_id, step_num))
+
