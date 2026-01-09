@@ -63,7 +63,7 @@ class TrackRedactor(QDialog):
         self._add_header()
 
         # Добавляем основной контент
-        if self.track is None:
+        if self.track is None or (len(self.track.SMs) + len(self.track.PSs)) == 0:
             self._add_creation_buttons()
         else:
             self._add_puzzle_cards()
