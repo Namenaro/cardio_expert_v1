@@ -109,7 +109,7 @@ class Model:
                     return result_obj
                 else:
                     track = self.track_service.get_track_by_id(conn=conn, track_id=track_id)
-                    track.insert_ps(sm=obj)
+                    track.insert_ps(ps=obj)
                     res_track = self.track_service.update_track(conn=conn, track=track)
                     result_obj = TrackDbResult(track=res_track, message=f"PS успешно добавлен в трек {track_id}",
                                                success=True)

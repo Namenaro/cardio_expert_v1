@@ -34,7 +34,7 @@ class TrackController(BaseController):
         track_signals.track_redactor_closed.connect(self._track_redactor_closed)
 
         pazzle_signals.db_add_sm.connect(self._add_sm)
-        pazzle_signals.db_add_pc.connect(self._add_ps)
+        pazzle_signals.db_add_ps.connect(self._add_ps)
 
         pazzle_signals.db_update_ps_sm.connect(self._update_sm_ps)
         pazzle_signals.db_delete_ps_sm.connect(self._delete_sm_ps)
@@ -85,7 +85,7 @@ class TrackController(BaseController):
         model = self.get_model()
         add_result = model.add_PS(track_id=add_ps_params.track_id,
                      step_id=add_ps_params.step_id,
-                     obj=add_ps_params.sm)
+                     obj=add_ps_params.ps)
         self._handle_db_track_result(add_result)
 
     @Slot(ParamsInitTrackEditor)

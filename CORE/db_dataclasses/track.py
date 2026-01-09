@@ -23,3 +23,6 @@ class Track:
             num_in_track = len(self.SMs)  # вставка в конец, если индекс слишком большой
 
         self.SMs.insert(num_in_track, sm)
+
+    def insert_ps(self, ps:BasePazzle):
+        self.PSs.append(ps)
