@@ -21,6 +21,10 @@ class ParamsInitTrackEditor(NamedTuple):
     track:Optional[Track]
     step_id: int
 
+class Del_Upd_SM_PS_Params(NamedTuple):
+    pazzle: BasePazzle
+    track_id: int
+
 
 class _SignalCategory(QObject):
     """Базовый класс для категорий сигналов."""
@@ -78,6 +82,9 @@ class AppSignals:
 
         db_delete_pazzle = Signal(BasePazzle)
         db_update_pazzle = Signal(BasePazzle)
+
+        db_delete_ps_sm = Signal(Del_Upd_SM_PS_Params)
+        db_update_ps_sm = Signal(Del_Upd_SM_PS_Params)
 
     # Экземпляры категорий сигналов
     form = _Form()

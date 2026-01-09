@@ -7,7 +7,7 @@ from typing import List, Optional
 
 from CORE.db_dataclasses import BaseClass, BasePazzle
 from DA3 import app_signals
-from DA3.app_signals import AddSMParams, AddPSParams
+from DA3.app_signals import AddSMParams, AddPSParams, Del_Upd_SM_PS_Params
 
 
 class SM_PS_Card(QFrame):
@@ -122,7 +122,8 @@ class SM_PS_Card(QFrame):
 
     def _delete_card(self):
         """Эмитируем сигнал для удаления карты."""
-        app_signals.base_pazzle.db_delete_pazzle.emit(self.puzzle)
+        del_params = Del_Upd_SM_PS_Params(pazzle=self.puzzle, track_id=self.track_id)
+        app_signals.base_pazzle.db_delete_ps_sm.emit(del_params)
 
     def setup_ui(self):
         """Инициализация пользовательского интерфейса карточки."""

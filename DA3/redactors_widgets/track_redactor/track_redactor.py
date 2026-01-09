@@ -138,7 +138,7 @@ class TrackRedactor(QDialog):
         self.setUpdatesEnabled(False)
         self.refresh_ui()
         self.setUpdatesEnabled(True)
-
+ 
         QApplication.processEvents()
         self.logger.info("Refresh completed")
 

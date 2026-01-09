@@ -8,7 +8,7 @@ from DA3.redactors_widgets.track_redactor import TrackRedactor
 from CORE.db_dataclasses import Track
 from .base_controller import BaseController
 
-from DA3.app_signals import AppSignals, ParamsInitTrackEditor, AddSMParams, AddPSParams
+from DA3.app_signals import AppSignals, ParamsInitTrackEditor, AddSMParams, AddPSParams, Del_Upd_SM_PS_Params
 from ..model import TrackDbResult
 from ..redactors_widgets.pazzles_modal_editors import SMEditor
 
@@ -34,6 +34,9 @@ class TrackController(BaseController):
 
         pazzle_signals.db_add_sm.connect(self._add_sm)
         pazzle_signals.db_add_pc.connect(self._add_ps)
+
+        pazzle_signals.db_update_ps_sm.connect(self._update_sm_ps)
+        pazzle_signals.db_delete_ps_sm.connect(self._delete_sm_ps)
 
         pazzle_signals.request_sm_redactor.connect(self._open_sm_redactor)
         pazzle_signals.request_ps_redactor.connect(self._open_ps_redactor)
@@ -104,6 +107,27 @@ class TrackController(BaseController):
                 self._track_redactor.refresh(track_db_result.track)
         # Обновление формы или показ ошибки база данных
         self.handle_db_result(success=track_db_result.success, message=track_db_result.message)
+
+    def _update_sm_ps(self, upd_sm_ps_params:Del_Upd_SM_PS_Params)->None:
+        pazzle = upd_sm_ps_params.pazzle
+        model = self.get_model()
+        success, message = model.update_object(pazzle)
+        if success:
+            if self._track_redactor is not None:
+                track = model.get_track_by_id(upd_sm_ps_params.track_id)
+                self._track_redactor.refresh(track)
+        self.handle_db_result(success, message)
+
+
+    def _delete_sm_ps(self, del_sm_ps_params:Del_Upd_SM_PS_Params)->None:
+        pazzle = del_sm_ps_params.pazzle
+        model = self.get_model()
+        success, message = model.delete_object(pazzle)
+        if success:
+            if self._track_redactor is not None:
+                track = model.get_track_by_id(del_sm_ps_params.track_id)
+                self._track_redactor.refresh(track)
+        self.handle_db_result(success, message)
 
 
 

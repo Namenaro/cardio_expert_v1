@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt
 
 from CORE.db_dataclasses import BasePazzle, Form, BaseClass, Parameter, ClassArgument, ObjectArgumentValue, Track
 from DA3 import app_signals
-from DA3.app_signals import  AddSMParams
+from DA3.app_signals import AddSMParams, Del_Upd_SM_PS_Params
 from DA3.redactors_widgets import BaseEditor
 from DA3.redactors_widgets.pazzles_subwidgets  import (ArgumentsTableWidget, ClassesListWidget, InputParamsWidget)
 
@@ -152,7 +152,8 @@ class SMEditor(BaseEditor):
 
     def _emit_update_signal(self, data: BasePazzle) -> None:
         """Испускание сигнала обновления существующего объекта"""
-        app_signals.base_pazzle.db_update_pazzle.emit(data)
+        upd_params = Del_Upd_SM_PS_Params(pazzle=data, track_id=self.track.id)
+        app_signals.base_pazzle.db_update_ps_sm.emit(upd_params)
 
 # тестирование
 if __name__ == "__main__":
