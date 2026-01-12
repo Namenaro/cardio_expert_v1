@@ -13,7 +13,6 @@ from DA3.specialized_controllers import *
 import DA3.app_signals as app_signals
 
 
-
 class Controller(QObject):
     def __init__(self, model: Model, main_window: MainForm):
         """
@@ -47,7 +46,6 @@ class Controller(QObject):
         self.step_controller = StepController(self)
         self.track_controller = TrackController(self)
 
-
     def _init_controller_signals(self):
         """
         Явная инициализация сигналов в специализированных контроллерах.
@@ -63,7 +61,7 @@ class Controller(QObject):
         # Параметры: передаем app_signals.parameter (объект класса AppSignals._Parameter)
         self.parameter_controller.init_signals(app_signals.parameter)
 
-        #Пазлы: передаем app_signals.base_pazzle (объект класса AppSignals._BasePazzle)
+        # Пазлы: передаем app_signals.base_pazzle (объект класса AppSignals._BasePazzle)
         self.pazzle_controller.init_signals(app_signals.base_pazzle)
 
         # Шаги: передаем app_signals.step (объект класса AppSignals._Step)
@@ -168,4 +166,3 @@ class Controller(QObject):
         except Exception as e:
             self.logger.exception(f"Ошибка при инициализации формы: {e}")
             return False
-

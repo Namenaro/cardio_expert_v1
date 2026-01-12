@@ -13,7 +13,7 @@ class StepService:
     Точки (point) не создаются и не удаляются этим сервисом - они считаются существующими.
     """
 
-    def __init__(self, track_service:TrackService):
+    def __init__(self, track_service: TrackService):
         """
         Инициализация сервиса шагов.
 
@@ -103,12 +103,8 @@ class StepService:
         step_id = cursor.lastrowid
         step.id = step_id
 
-
-
         # Добавляем треки шага через track_service
         self._add_step_tracks(conn, step_id, step)
-
-
 
         # Получаем полный шаг с заполненными ID треков
         result = self.get_step_by_id(conn, step_id)
@@ -328,4 +324,3 @@ class StepService:
             SET num_in_form = num_in_form + 1
             WHERE form_id = ? AND num_in_form >= ?
             """, (form_id, step_num))
-

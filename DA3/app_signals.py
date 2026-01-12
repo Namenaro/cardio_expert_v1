@@ -10,6 +10,7 @@ class AddSMParams(NamedTuple):
     num_in_track: int
     step_id: int
 
+
 class AddPSParams(NamedTuple):
     ps: Optional[BasePazzle]
     track_id: Optional[int]
@@ -17,8 +18,9 @@ class AddPSParams(NamedTuple):
 
 
 class ParamsInitTrackEditor(NamedTuple):
-    track:Optional[Track]
+    track: Optional[Track]
     step_id: int
+
 
 class Del_Upd_SM_PS_Params(NamedTuple):
     pazzle: BasePazzle
@@ -57,7 +59,6 @@ class AppSignals:
         track_redactor_closed = Signal()
         db_delete_track = Signal(Track)
         db_update_track = Signal(Track)
-
 
     class _Step(_SignalCategory):
         request_new_step_dialog = Signal()

@@ -13,7 +13,7 @@ class TrackService:
     с сохранением целостности данных и порядковых номеров объектов.
     """
 
-    def __init__(self, objects_service:ObjectsService):
+    def __init__(self, objects_service: ObjectsService):
         """
         Инициализация сервиса треков.
 

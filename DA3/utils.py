@@ -1,6 +1,7 @@
 from CORE.db_dataclasses import *
 
-def get_affected_form_parameters(puzzle:BasePazzle, form_parameters:List[Parameter]) -> List[str]:
+
+def get_affected_form_parameters(puzzle: BasePazzle, form_parameters: List[Parameter]) -> List[str]:
     """
     Получить список имен параметров формы, которые упоминаются как входные параметры пазла
     :param puzzle: рассматриваемый пазл произвольного типа
