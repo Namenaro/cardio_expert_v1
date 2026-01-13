@@ -1,4 +1,4 @@
-from CORE.settings import DB_PATH
+from CORE.paths import DB_PATH
 from CORE.db.schema import create_tables
 
 import sqlite3

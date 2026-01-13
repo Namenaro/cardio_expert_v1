@@ -5,7 +5,7 @@ from CORE.db.classes_service import ClassesRepoRead
 from CORE.db_dataclasses import *
 
 from CORE.db.db_manager import DBManager
-from CORE.settings import DB_PATH
+from CORE.paths import DB_PATH
 
 from typing import List, Optional, Union, Tuple, NamedTuple
 

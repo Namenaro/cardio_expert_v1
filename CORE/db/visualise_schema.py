@@ -1,4 +1,4 @@
-from CORE.settings import DB_PATH
+from CORE.paths import DB_PATH
 import os
 import sqlite3
 import graphviz
