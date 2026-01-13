@@ -65,7 +65,7 @@ class Signal_1D_Drawer:
 
 # Пример использования
 if __name__ == "__main__":
-    from CORE.datasets.LUDB import LUDB, LEADS_NAMES
+    from CORE.datasets_wrappers.LUDB import LUDB, LEADS_NAMES
 
     # Загружаем тестовый сигнал
     ludb = LUDB()

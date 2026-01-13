@@ -1,6 +1,6 @@
 import os
 
-from CORE.datasets.third_party_dataset import ThirdPartyDataset
+from CORE.datasets_wrappers.third_party_dataset import ThirdPartyDataset
 from CORE.enums import LEADS_NAMES
 from CORE.signal_1d import Signal
 
