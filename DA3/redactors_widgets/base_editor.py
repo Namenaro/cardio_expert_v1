@@ -2,9 +2,9 @@ from abc import ABC, abstractmethod
 from typing import Any
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QPushButton,
-    QMessageBox, QWidget
+    QMessageBox, QWidget, QApplication
 )
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Signal, Qt
 
 
 class BaseEditor(QDialog):
@@ -17,6 +17,20 @@ class BaseEditor(QDialog):
         super().__init__(parent)
         self.original_data = data_object  # Сохраняем ссылку на оригинальный объект для сравнения на наличие изменений при сохранении.
         self.setModal(True)
+        # Устанавливаем адаптивный размер (70% от экрана)
+        screen = QApplication.primaryScreen().size()
+        width = int(screen.width() * 0.7)
+        height = int(screen.height() * 0.7)
+        self.resize(width, height)
+
+        # Устанавливаем стандартные флаги окна (свернуть, развернуть, закрыть)
+        self.setWindowFlags(
+            Qt.WindowType.Window |
+            Qt.WindowType.WindowMinimizeButtonHint |
+            Qt.WindowType.WindowMaximizeButtonHint |
+            Qt.WindowType.WindowCloseButtonHint
+        )
+
         self.setup_ui()
 
     def setup_ui(self) -> None:
@@ -128,7 +142,7 @@ class BaseEditor(QDialog):
 
     def _is_new_object(self) -> bool:
         """Проверка, является ли объект новым (не сохраненным в БД)"""
-        return self.original_data.id is None
+        return self.original_data is None or self.original_data.id is None
 
     def closeEvent(self, event: Any) -> None:
         """Обработчик закрытия окна"""

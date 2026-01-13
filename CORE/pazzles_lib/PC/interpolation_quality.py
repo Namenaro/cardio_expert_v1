@@ -41,8 +41,8 @@ class InterpolationError:
 
 # Пример использования
 if __name__ == "__main__":
-    from CORE.drawer import Drawer
-    from CORE.datasets.LUDB import LUDB, LEADS_NAMES
+    from CORE.visualisation.signal_1d_drawer import Signal_1D_Drawer
+    from CORE.datasets_wrappers.LUDB import LUDB, LEADS_NAMES
     import matplotlib.pyplot as plt
 
     # Загружаем тестовый сигнал ЭКГ
@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
     # Визуализация
     fig, ax = plt.subplots(figsize=(10, 4))
-    drawer = Drawer(ax)
+    drawer = Signal_1D_Drawer(ax)
     drawer.draw_signal(signal)
     ax.axvline(x=p1, ymin=0, ymax=1, color='r', linestyle='--', linewidth=1)
     ax.axvline(x=p3, ymin=0, ymax=1, color='b', linestyle='--', linewidth=1)

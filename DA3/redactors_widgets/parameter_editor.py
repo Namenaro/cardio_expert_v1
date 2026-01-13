@@ -83,8 +83,8 @@ class ParameterEditor(BaseEditor):
 
     def _emit_add_signal(self, param_data: Parameter) -> None:
         """Испускание сигнала добавления нового параметра"""
-        app_signals.db_add_parameter.emit(param_data)
+        app_signals.parameter.db_add_parameter.emit(param_data)
 
     def _emit_update_signal(self, param_data: Parameter) -> None:
         """Испускание сигнала обновления параметра"""
-        app_signals.db_update_object.emit(param_data)
+        app_signals.parameter.db_update_parameter.emit(param_data)

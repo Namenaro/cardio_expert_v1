@@ -2,6 +2,8 @@ from CORE.db.forms_services.parameter_service import ParameterService
 from CORE.db.forms_services.point_service import PointService
 from CORE.db.forms_services.step_service import StepService
 from CORE.db.forms_services.objects_service import ObjectsService
+from CORE.db.forms_services.track_service import TrackService
+from CORE.db.classes_service import ClassesRepoRead
 from CORE.db_dataclasses import *
 
 import logging
@@ -19,10 +21,14 @@ class FormService:
         """
         Инициализация сервиса форм: создает все вспомогательные сервисы для работы с шагами, точками и т.п.
         """
-        self.objects_service = ObjectsService()
-        self.step_service = StepService()
+        classes_refs_reader = ClassesRepoRead()
+        self.objects_service = ObjectsService(classes_refs_reader)
+        self.track_service = TrackService(objects_service=self.objects_service)
+        self.step_service = StepService(self.track_service)
         self.point_service = PointService()
         self.parameter_service = ParameterService()
+
+
 
     def update_form_main_info(self, conn, form: Form) -> Form:
         cursor = conn.cursor()

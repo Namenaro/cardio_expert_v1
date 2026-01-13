@@ -1,43 +1,97 @@
-from PySide6.QtCore import QObject, Signal
+from typing import NamedTuple
 
-from typing import List, Optional, Union
+from PySide6.QtCore import QObject, Signal
 
 from CORE.db_dataclasses import *
 
 
-class AppSignals(QObject):
+# Вспомогательные типы для явной документации аргументов сигналов
+class AddSMParams(NamedTuple):
+    sm: Optional[BasePazzle]
+    track_id: Optional[int]
+    num_in_track: int
+    step_id: int
+
+
+class AddPSParams(NamedTuple):
+    ps: Optional[BasePazzle]
+    track_id: Optional[int]
+    step_id: int
+
+
+class ParamsInitTrackEditor(NamedTuple):
+    track: Optional[Track]
+    step_id: int
+
+
+class Del_Upd_SM_PS_Params(NamedTuple):
+    pazzle: BasePazzle
+    track_id: int
+
+
+class _SignalCategory(QObject):
+    """Базовый класс для категорий сигналов."""
+    pass
+
+
+class AppSignals:
     """
-    Глобальные сигналы приложения
+    Глобальные сигналы приложения, сгруппированные по функциональным областям.
     """
 
-    # ===================== СИГНАЛЫ ОТКРЫТИЯ РЕДАКТОРОВ =====================
+    class _Form(_SignalCategory):
+        request_main_info_redactor = Signal(Form)
+        db_add_form = Signal(Form)
+        db_update_form_main_info = Signal(Form)
 
-    request_main_info_redactor = Signal(Form)
-    request_point_redactor = Signal(Point)
-    request_parameter_redactor = Signal(Parameter)
-    request_step_redactor = Signal(Step)
-    request_track_redactor = Signal(Track)
+    class _Point(_SignalCategory):
+        request_point_redactor = Signal(Point)
+        db_add_point = Signal(Point)
+        db_delete_point = Signal(Point)
+        db_opdate_point = Signal(Point)
 
-    request_hc_redactor = Signal(BasePazzle)
-    request_pc_redactor = Signal(BasePazzle)
-    request_sm_redactor = Signal(BasePazzle)
-    request_ps_redactor = Signal(BasePazzle)
+    class _Parameter(_SignalCategory):
+        request_parameter_redactor = Signal(Parameter)
+        db_add_parameter = Signal(Parameter)
+        db_delete_parameter = Signal(Parameter)
+        db_update_parameter = Signal(Parameter)
 
-    # ===================== СИГНАЛЫ ДЕЙСТВИЙ С БАЗОЙ =====================
-    # СИГНАЛЫ ОБНОВЛЕНИЯ И УДАЛЕНИЯ
+    class _Track(_SignalCategory):
+        request_track_redactor = Signal(ParamsInitTrackEditor)
+        track_redactor_closed = Signal()
+        db_delete_track = Signal(Track)
+        db_update_track = Signal(Track)
 
-    db_delete_object = Signal(object) # Form, Point, Parameter, Step, BasePazzle, Track
-    db_update_object = Signal(object) # Form, Point, Parameter, Step, BasePazzle, Track
-    db_update_form_main_info = Signal(Form)
+    class _Step(_SignalCategory):
+        request_new_step_dialog = Signal()
+        request_step_info_redactor = Signal(Step)
+        db_add_step = Signal(Step)
+        db_delete_step = Signal(Step)
+        db_update_step = Signal(Step)
 
-    # СИГНАЛЫ ДОБАВЛЕНИЯ
-    db_add_form = Signal(Form)
-    db_add_point = Signal(Point)
-    db_add_parameter = Signal(Parameter)
-    db_add_step = Signal(Step)
-    db_add_track = Signal(Track, int) # track, step_id
+    class _BasePazzle(_SignalCategory):
+        # Запросы на показ модальных редакторов
+        request_hc_redactor = Signal(BasePazzle)
+        request_pc_redactor = Signal(BasePazzle)
+        request_sm_redactor = Signal(AddSMParams)
+        request_ps_redactor = Signal(AddPSParams)
 
-    db_add_hc = Signal(BasePazzle)
-    db_add_pc = Signal(BasePazzle)
-    db_add_sm = Signal(BasePazzle, int, int) # sm, track_id, num_in_track
-    db_add_ps = Signal(BasePazzle, int, int) # ps, track_id, num_in_track
+        # Запрос на добавление в базу нового пазла
+        db_add_hc = Signal(BasePazzle)
+        db_add_pc = Signal(BasePazzle)
+        db_add_sm = Signal(AddSMParams)
+        db_add_ps = Signal(AddPSParams)
+
+        db_delete_pazzle = Signal(BasePazzle)
+        db_update_pazzle = Signal(BasePazzle)
+
+        db_delete_ps_sm = Signal(Del_Upd_SM_PS_Params)
+        db_update_ps_sm = Signal(Del_Upd_SM_PS_Params)
+
+    # Экземпляры категорий сигналов
+    form = _Form()
+    point = _Point()
+    parameter = _Parameter()
+    track = _Track()
+    step = _Step()
+    base_pazzle = _BasePazzle()

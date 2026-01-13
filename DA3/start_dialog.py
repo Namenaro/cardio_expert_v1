@@ -1,11 +1,10 @@
-from CORE.db_dataclasses import Form
-
-from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout,
-                               QListWidget, QPushButton, QListWidgetItem,
-                               QLabel, QApplication)
+from typing import List, Optional, Tuple
 
 from PySide6.QtCore import Qt
-from typing import List, Optional, Tuple
+from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QPushButton, QListWidgetItem, QLabel,
+                               QApplication)
+
+from CORE.db_dataclasses import Form
 
 
 def select_form_from_dialog(forms: List[Form]) -> Tuple[Optional[int], bool]:
@@ -124,11 +123,8 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     # Тестовые данные
-    forms = [
-        Form(1, "Форма 1", "Коммент 1", "", ""),
-        Form(2, "Форма 2", "Коммент 2", "", ""),
-        Form(3, "Форма 3", "Коммент 3", "", "")
-    ]
+    forms = [Form(1, "Форма 1", "Коммент 1", "", ""), Form(2, "Форма 2", "Коммент 2", "", ""),
+             Form(3, "Форма 3", "Коммент 3", "", "")]
 
     form_id, create_new = select_form_from_dialog(forms)
 

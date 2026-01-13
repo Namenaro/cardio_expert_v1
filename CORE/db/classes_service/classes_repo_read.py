@@ -8,35 +8,39 @@ from typing import List
 class ClassesRepoRead:
     """Репозиторий для чтения классов из базы данных"""
 
-    def __init__(self, db: DBManager):
+    def __init__(self, db: Optional[DBManager]=None):
         self.db = db
+
+    def get_class_by_id_in_conn(self, conn, class_id:int)-> BaseClass:
+        # Получаем основную информацию о классе
+        class_sql = "SELECT * FROM class WHERE id = ?"
+        class_row = conn.execute(class_sql, (class_id,)).fetchone()
+
+        if not class_row:
+            raise ValueError(f"Класс с ID {class_id} не найден")
+
+        # Создаем базовый объект класса
+        base_class = BaseClass(
+            name=class_row['name'],
+            comment=class_row['comment'] or '',
+            type=class_row['TYPE']
+        )
+
+        # Загружаем связанные данные
+        base_class.constructor_arguments = self._get_constructor_arguments(conn, class_id)
+        base_class.input_points = self._get_input_points(conn, class_id)
+        base_class.input_params = self._get_input_params(conn, class_id)
+        base_class.output_params = self._get_output_params(conn, class_id)
+
+        base_class.id = class_id
+
+        return base_class
 
     def get_class_by_id(self, class_id: int) -> BaseClass:
         """Получает полную информацию о классе по ID"""
         with self.db.get_connection() as conn:
-            # Получаем основную информацию о классе
-            class_sql = "SELECT * FROM class WHERE id = ?"
-            class_row = conn.execute(class_sql, (class_id,)).fetchone()
+            return self.get_class_by_id_in_conn(conn, class_id=class_id)
 
-            if not class_row:
-                raise ValueError(f"Класс с ID {class_id} не найден")
-
-            # Создаем базовый объект класса
-            base_class = BaseClass(
-                name=class_row['name'],
-                comment=class_row['comment'] or '',
-                type=class_row['TYPE']
-            )
-
-            # Загружаем связанные данные
-            base_class.constructor_arguments = self._get_constructor_arguments(conn, class_id)
-            base_class.input_points = self._get_input_points(conn, class_id)
-            base_class.input_params = self._get_input_params(conn, class_id)
-            base_class.output_params = self._get_output_params(conn, class_id)
-
-            base_class.id = class_id
-
-            return base_class
 
     def _get_constructor_arguments(self, conn: sqlite3.Connection, class_id: int) -> List[ClassArgument]:
         """Получает аргументы конструктора для класса"""

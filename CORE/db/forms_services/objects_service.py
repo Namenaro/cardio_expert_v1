@@ -5,6 +5,7 @@ from CORE.db.forms_services.object_data_service import ObjectDataService
 import logging
 from typing import List, Optional, Tuple
 
+from CORE.db.classes_service import ClassesRepoRead
 
 class ObjectsService:
     """
@@ -14,9 +15,10 @@ class ObjectsService:
     Обрабатывает бизнес-логику при изменении класса объекта и управляет транзакционной целостностью.
     """
 
-    def __init__(self):
+    def __init__(self, classes_refs_reader:ClassesRepoRead):
         self.data_service = ObjectDataService()
-        self.relation_service = ObjectRelationService()
+        self.relation_service = ObjectRelationService(classes_refs_reader)
+
 
     def delete_object(self, conn, object_id: int) -> bool:
         """
@@ -86,11 +88,11 @@ class ObjectsService:
             raise ValueError("Нарушено соглашение: Если пазл типа PC/HC, то указать form_id, иначе указать привязку к треку")
 
         # Получаем полный объект с заполненными ID
-        result = self.relation_service._get_full_object(cursor, object_id)
+        result = self.relation_service._get_full_object(conn, object_id)
         logging.info(f"Объект {object_id} успешно добавлен")
         return result
 
-    def update_object(self, conn, base_pazzle: BasePazzle) -> BasePazzle:
+    def update_object(self, conn, base_pazzle: BasePazzle, num_in_track: int = -1) -> BasePazzle:
         """
         Обновляет объект в базе данных каскадно
         """
@@ -100,7 +102,7 @@ class ObjectsService:
         cursor = conn.cursor()
 
         # Получаем текущую версию объекта
-        current_object = self.relation_service._get_full_object(cursor, base_pazzle.id)
+        current_object = self.relation_service._get_full_object(conn, base_pazzle.id)
         if not current_object:
             raise ValueError(f"Object with ID {base_pazzle.id} not found")
 
@@ -122,15 +124,17 @@ class ObjectsService:
             # Если класс не изменился - точечно обновляем связанные данные
             self.data_service._update_related_data(cursor, base_pazzle.id, base_pazzle, current_object)
 
+        if current_object.is_SM():
+            self.relation_service.change_num_in_track(cursor, current_object.id, num_in_track)
+
         # Получаем обновленный объект
-        result = self.relation_service._get_full_object(cursor, base_pazzle.id)
+        result = self.relation_service._get_full_object(conn, base_pazzle.id)
         logging.info(f"Объект {base_pazzle.id} успешно обновлен")
         return result
 
     def get_object_by_id(self, conn, object_id: int) -> Optional[BasePazzle]:
         """Получает объект по ID"""
-        cursor = conn.cursor()
-        return self.relation_service._get_full_object(cursor, object_id)
+        return self.relation_service._get_full_object(conn, object_id)
 
     def get_objects_by_class(self, conn, class_id: int) -> List[BasePazzle]:
         """Получает все объекты определенного класса"""
@@ -140,7 +144,7 @@ class ObjectsService:
 
         objects = []
         for obj_id in object_ids:
-            obj = self.relation_service._get_full_object(cursor, obj_id)
+            obj = self.relation_service._get_full_object(conn, obj_id)
             if obj:
                 objects.append(obj)
 

@@ -1,38 +1,40 @@
-
-from CORE.db.forms_services import FormService, PointService, ParameterService, StepService, TrackService, \
-    ObjectsService
+from typing import List, Optional, Union, Tuple, NamedTuple
 
 from CORE.db.classes_service import ClassesRepoRead
-from CORE.db_dataclasses import *
-
 from CORE.db.db_manager import DBManager
-from CORE.settings import DB_PATH
+from CORE.db.forms_services import FormService
+from CORE.db_dataclasses import *
+from CORE.paths import DB_PATH
 
 
-from typing import List, Optional, Union, Tuple
-
+class TrackDbResult(NamedTuple):
+    track: Optional[Track]
+    success: bool
+    message: str
 
 
 class Model:
-    def __init__(self, db_path:str=DB_PATH):
+
+    def __init__(self, db_path: str = DB_PATH):
         self.db_manager = DBManager(db_path)
 
         self.form_service = FormService()
-        self.point_service = PointService()
-        self.parameter_service = ParameterService()
-        self.objects_service = ObjectsService()
-        self.track_service = TrackService()
-        self.step_service = StepService()
+
+        self.point_service = self.form_service.point_service
+        self.parameter_service = self.form_service.parameter_service
+        self.objects_service = self.form_service.objects_service
+        self.track_service = self.form_service.track_service
+        self.step_service = self.form_service.step_service
 
         self.classes_service = ClassesRepoRead(self.db_manager)
 
     # ================= ГЕТТЕРЫ ======================
-    def get_all_forms_summaries(self)-> List[Form]:
+    def get_all_forms_summaries(self) -> List[Form]:
         with self.db_manager.get_connection() as conn:
             forms = self.form_service.get_all_forms(conn)
             return forms
 
-    def get_form_by_id(self, form_id)->Form:
+    def get_form_by_id(self, form_id) -> Form:
         with self.db_manager.get_connection() as conn:
             form = self.form_service.get_form_by_id(form_id=form_id, conn=conn)
             return form
@@ -50,17 +52,67 @@ class Model:
     def get_PSs_classes(self):
         return self.classes_service.get_classes_by_specific_type(CLASS_TYPES.PS)
 
+    def get_track_by_id(self, track_id: int):
+        with self.db_manager.get_connection() as conn:
+            return self.track_service.get_track_by_id(conn=conn, track_id=track_id)
 
     # ================= ДОБАВЛЕНИЕ ======================
-    def add_SM(self, num_in_track: int, obj: BasePazzle, track_id: int) -> Tuple[bool, str]:
+    def add_SM(self, num_in_track: int, obj: BasePazzle, track_id: Optional[int], step_id: int) -> TrackDbResult:
+        """
+        Добавление SM-пазла в Трек. Либо в существующий, лиюо создается новый трек.
+        :param num_in_track: номер добавлемого пазла в треке
+        :param obj: добавляемый пазл
+        :param track_id: если трек уже существует, то int.  Если трек нужно создать, то None
+        :param step_id: id шага, к которому принадлежит трек (нужен на случай, если придется создавать трек)
+        :return:
+        """
         try:
             with self.db_manager.get_connection() as conn:
-                track = self.track_service.get_track_by_id(conn=conn, track_id=track_id)
-                track.insert_sm(sm=obj, num_in_track=num_in_track)
-                self.track_service.update_track(conn=conn, track=track)
-                return True, "SM успешно добавлен"
+                if track_id is None:
+                    track = Track(SMs=[obj])
+                    res_track = self.track_service.add_track(conn, track, step_id=step_id)
+                    result_obj = TrackDbResult(track=res_track, message="SM успешно добавлен и создан трек",
+                                               success=True)
+                    return result_obj
+                else:
+                    track = self.track_service.get_track_by_id(conn=conn, track_id=track_id)
+                    track.insert_sm(sm=obj, num_in_track=num_in_track)
+                    res_track = self.track_service.update_track(conn=conn, track=track)
+                    result_obj = TrackDbResult(track=res_track, message=f"SM успешно добавлен в трек {track_id}",
+                                               success=True)
+                    return result_obj
+
         except Exception as e:
-            return False, f"Ошибка добавления SM: {str(e)}"
+            result_obj = TrackDbResult(None, message=f"Ошибка добавления SM: {str(e)}", success=False)
+            return result_obj
+
+    def add_PS(self, obj: BasePazzle, track_id: Optional[int], step_id: int) -> TrackDbResult:
+        """
+        Добавление PS-пазла в Трек. Либо в существующий, лиюо создается новый трек.
+        :param obj: добавляемый пазл
+        :param track_id: если трек уже существует, то int.  Если трек нужно создать, то None
+        :param step_id: id шага, к которому принадлежит трек (нужен на случай, если придется создавать трек)
+        :return:
+        """
+        try:
+            with self.db_manager.get_connection() as conn:
+                if track_id is None:
+                    track = Track(PSs=[obj])
+                    res_track = self.track_service.add_track(conn, track, step_id=step_id)
+                    result_obj = TrackDbResult(track=res_track, message="PS успешно добавлен и создан трек",
+                                               success=True)
+                    return result_obj
+                else:
+                    track = self.track_service.get_track_by_id(conn=conn, track_id=track_id)
+                    track.insert_ps(ps=obj)
+                    res_track = self.track_service.update_track(conn=conn, track=track)
+                    result_obj = TrackDbResult(track=res_track, message=f"PS успешно добавлен в трек {track_id}",
+                                               success=True)
+                    return result_obj
+
+        except Exception as e:
+            result_obj = TrackDbResult(None, message=f"Ошибка добавления PS: {str(e)}", success=False)
+            return result_obj
 
     def add_PC(self, obj: BasePazzle, form_id: int) -> Tuple[bool, str]:
         try:
@@ -77,14 +129,6 @@ class Model:
                 return True, "HC успешно добавлен"
         except Exception as e:
             return False, f"Ошибка добавления HC: {str(e)}"
-
-    def add_PS(self, obj: BasePazzle, track_id: int) -> Tuple[bool, str]:
-        try:
-            with self.db_manager.get_connection() as conn:
-                self.objects_service.add_object(conn=conn, base_pazzle=obj, track_id=track_id)
-                return True, "PS успешно добавлен"
-        except Exception as e:
-            return False, f"Ошибка добавления PS: {str(e)}"
 
     def add_track(self, track: Track, step_id: int) -> Tuple[bool, str]:
         try:
@@ -117,12 +161,6 @@ class Model:
                 form = self.form_service.get_form_by_id(form_id=form_id, conn=conn)
                 if step.num_in_form < 0 or step.num_in_form > len(form.steps):
                     return False, f"Некорректный номер шага: {step.num_in_form}"
-
-                # Изменим нумерацию шагов, следующих после вставляемого
-                for old_step in form.steps:
-                    if old_step.num_in_form >= step.num_in_form:
-                        old_step.num_in_form += 1
-                        self.step_service.update_step(conn=conn, step=old_step)
 
                 # Добавим новый шаг
                 self.step_service.add_step(conn=conn, step=step, form_id=form_id)

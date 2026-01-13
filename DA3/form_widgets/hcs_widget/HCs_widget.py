@@ -2,18 +2,14 @@ from typing import Optional, List
 from PySide6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QPushButton,
                                QLabel, QMessageBox, QScrollArea, QFrame, QSizePolicy)
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont
 
 from DA3 import app_signals
-from CORE.db_dataclasses import BasePazzle, Form
+from CORE.db_dataclasses import BasePazzle, Form, Parameter
 from DA3.form_widgets.hcs_widget.HC_card import HCCard
 
 
 class HCsWidget(QWidget):
     """Виджет для отображения HC объектов формы"""
-
-    # Сигналы
-    hc_added = Signal(BasePazzle, Form)  # Альтернативный сигнал, если нужно
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -70,7 +66,6 @@ class HCsWidget(QWidget):
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-
         self.cards_widget = QWidget()
         self.cards_widget.setStyleSheet("background-color: #f5f5f5;")
         self.cards_layout = QHBoxLayout(self.cards_widget)
@@ -96,9 +91,8 @@ class HCsWidget(QWidget):
         # Создаем пустой объект BasePazzle
         hc = BasePazzle()
 
-
         # Испускаем сигнал с пустым объектом
-        app_signals.request_hc_redactor.emit(hc)
+        app_signals.base_pazzle.request_hc_redactor.emit(hc)
 
     def reset_form(self, form: Form) -> None:
         """Установить новую форму"""
@@ -116,7 +110,8 @@ class HCsWidget(QWidget):
         # Добавляем карточки только для HC объектов
         for hc_object in self._form.HC_PC_objects:
             if hc_object.is_HC():
-                card = HCCard(hc_object, self)
+                # Создаем карточку с передачей параметров формы
+                card = HCCard(hc_object, self._form.parameters, self)
                 self.cards_layout.insertWidget(self.cards_layout.count() - 1, card)
 
     def clear_cards(self):
@@ -127,28 +122,4 @@ class HCsWidget(QWidget):
             if item.widget():
                 item.widget().deleteLater()
 
-        # Убедимся, что stretch есть в конце
-        if self.cards_layout.count() == 0:
-            self.cards_layout.addStretch()
-        elif not isinstance(self.cards_layout.itemAt(0), QWidget):
-            # Если первый элемент не виджет, значит это stretch
-            pass
-        else:
-            self.cards_layout.addStretch()
 
-    def add_hc_object(self, hc: BasePazzle):
-        """Добавить HC объект вручную (если требуется)"""
-        if self._form and hasattr(self._form, 'HC_PC_objects'):
-            self._form.HC_PC_objects.append(hc)
-            self.refresh()
-
-    def remove_hc_object(self, hc: BasePazzle):
-        """Удалить HC объект (если требуется)"""
-        if self._form and hasattr(self._form, 'HC_PC_objects'):
-            if hc in self._form.HC_PC_objects:
-                self._form.HC_PC_objects.remove(hc)
-                self.refresh()
-
-    def get_form(self) -> Optional[Form]:
-        """Получить текущую форму"""
-        return self._form
