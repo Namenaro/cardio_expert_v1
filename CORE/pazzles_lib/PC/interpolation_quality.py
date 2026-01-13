@@ -41,7 +41,7 @@ class InterpolationError:
 
 # Пример использования
 if __name__ == "__main__":
-    from CORE.drawer import Drawer
+    from CORE.visualisation.drawer import Drawer
     from CORE.datasets.LUDB import LUDB, LEADS_NAMES
     import matplotlib.pyplot as plt
 
