@@ -1,13 +1,11 @@
-import sys
 import logging
-from typing import Optional
+import sys
+
 from PySide6.QtWidgets import QApplication
 
-from DA3.main_form import MainForm
 from DA3.controller import Controller
-from CORE.db_dataclasses import Form
+from DA3.main_form import MainForm
 from DA3.model import Model
-from DA3.start_dialog import select_form_from_dialog
 
 
 def setup_logging():

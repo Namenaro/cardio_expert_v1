@@ -1,5 +1,7 @@
+from typing import NamedTuple
+
 from PySide6.QtCore import QObject, Signal
-from typing import Optional, Union, NamedTuple
+
 from CORE.db_dataclasses import *
 
 
