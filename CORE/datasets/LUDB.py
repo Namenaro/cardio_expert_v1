@@ -1,27 +1,16 @@
+import os
+
+from CORE.datasets.third_party_dataset import ThirdPartyDataset
+from CORE.enums import LEADS_NAMES
 from CORE.signal_1d import Signal
 
 from importlib import resources
 import json
 from typing import Optional, List
-from types import SimpleNamespace
-
-LEADS_NAMES = SimpleNamespace(
-    i='i',
-    ii='ii',
-    iii='iii',
-    avr='avr',
-    avl='avl',
-    avf='avf',
-    v1='v1',
-    v2='v2',
-    v3='v3',
-    v4='v4',
-    v5='v5',
-    v6='v6',
-)
+from CORE.paths import LUDB_JSON_PATH
 
 
-class LUDB:
+class LUDB(ThirdPartyDataset):
     def __init__(self):
         """
             Обертка для работы с датасетом LUDB.
@@ -31,15 +20,18 @@ class LUDB:
                 _data (dict): Загруженные данные датасета
 
             Raises:
-                FileNotFoundError: Если файл датасета не найден
+                FileNotFoundError: Если файл LUDB_JSON_PATH не найден.
+                json.JSONDecodeError: Если файл содержит некорректный JSON.
             """
-        try:
-            with resources.files('CORE.datasets.data').joinpath('ecg_data_200.json').open('r', encoding='utf-8') as f:
-                self._data = json.load(f)
+        if not os.path.exists(LUDB_JSON_PATH):
+            raise FileNotFoundError(f"Файл LUDB не найден: {LUDB_JSON_PATH}")
 
-        except FileNotFoundError as e:
-            raise FileNotFoundError(
-                f"Файл датасета 'ecg_data_200.json' не найден в пакете 'datasets.data'"
+        try:
+            with open(LUDB_JSON_PATH, 'r', encoding='utf-8') as f:
+                self._data = json.load(f)
+        except json.JSONDecodeError as e:
+            raise json.JSONDecodeError(
+                f"Ошибка парсинга JSON в файле {LUDB_JSON_PATH}: {e}", e.doc, e.pos
             ) from e
 
     def get_1d_signal(self, patient_id:str, lead_name:LEADS_NAMES)->Optional[Signal]:
@@ -48,7 +40,7 @@ class LUDB:
 
                 Args:
                     patient_id: Идентификатор пациента в файле ecg_data_200.json
-                    lead_name: Название отведения из LUDB_LEADS_NAMES
+                    lead_name: Название отведения из enums.py
 
                 Returns:
                     Объект Signal с данными сигнала или None,
@@ -64,11 +56,12 @@ class LUDB:
         return signal
 
     def get_patients_ids(self)->List[str]:
-        return list(self._data.keys())
+        return list(self._data.keys()) if self._data else []
 
 if __name__ == "__main__":
     ludb = LUDB()
     patients_ids = ludb.get_patients_ids()
+    print(f" Пациентов найдено {len(patients_ids)}")
 
     signal = ludb.get_1d_signal(patient_id=patients_ids[0], lead_name=LEADS_NAMES.i)
     print(signal.time[0:8])

@@ -13,6 +13,9 @@ DB_PATH = os.path.join(BASE_DIR, "data", DB_NAME)
 # Папка с json-файлами датасетов экземплярв форм, заполняемых в Datagen
 EXEMPLARS_DATASETS_PATH = os.path.join(BASE_DIR, "data", "forms_datasets")
 
+# Внешние датасеты
+LUDB_JSON_PATH = os.path.join(BASE_DIR, "data", "ecg_data_200.json")
+
 
 def create_directories():
     """Создаёт директории, если их нет."""
