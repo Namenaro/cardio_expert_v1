@@ -1,8 +1,9 @@
-# Константы приложения
+"""
+Конфигурационный файл с путями к данным и функцией инициализации директорий.
+"""
 
 import os
 
-# Получаем абсолютный путь к папке, где находится paths.py
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Основая база данных, заполненная в DA
@@ -17,6 +18,7 @@ def create_directories():
     """Создаёт директории, если их нет."""
     directories = [
         os.path.dirname(DB_PATH),
+        EXEMPLARS_DATASETS_PATH
 
     ]
     for dir_path in directories:
