@@ -1,10 +1,7 @@
-from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout,
-                               QHBoxLayout, QSizePolicy, QScrollArea, QApplication)
+from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QSizePolicy, QScrollArea, QApplication)
+
 from CORE.db_dataclasses import Form
-from DA3.form_widgets import (
-    FormInfoWidget, HCsWidget, PCsWidget,
-    PointsWidget, ParametersWidget, StepsWidget
-)
+from DA3.form_widgets import (FormInfoWidget, HCsWidget, PCsWidget, PointsWidget, ParametersWidget, StepsWidget)
 
 
 class MainForm(QMainWindow):
@@ -46,26 +43,17 @@ class MainForm(QMainWindow):
 
         # FormInfoWidget - минимальный размер по содержимому
         self.form_info_widget = FormInfoWidget()
-        self.form_info_widget.setSizePolicy(
-            QSizePolicy.Policy.Minimum,
-            QSizePolicy.Policy.Minimum
-        )
+        self.form_info_widget.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         top_layout.addWidget(self.form_info_widget)
 
         # PointsWidget - расширяемый по горизонтали
         self.points_widget = PointsWidget()
-        self.points_widget.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Minimum
-        )
+        self.points_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         top_layout.addWidget(self.points_widget, stretch=1)
 
         # StepsWidget - максимальный приоритет расширения
         self.steps_widget = StepsWidget()
-        self.steps_widget.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Minimum
-        )
+        self.steps_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         top_layout.addWidget(self.steps_widget, stretch=2)
 
         # === НИЖНИЙ КОНТЕЙНЕР ===
@@ -76,10 +64,7 @@ class MainForm(QMainWindow):
 
         # ParametersWidget
         self.parameters_widget = ParametersWidget()
-        self.parameters_widget.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Minimum
-        )
+        self.parameters_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         bottom_layout.addWidget(self.parameters_widget, 1)
 
         # Правый контейнер (для PC и HC виджетов)
@@ -90,18 +75,12 @@ class MainForm(QMainWindow):
 
         # PCsWidget
         self.pcs_widget = PCsWidget()
-        self.pcs_widget.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Minimum
-        )
+        self.pcs_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         right_layout.addWidget(self.pcs_widget)
 
         # HCsWidget
         self.hcs_widget = HCsWidget()
-        self.hcs_widget.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Minimum
-        )
+        self.hcs_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         right_layout.addWidget(self.hcs_widget)
 
         bottom_layout.addWidget(right_container, 2)

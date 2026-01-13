@@ -4,7 +4,8 @@ from CORE.signal_1d import Signal
 
 from typing import Optional
 
-class Drawer:
+
+class Signal_1D_Drawer:
     """
     Класс для визуализации 1-d сигналов на миллиметровке
 
@@ -62,7 +63,6 @@ class Drawer:
 
 
 
-
 # Пример использования
 if __name__ == "__main__":
     from CORE.datasets.LUDB import LUDB, LEADS_NAMES
@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
     # Отрисовываем его
     fig, ax = plt.subplots(figsize=(10, 4))
-    drawer = Drawer(ax)
+    drawer = Signal_1D_Drawer(ax)
     drawer.draw_signal(signal, color='blue', name='Тестовый сигнал')
 
 

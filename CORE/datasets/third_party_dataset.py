@@ -7,7 +7,7 @@ from CORE.signal_1d import Signal
 
 class ThirdPartyDataset(ABC):
     """
-    Базовый класс для датасетов ЭКГ, на которых мы созданем датасеты форм (LUDB, PTB-XL,...)
+    Базовый класс для датасетов ЭКГ, на которых мы создаем датасеты форм (LUDB, PTB-XL,...)
     """
 
     @abstractmethod
