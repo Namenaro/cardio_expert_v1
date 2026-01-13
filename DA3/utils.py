@@ -14,9 +14,8 @@ def get_affected_form_parameters(puzzle: BasePazzle, form_parameters: List[Param
     # Собираем ID параметров формы из input_param_values
     param_ids = []
     for param_value in puzzle.input_param_values:
-        if (isinstance(param_value, ObjectInputParamValue) and
-                hasattr(param_value, 'parameter_id') and
-                param_value.parameter_id is not None):
+        if (isinstance(param_value, ObjectInputParamValue) and hasattr(param_value,
+                                                                       'parameter_id') and param_value.parameter_id is not None):
             param_ids.append(param_value.parameter_id)
 
     if not param_ids:
