@@ -3,11 +3,12 @@ import json
 import os
 
 from CORE.datasets_wrappers.third_party_dataset import ThirdPartyDataset
+from CORE.db_dataclasses import Form
 from CORE.paths import DB_PATH, EXEMPLARS_DATASETS_PATH
 
 
 class FormDataset:
-    def __init__(self, forms_dataset_name: str, outer_dataset: ThirdPartyDataset, ):
+    def __init__(self, forms_dataset_name: str, outer_dataset: ThirdPartyDataset, form: Form):
         full_path = os.path.join(EXEMPLARS_DATASETS_PATH, forms_dataset_name)
 
 
