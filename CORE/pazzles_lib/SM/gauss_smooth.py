@@ -115,7 +115,7 @@ if __name__ == "__main__":
 
     # Визуализация
     fig, ax = plt.subplots(figsize=(10, 4))
-    drawer = Drawer(ax)
+    drawer = Signal_1D_Drawer(ax)
     drawer.draw_signal(new_signal, name="new", color='blue')
     drawer.draw_signal(old_signal, name="old")
     plt.show()
