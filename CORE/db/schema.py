@@ -8,7 +8,8 @@ def create_tables(cursor):
                                     comment TEXT,
                                     name TEXT NOT NULL UNIQUE,
                                     path_to_pic TEXT,
-                                    path_to_dataset TEXT
+                                    path_to_dataset TEXT,
+                                    path_to_neg_dataset TEXT
                                 )
                                 ''')
 

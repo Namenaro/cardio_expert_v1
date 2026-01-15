@@ -116,8 +116,8 @@ class FrequencyFilter:
 
 # Пример использования
 if __name__ == "__main__":
-    from CORE.drawer import Drawer
-    from CORE.datasets.LUDB import LUDB, LEADS_NAMES
+    from CORE.visualisation import Signal_1D_Drawer
+    from CORE.datasets_wrappers.LUDB import LUDB, LEADS_NAMES
     import matplotlib.pyplot as plt
 
     # Загружаем тестовый сигнал ЭКГ
@@ -141,17 +141,17 @@ if __name__ == "__main__":
     # Визуализация
     fig, axes = plt.subplots(4, 1, figsize=(12, 10), sharex=True)
 
-    drawer1 = Drawer(axes[0])
+    drawer1 = Signal_1D_Drawer(axes[0])
     drawer1.draw_signal(old_signal, name="Исходный сигнал", color='black')
     axes[0].set_title("Исходный сигнал")
     axes[0].grid(True, alpha=0.3)
 
-    drawer2 = Drawer(axes[1])
+    drawer2 = Signal_1D_Drawer(axes[1])
     drawer2.draw_signal(signal_lowpass, name="ФНЧ", color='blue')
     axes[1].set_title("ФНЧ - удалены высокие частоты")
     axes[1].grid(True, alpha=0.3)
 
-    drawer3 = Drawer(axes[2])
+    drawer3 = Signal_1D_Drawer(axes[2])
     drawer3.draw_signal(signal_highpass, name="ФВЧ", color='red')
     axes[2].set_title("ФВЧ - удалены низкие частоты")
     axes[2].grid(True, alpha=0.3)
