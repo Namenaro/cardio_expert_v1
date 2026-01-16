@@ -5,9 +5,10 @@ from typing import List, Optional, Dict
 
 from CORE.datasets_wrappers.third_party_dataset import ThirdPartyDataset
 from CORE.db_dataclasses import Form
-from CORE.paths import DB_PATH, EXEMPLARS_DATASETS_PATH
+from CORE.paths import EXEMPLARS_DATASETS_PATH
 from CORE.logger import get_logger
 from CORE.datasets_wrappers.form_dataset_entry import Entry
+from CORE.run import Exemplar
 
 logger = get_logger(__name__)
 
@@ -21,6 +22,9 @@ class FormDataset:
 
         full_path = os.path.join(EXEMPLARS_DATASETS_PATH, form_dataset_name)
         self._load_data(full_path)
+
+    def _entry_to_exemplar(self, entry: Entry) -> Optional[Exemplar]:
+
 
     def _load_data(self, filepath: str):
         """Загрузка данных из JSON файла"""
@@ -59,11 +63,6 @@ class FormDataset:
         """Проверка наличия ID"""
         return id in self._entries
 
-    def __getitem__(self, id: str) -> Entry:
-        """Доступ по ID через квадратные скобки"""
-        if id not in self._entries:
-            raise KeyError(f"Запись {id} не найдена")
-        return self._entries[id]
 
 if __name__ == "__main__":
     from CORE.datasets_wrappers import LUDB
