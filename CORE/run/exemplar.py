@@ -19,7 +19,7 @@ class Exemplar:
         self.signal = signal
         self._points: Dict[str, Tuple[float, Any]] = {}  # Хранилище точек: имя -> (координата, track_id)
         self._parameters: Dict[str, Any] = {}  # Хранилище параметров: имя -> значение
-        self.evaluation_result: Optional[int] = None
+        self.evaluation_result: Optional[float] = None
 
     def add_point(self, point_name: str, point_coord_t: float, track_id: Any) -> bool:
         """
@@ -135,7 +135,7 @@ class Exemplar:
         return self._evaluation_result
 
     @evaluation_result.setter
-    def evaluation_result(self, value: float) -> None:
+    def evaluation_result(self, value: Optional[float]) -> None:
         """
         Устанавливает результат оценки.
 
@@ -144,8 +144,8 @@ class Exemplar:
         :raises ValueError: если значение выходит за допустимый диапазон
         """
         # Валидация типа
-        if not isinstance(value, float):
-            raise TypeError("evaluation_result должно быть int или None")
+        if value is not None and not isinstance(value, float):
+            raise TypeError("evaluation_result должно быть float или None")
 
         # Валидации диапазона
         if isinstance(value, float) and not (0 <= value <= 1):
