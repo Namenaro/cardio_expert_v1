@@ -1,82 +1,81 @@
 from pathlib import Path
-import json
-import os
-from typing import List, Optional, Dict
+from typing import Optional
 
-from CORE.datasets_wrappers.third_party_dataset import ThirdPartyDataset
+import pandas as pd
+
+from CORE.datasets_wrappers.form_dataset_raw import FormDatasetRaw
 from CORE.db_dataclasses import Form
-from CORE.paths import EXEMPLARS_DATASETS_PATH
-from CORE.logger import get_logger
-from CORE.datasets_wrappers.form_dataset_entry import Entry
-from CORE.run import Exemplar
-
-from CORE.logger import get_logger
-logger = get_logger(__name__)
+from CORE.run.parametriser import Parametriser
+from CORE.run.run_form import RunForm
 
 
-class ExemplarsDatasetOnlyPoints:
-    def __init__(self, form_dataset_name: str, outer_dataset: ThirdPartyDataset):
+class FormDataset:
+    def __init__(self, data: Optional[pd.DataFrame] = None):
+        """
+        Базовый конструктор. Для создания объекта используйте classmethod-ы.
+        """
+        self.data = data
 
-        self.outer_dataset = outer_dataset
-        self.point_names: List[str] = []
-        self._exemplars: Dict[str, Exemplar] = {}
+    @classmethod
+    def from_file(cls, filepath: str):
+        """
+        Создаёт экземпляр FormDataset из файла.
 
-        full_path = os.path.join(EXEMPLARS_DATASETS_PATH, form_dataset_name)
-        self._load_data(full_path)
+        Args:
+            filepath (str): путь к файлу с данными ( .parquet)
 
-    def _entry_to_exemplar(self, entry: Entry) -> Optional[Exemplar]:
-        # Находим силнал этого отведения этого пациента
-        signal = self.outer_dataset.get_1d_signal(patient_id=entry.patient_id, lead_name=entry.lead_name)
+        Returns:
+            FormDataset: новый экземпляр класса
+        """
+        path = Path(filepath)
 
-        # Заполняем точки
-        exemplar = Exemplar(signal)
-        for point_name, point_coord in entry.points.items():
-            exemplar.add_point(point_name=point_name, point_coord_t=point_coord, track_id=None)
-        return exemplar
+        if path.suffix == '.parquet':
+            data = pd.read_parquet(path)
+        else:
+            raise ValueError(f"Неподдерживаемый формат файла: {path.suffix}")
+        return cls(data)
 
+    @classmethod
+    def from_raw_dataset(cls, raw_exemplars: FormDatasetRaw, parametriser: Parametriser):
+        """
+        Создаёт экземпляр FormDataset на основе объекта FormDatasetRaw
+        """
 
-    def _load_data(self, filepath: str):
-        """Загрузка данных из JSON файла"""
-        try:
-            with open(filepath, 'r', encoding='utf-8') as file:
-                data = json.load(file)
+        rows = []
 
-            # Получаем метаинформацию
-            self.point_names = data.get('meta', {}).get('points', [])
+        for exemplar_id, exemplar in raw_exemplars._exemplars.items():
+            # Первый столбец таблицы это id записи непараметризованного (сыорго датасета)
+            row = {'id': exemplar_id}
 
-            # Загружаем записи
-            data_dict = data.get('data', {})
-            for entry_id, entry_data in data_dict.items():
-                entry = Entry.from_dict(entry_id, entry_data)
-                exemplar = self._entry_to_exemplar(entry)
-                self._exemplars[entry_id] = exemplar
+            # В сыром датасете параметры экзепляра не посчитаны, но расставлены все точки. На их основе заполяем параметры
+            parametriser.parametrise_exemplar(exemplar)
 
-            logger.info(f"Загружено {len(self._exemplars)} записей")
+            # Добавляем все параметры из _parameters экземпляра Exemplar в строку таблицы
+            for param_name, param_value in exemplar._parameters.items():
+                row[param_name] = param_value
 
-        except Exception as e:
-            logger.error(f"Ошибка загрузки {filepath}: {e}")
-            raise
+            rows.append(row)
 
-    def get_exemplar_by_id(self, id: str) -> Optional[Exemplar]:
-        """Получение записи по ID"""
-        return self._exemplars.get(id)
+        # Создаём DataFrame
+        data = pd.DataFrame(rows)
 
-    def get_all_ids(self) -> List[str]:
-        """Получение всех ID"""
-        return list(self._exemplars.keys())
+        # Сохраняем метаинформацию в attrs
+        data.attrs[
+            'raw_name'] = raw_exemplars.form_dataset_name if raw_exemplars.form_dataset_name is not None else "unknown"
 
-    def __len__(self) -> int:
-        """Количество записей"""
-        return len(self._exemplars)
+        return cls(data)
 
-    def __contains__(self, id: str) -> bool:
-        """Проверка наличия ID"""
-        return id in self._exemplars
+    def save_to_file(self, filename: str):
+        """
+            Сохраняет экземпляр FormDataset в файл
 
+            Args:
+                filename (str): имя файла с указанием формата .parquet
+            """
+        path = Path(filename)
 
-if __name__ == "__main__":
-    from CORE.datasets_wrappers import LUDB
-
-    ludb = LUDB()
-    dataset = ExemplarsDatasetOnlyPoints(form_dataset_name="test_form_dataset.json", outer_dataset=ludb)
-    print(f" датасет точек без параметризации: {len(dataset)}")
+        if path.suffix == '.parquet':
+            self.data.to_parquet(path, engine='pyarrow')
+        else:
+            raise ValueError(
+                f"Неподдерживаемый формат для сохранения парамертризованного датасета формы: {path.suffix}")
