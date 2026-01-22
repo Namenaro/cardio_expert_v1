@@ -4,6 +4,9 @@ import inspect
 import os
 import pkgutil
 
+from CORE.logger import get_logger
+
+logger = get_logger(__name__)
 
 class PuzzleFactory:
     _instance = None
@@ -49,7 +52,7 @@ class PuzzleFactory:
                         if self._is_valid_class(obj, module):
                             self.register(name, obj)
                 except Exception as e:
-                    print(f"Warning: Failed to load module {subfolder}.{module_name}: {e}")
+                    logger.error(f"Warning: Failed to load module {subfolder}.{module_name}: {e}")
                     continue
 
     def _is_valid_class(self, obj, module):
