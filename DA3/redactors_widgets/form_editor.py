@@ -115,7 +115,7 @@ class FormEditor(BaseEditor):
 
     def _emit_add_signal(self, form_data: Form) -> None:
         """Испускание сигнала добавления новой формы"""
-        app_signals.db_add_form.emit(form_data)
+        app_signals.form.db_add_form.emit(form_data)
 
     def _emit_update_signal(self, form_data: Form) -> None:
         """Испускание сигнала обновления формы"""

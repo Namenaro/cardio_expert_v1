@@ -1,25 +1,26 @@
+from CORE.pazzles_lib.pc_base import PCBase
 from CORE.signal_1d import Signal
-from typing import Optional
+from typing import Optional, Any, Dict
 from dataclasses import dataclass, field
 
 
-class InterpolationError:
+class InterpolationError(PCBase):
     """ Если построить лин.интерполяцию по 2 точкам (левая,  правая),
     то какое расхождение будет с сигналом внутри этого промежутка"""
 
-    @dataclass
-    class OutputParams:
-        error_in_procents: float = field(metadata={"description": "Ошибка интерполяции в процентах"})
-        error_in_mV: float =field(metadata={"description": "Ошибка интерполяции в мв"})
+    # Схема выходных данных
+    OUTPUT_SCHEMA = {
+        'error_in_procents': (float, "Ошибка интерполяции в процентах"),
+        'error_in_mV': (float, "Ошибка интерполяции в мв")
+    }
 
-    def register_points(self, point_left:float, point_right:float):
+    def register_points(self, point_left: float, point_right: float) -> None:
         """
         :param point_left: левая точка
         :param point_right: правая точка
         """
         self.point_left = point_left
         self.point_right = point_right
-
 
     def register_input_parameters(self, some_example_param:bool):
         """
@@ -28,16 +29,13 @@ class InterpolationError:
         """
         self.some_example_param = some_example_param  # TODO удалить потом, а пока чисто для теста парсера
 
-
-    def run(self, signal: Signal, left_t: Optional[float] = None, right_t: Optional[float] = None) -> 'InterpolationError.OutputParams':
-        # строим интерполяцию, считаем ошибку....
+    def run(self, signal: Signal) -> Dict[str, Any]:
         err_in_mV = 8.3
         err_in_procents = 0.11
-
-        return self.OutputParams(
-            error_in_mV=err_in_mV,
-            error_in_procents=err_in_procents
-        )
+        return {
+            'error_in_procents': err_in_procents,
+            'error_in_mV': err_in_mV
+        }
 
 # Пример использования
 if __name__ == "__main__":

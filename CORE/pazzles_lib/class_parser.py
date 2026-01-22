@@ -27,8 +27,8 @@ class ClassParser:
         # Парсим метод register_points
         base_class.input_points = self._parse_register_points(class_node)
 
-        # Парсим внутренний dataclass OutputParams
-        base_class.output_params = self._parse_output_params_dataclass(class_node)
+        # Парсим выходные параметры
+        base_class.output_params = self._parse_output_params(class_node)
 
         return base_class
 
@@ -134,29 +134,35 @@ class ClassParser:
 
         return input_params
 
-    def _parse_output_params_dataclass(self, class_node: ast.ClassDef) -> List[ClassOutputParam]:
-        """Парсит внутренний dataclass OutputParams"""
-        output_params = []
+    def _parse_output_params(self, class_node: ast.ClassDef) -> list[ClassOutputParam]:
+        """Парсит OUTPUT_SCHEMA из класса (Python 3.13+)"""
+        for item in class_node.body:
+            match item:
+                case ast.Assign(
+                    targets=[ast.Name(id="OUTPUT_SCHEMA")],
+                    value=ast.Dict(keys=keys, values=values)
+                ):
+                    output_params = []
+                    for key, value in zip(keys, values):
+                        match (key, value):
+                            case (ast.Constant(value=param_name),
+                                  ast.Tuple(elts=[type_node, ast.Constant(value=description)])):
 
-        output_params_class = self._find_inner_class(class_node, "OutputParams")
-        if not output_params_class or not self._is_dataclass(output_params_class):
-            return output_params
+                                # Извлекаем тип
+                                match type_node:
+                                    case ast.Name(id=type_name):
+                                        data_type = type_name
+                                    case _:
+                                        data_type = ast.unparse(type_node)
 
-        for class_item in output_params_class.body:
-            match class_item:
-                case ast.AnnAssign(target=ast.Name() as target, annotation=annotation):
-                    field_name = target.id
-                    raw_data_type = ast.unparse(annotation)
-                    data_type = self._normalize_data_type(raw_data_type)
-                    comment = self._get_field_comment(class_item)
+                                output_params.append(ClassOutputParam(
+                                    name=param_name,
+                                    data_type=data_type,
+                                    comment=description
+                                ))
+                    return output_params
 
-                    output_params.append(ClassOutputParam(
-                        name=field_name,
-                        comment=comment,
-                        data_type=data_type
-                    ))
-
-        return output_params
+        return []
 
     def _normalize_data_type(self, data_type: str) -> str:
         """Нормализует тип данных к значениям из DATA_TYPES"""

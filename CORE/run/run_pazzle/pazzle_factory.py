@@ -106,7 +106,9 @@ class PuzzleFactory:
         raise ValueError(f"Unsupported type: {target_type}")
 
     def create(self, classname: str, args: Dict[str, str]):
-        """Создает объект класса с преобразованием типов"""
+        """Создает объект класса с преобразованием типов аругментов из строки
+         в ожидаемый сигнатурой коснтруктора тип"""
+
         if classname not in self._registry:
             raise ValueError(f"Class {classname} not found")
 
