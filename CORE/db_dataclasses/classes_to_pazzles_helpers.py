@@ -84,7 +84,7 @@ class ObjectOutputParamValue:
     """Значение выходного параметра для объекта"""
     id: Optional[int] = None
     object_id: Optional[int] = None
-    output_param_id: Optional[int] = None
+    output_param_id: Optional[int] = None  # Ссылка на ClassOutputParam.id
     parameter_id: Optional[int] = None  # Ссылка на parameter.id  Может быть NULL
 
 #--------------------------------------------------

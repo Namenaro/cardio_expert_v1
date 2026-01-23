@@ -3,7 +3,9 @@ import sys
 import os
 
 # Добавляем путь к run_pazzle
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'run_pazzle'))
+current_path = os.path.dirname(__file__)
+path_to_pazzles = os.path.join(os.path.dirname(current_path), 'run_pazzle')
+sys.path.insert(0, path_to_pazzles)
 
 try:
     from pazzle_factory import factory
