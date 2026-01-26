@@ -1,76 +1,80 @@
-def _convert_value(self, value: str, target_type):
-    """Преобразует строку в указанный тип"""
-    if value is None:
-        raise ValueError("Value cannot be None")
-    if value == "":
-        raise ValueError("Value cannot be empty string")
+import ast
+from typing import Any, get_origin, get_args
 
-    # Обработка list[int] и list[float]
-    origin = get_origin(target_type)
-    if origin is list:
-        args = get_args(target_type)
-        if len(args) == 1:
-            elem_type = args[0]
-            # Удаляем скобки и разбиваем по запятым
-            value = value.strip('[] ')
-            if not value:
-                raise ValueError("List cannot be empty")
-            elements = [elem.strip() for elem in value.split(',') if elem.strip()]
 
-            if elem_type == int:
-                return [int(elem) for elem in elements]
-            elif elem_type == float:
-                return [float(elem) for elem in elements]
-
-    # Базовые типы
-    if target_type == bool:
-        val_lower = value.lower()
-        if val_lower == 'true':
-            return True
-        elif val_lower == 'false':
-            return False
+def convert_value(value_str: str, target_type: type) -> Any:
+    """
+    Конвертирует строковое значение в указанный тип.
+    Поддерживает: bool, float, int, str, list[float], list[int], list[str].
+    Принимает списки в форматах:
+      - "1,2,3"
+      - "[1,2,3]"
+    """
+    try:
+        if target_type is bool:
+            return _str_to_bool(value_str)
+        elif target_type is int:
+            return int(float(value_str))
+        elif target_type is float:
+            return float(value_str)
+        elif target_type is str:
+            return value_str
+        # Проверка на List[T]
+        elif (hasattr(target_type, '__origin__') and
+              get_origin(target_type) is list and
+              len(get_args(target_type)) == 1):
+            inner_type = get_args(target_type)[0]
+            parsed_list = _parse_list_string(value_str)
+            return [_convert_single_item(item, inner_type) for item in parsed_list]
         else:
-            raise ValueError(f"Bool must be 'true' or 'false', got: {value}")
-    elif target_type == int:
-        return int(value)
-    elif target_type == float:
-        return float(value)
-    elif target_type == str:
-        return str(value)
-
-    raise ValueError(f"Unsupported type: {target_type}")
+            raise ValueError(f"Тип {target_type} не поддерживается")
+    except Exception as e:
+        raise ValueError(f"Ошибка конвертации '{value_str}' в {target_type}: {e}")
 
 
-def create(self, classname: str, args: Dict[str, str]):
-    """Создает объект класса с преобразованием типов аругментов из строки
-     в ожидаемый сигнатурой коснтруктора тип"""
+def _parse_list_string(value_str: str) -> list:
+    """Парсит строку как список, поддерживая два формата: '1,2,3' и '[1,2,3]'."""
+    value_str = value_str.strip()
 
-    if classname not in self._registry:
-        raise ValueError(f"Class {classname} not found")
+    # Если строка начинается с [ и заканчивается на ], используем ast.literal_eval
+    if value_str.startswith('[') and value_str.endswith(']'):
+        try:
+            result = ast.literal_eval(value_str)
+            if not isinstance(result, list):
+                raise ValueError("Значение не является списком")
+            return result
+        except (SyntaxError, ValueError) as e:
+            raise ValueError(f"Не удалось парсить список: {e}")
 
-    cls = self._registry[classname]
-    signature = inspect.signature(cls.__init__)
-    type_hints = get_type_hints(cls.__init__)
+    # Иначе разделяем по запятым
+    else:
+        return [item.strip() for item in value_str.split(',') if item.strip()]
 
-    prepared_args = {}
 
-    for param_name, param in signature.parameters.items():
-        if param_name == 'self':
-            continue
+def _str_to_bool(s: str) -> bool:
+    s_clean = s.strip().lower()
+    if s_clean in ('true', '1', 'yes'):
+        return True
+    if s_clean in ('false', '0', 'no'):
+        return False
+    raise ValueError(f"Не удаётся интерпретировать '{s}' как bool")
 
-        if param_name in args:
-            value = args[param_name]
-            expected_type = type_hints.get(param_name, str)
 
-            try:
-                prepared_args[param_name] = self._convert_value(value, expected_type)
-            except Exception as e:
-                raise ValueError(
-                    f"Не смогли конвертировать '{param_name}'='{value}' в {expected_type}: {e}"
-                )
-        elif param.default != inspect.Parameter.empty:
-            prepared_args[param_name] = param.default
-        else:
-            raise ValueError(f"Отстуствует аргумент: {param_name}")
+def _convert_single_item(item: Any, target_type: type) -> Any:
+    if isinstance(item, target_type):
+        return item
+    if target_type is int:
+        return int(float(item))  # '3.14' → 3
+    if target_type is float:
+        return float(item)
+    if target_type is str:
+        return str(item)
+    raise ValueError(f"Невозможно конвертировать {item} в {target_type}")
 
-    return cls(**prepared_args)
+
+if __name__ == "__main__":
+    from typing import List
+
+    print(f"int('42') = {convert_value('42', int)}")
+    print(f"List[float]('1.1,2.2,3.3') = {convert_value('1.1,2.2,3.3', List[float])}")
+    print(f"List[float]('[1.1,2.2,3.3]') = {convert_value('1.1,2.2,3.3', List[float])}")

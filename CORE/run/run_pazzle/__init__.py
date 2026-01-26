@@ -1,4 +1,3 @@
-from CORE.run.run_pazzle.run_pazzle import RunPazzle
-from CORE.run.run_pazzle.pazzle_factory import factory, PuzzleFactory
+from CORE.run.run_pazzle.pazzle_parser import PazzleParser
 
-__all__ = ['factory', 'PuzzleFactory', 'RunPazzle']
+__all__ = ['PazzleParser']
