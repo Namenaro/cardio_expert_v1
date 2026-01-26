@@ -7,14 +7,29 @@ from CORE.run.run_pazzle.utils import *
 
 
 class PazzleParser:
+    """
+    Поскольку пазлы десериализуются из базы данных в "сырые" датаклассы,
+    то нужен "переходник" от CORE.db_dataclasses к тем классам,
+    которые нужны пакету run. Желаемы нами runnable-классы начинаютсЯ с R_.
+
+    Данный класс обеспечивает служебные методы для перехода
+    от CORE.db_dataclasses.BasePazzle  (содержащего в т.ч. ненужные
+    данные о сопряжении таблиц БД)  к объектам R_PC, R_PS, R_SM, R_HC,
+    которые уже можно будет запускать при непосредственно распознавании
+    формы на конкретном ЭКГ.
+    """
+
     def __init__(self, base_pazzle: BasePazzle, form_points: List[Point], form_params: List[Parameter]):
         self.base_pazzle: BasePazzle = base_pazzle
         self.points = form_points
         self.params = form_params
 
-        self.cls: Type = self._get_cls()
+        self.cls: Type = self._extract_cls()  # конкретный класс из пакета pazzles_lib
 
-    def _get_cls(self) -> Type:
+    def get_cls(self) -> Type:
+        return self.cls
+
+    def _extract_cls(self) -> Type:
         class_name_str = self.base_pazzle.class_ref.name
         if not isinstance(class_name_str, str) or not class_name_str.strip():
             raise ValueError("Ожидалась непустая строка в качестве имени класса")
