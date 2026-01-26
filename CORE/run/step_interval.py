@@ -136,7 +136,7 @@ class Interval:
         Returns:
             bool: True, если валидация пройдена, False — иначе
         """
-        # Используем преобразование в bool и XOR (^)
+
         left_valid = bool(self.left_point_name) ^ bool(self.left_padding)
         right_valid = bool(self.right_point_name) ^ bool(self.right_padding)
         return left_valid and right_valid

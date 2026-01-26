@@ -1,31 +1,18 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 
 from CORE.run import Exemplar
+from CORE.run.r_track import RTrack
+from CORE.run.step_interval import Interval
 
 
-class Interval:
-    def __init__(self):
-        self.left_point_name: Optional[str] = None
-        self.left_padding: Optional[float] = None
+class RStep:
+    def __init__(self, interval: Interval, target_point_name):
+        self.interval: Interval = interval
 
-        self.right_point_name: Optional[str] = None
-        self.right_padding: Optional[float] = None
+        self.rHC_objects = []
+        self.rPC_objects = []
 
-    def set_point_left(self, point_name: str) -> None:
-        pass
+        self.target_point_name: str = target_point_name
 
-    def set_point_right(self, point_name: str) -> None:
-        pass
-
-    def set_right_padding(self, dt: float) -> None:
-        pass
-
-    def set_left_padding(self, dt: float) -> None:
-        pass
-
-    def get_interval_coords(self, exemplar: Exemplar, center: Optional = None) -> (float, float):
-        pass
-
-    def validate(self) -> bool:
-        pass
+        self.r_tracks: List[RTrack] = []
