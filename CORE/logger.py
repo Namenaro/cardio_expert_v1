@@ -4,6 +4,7 @@
 import logging
 import sys
 import os
+import traceback
 from typing import Optional
 
 
@@ -70,6 +71,34 @@ class AppLogger:
         logger = logging.getLogger(name)
         logger.setLevel(cls._default_level)
         return logger
+
+    @classmethod
+    def install_uncaught_exception_hook(cls, log_name: str = "uncaught"):
+        """
+        Устанавливает хук для перехвата неперехваченных исключений.
+
+        Args:
+            log_name: Имя логгера, куда будут писаться ошибки (по умолчанию "uncaught").
+        """
+
+        def _uncaught_exception_handler(exc_type, exc_value, exc_traceback):
+            # Игнорируем KeyboardInterrupt (Ctrl+C)
+            if issubclass(exc_type, KeyboardInterrupt):
+                return
+
+            # 1. Пишем ПОЛНЫЙ лог в файл (с трассировкой)
+            logger = cls.get_logger(log_name)
+            logger.error(
+                "Неперехваченное исключение:",
+                exc_info=(exc_type, exc_value, exc_traceback)
+            )
+
+            # 2. В консоль — выводим ТОЧНО КАК СТАНДАРТНЫЙ PYTHON
+            # Это повторяет поведение sys.__excepthook__
+            sys.__excepthook__(exc_type, exc_value, exc_traceback)
+
+        # Регистрируем хук
+        sys.excepthook = _uncaught_exception_handler
 
 
 # Глобальный экземпляр

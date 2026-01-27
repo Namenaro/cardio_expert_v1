@@ -6,9 +6,7 @@ from PySide6.QtWidgets import QApplication
 from DA3.controller import Controller
 from DA3.main_form import MainForm
 from DA3.model import Model
-from CORE.logger import setup_logging, get_logger
-
-
+from CORE.logger import setup_logging, get_logger, AppLogger
 
 
 def main():
@@ -17,6 +15,9 @@ def main():
         level=logging.INFO,
         log_file="app.log"  # Лог будет писаться в app.log
     )
+    # Устанавливаем хук для неперехваченных исключений
+    AppLogger.install_uncaught_exception_hook(log_name="uncaught")
+
     logger = logging.getLogger(__name__)
 
     # Создаем экземпляр приложения Qt
