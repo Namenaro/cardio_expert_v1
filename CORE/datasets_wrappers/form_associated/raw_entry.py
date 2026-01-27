@@ -3,15 +3,15 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Entry:
-    """Одна запись в датасете"""
+class RawEntry:
+    """Одна запись в датасете, полученном из внешнего приложения ручной разметки"""
     entry_id: str  # ID записи
     patient_id: str
     lead_name: str
     points: Dict[str, float]  # Точки как словарь
 
     @classmethod
-    def from_dict(cls, entry_id: str, data: Dict) -> 'Entry':
+    def from_dict(cls, entry_id: str, data: Dict) -> 'RawEntry':
         """Создание из словаря"""
         return cls(
             entry_id=entry_id,

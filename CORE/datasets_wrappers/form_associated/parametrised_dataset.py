@@ -3,13 +3,13 @@ from typing import Optional
 
 import pandas as pd
 
-from CORE.datasets_wrappers.form_dataset_raw import FormDatasetRaw
+from CORE.datasets_wrappers.form_associated.exemplars_dataset import ExemplarsDataset
 from CORE.db_dataclasses import Form
 from CORE.run.parametriser import Parametriser
 from CORE.run.run_form import RunForm
 
 
-class FormDataset:
+class ParametrisedDataset:
     def __init__(self, data: Optional[pd.DataFrame] = None):
         """
         Базовый конструктор. Для создания объекта используйте classmethod-ы.
@@ -19,13 +19,13 @@ class FormDataset:
     @classmethod
     def from_file(cls, filepath: str):
         """
-        Создаёт экземпляр FormDataset из файла.
+        Создаёт экземпляр себя из файла.
 
         Args:
             filepath (str): путь к файлу с данными ( .parquet)
 
         Returns:
-            FormDataset: новый экземпляр класса
+            ParametrisedDataset: новый экземпляр класса
         """
         path = Path(filepath)
 
@@ -36,9 +36,9 @@ class FormDataset:
         return cls(data)
 
     @classmethod
-    def from_raw_dataset(cls, raw_exemplars: FormDatasetRaw, parametriser: Parametriser):
+    def from_raw_dataset(cls, raw_exemplars: ExemplarsDataset, parametriser: Parametriser):
         """
-        Создаёт экземпляр FormDataset на основе объекта FormDatasetRaw
+        Создаёт экземпляр ParametrisedDataset на основе объекта датасета экземпляров
         """
 
         rows = []
@@ -67,7 +67,7 @@ class FormDataset:
 
     def save_to_file(self, filename: str):
         """
-            Сохраняет экземпляр FormDataset в файл
+            Сохраняет себя в файл
 
             Args:
                 filename (str): имя файла с указанием формата .parquet
