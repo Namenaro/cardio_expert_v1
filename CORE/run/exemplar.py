@@ -53,16 +53,15 @@ class Exemplar:
         """
         return point_name in self._points
 
-    def get_point_coord(self, point_name: str) -> float:
+    def get_point_coord(self, point_name: str) -> Optional[float]:
         """
         Возвращает временную координату точки.
 
         :param point_name: имя точки
-        :return: временная координата точки в секундах
-        :raises ValueError: если точка не найдена
+        :return: временная координата точки в секундах, None если точка не найдена
         """
         if not self.contains_point(point_name):
-            raise ValueError(f"Точка {point_name} не найдена")
+            return None
 
         return self._points[point_name][0]  # Возвращаем только координату (первый элемент пары)
 
@@ -104,16 +103,15 @@ class Exemplar:
         """
         return param_name in self._parameters
 
-    def get_parameter_value(self, param_name: str) -> Any:
+    def get_parameter_value(self, param_name: str) -> Optional[Any]:
         """
         Возвращает значение параметра.
 
         :param param_name: имя параметра
-        :return: значение параметра
-        :raises ValueError: если параметр не найден
+        :return: значение параметра, None если параметр не найден
         """
         if not self.contains_parameter(param_name):
-            raise ValueError(f"Параметр {param_name} не найден")
+            return None
 
         return self._parameters[param_name]
 
