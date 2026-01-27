@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional
 
 from CORE.db_dataclasses import BasePazzle, Point, Parameter
+from CORE.exeptions import RunError, ErrorCode
 from CORE.pazzles_lib.pc_base import PCBase
 from CORE.run import Exemplar
 from CORE.run.run_pazzle import PazzleParser
@@ -178,6 +179,13 @@ class R_PC:
         """
         try:
             result.params_measurement = runnable.run(signal)
+        except RunError as e:
+            if e.code == ErrorCode.RUN_PAZZLE_OUT_OF_SIGNAL:
+                raise
+            else:
+                result.status = False
+                class_name = self.base_pazzle.class_ref.name
+                result.err_msg = f"RunError не должно возникать из кода pazzles_lib, но возникло: исправь код {class_name}"
         except Exception as e:
             result.status = False
             class_name = self.base_pazzle.class_ref.name
