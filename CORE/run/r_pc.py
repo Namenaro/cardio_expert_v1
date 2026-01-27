@@ -33,10 +33,9 @@ class R_PC:
         """
         Инициализация экземпляра R_PC.
 
-        Args:
-            base_pazzle: базовый пазл (описание класса пазла)
-            form_points: список точек формы
-            form_params: список параметров формы
+        :param    base_pazzle: базовый пазл (описание класса пазла)
+        :param    form_points: список точек формы
+        :param    form_params: список параметров формы
         """
         self.base_pazzle = base_pazzle
         self.form_points = form_points
@@ -53,11 +52,9 @@ class R_PC:
         4. Настройка runnable-объекта
         5. Запуск и получение результата
 
-        Args:
-            exemplar: экземпляр формы для обработки
+        :param    exemplar: экземпляр формы для обработки
 
-        Returns:
-            Объект Result с результатами выполнения
+        :return    Объект Result с результатами выполнения
         """
         result = self.Result()
         parser = PazzleParser(self.base_pazzle, form_points=self.form_points, form_params=self.form_params)
@@ -68,7 +65,7 @@ class R_PC:
             return result
 
         # 2. Сбор данных точек
-        input_points_data = self._collectinput_points(parser, exemplar, result)
+        input_points_data = self._collect_input_points(parser, exemplar, result)
         if not result.status:
             return result
 
@@ -88,12 +85,10 @@ class R_PC:
         """
         Создает экземпляр класса пазла (runnable-объект).
 
-        Args:
-            parser: объект парсера для получения информации о классе пазла
-            result: объект результата для записи ошибок
+        :param    parser: объект парсера для получения информации о классе пазла
+        :param    result: объект результата для записи ошибок
 
-        Returns:
-            Экземпляр класса пазла или None в случае ошибки
+        :return Экземпляр класса пазла или None в случае ошибки
 
         """
         try:
@@ -105,17 +100,15 @@ class R_PC:
             result.err_msg = str(e)
             return None
 
-    def _collectinput_points(self, parser: PazzleParser, exemplar: Exemplar, result: R_PC.Result) -> Dict[str, float]:
+    def _collect_input_points(self, parser: PazzleParser, exemplar: Exemplar, result: R_PC.Result) -> Dict[str, float]:
         """
         Собирает данные точек из экземпляра формы.
 
-        Args:
-            parser: объект парсера для получения соответствия имен точек
-            exemplar: экземпляр формы
-            result: объект результата для записи ошибок и отсутствующих точек
+        :param    parser: объект парсера для получения соответствия имен точек
+        :param    exemplar: экземпляр формы
+        :param    result: объект результата для записи ошибок и отсутствующих точек
 
-        Returns:
-            Словарь соответствия имен точек класса и их координат в экземпляре
+        :return Словарь соответствия имен точек класса и их координат в экземпляре
         """
         try:
             required_points = parser.map_point_names()
@@ -139,13 +132,12 @@ class R_PC:
         """
         Собирает значения параметров из экземпляра формы.
 
-        Args:
-            parser: объект парсера для получения соответствия имен параметров
-            exemplar: экземпляр формы
-            result: объект результата для записи ошибок и отсутствующих параметров
 
-        Returns:
-            Словарь соответствия имен параметров класса и их значений в экземпляре
+        :param    parser: объект парсера для получения соответствия имен параметров
+        :param      exemplar: экземпляр формы
+        :param      result: объект результата для записи ошибок и отсутствующих параметров
+
+        :return Словарь соответствия имен параметров класса и их значений в экземпляре
         """
         try:
             required_params = parser.map_input_params_names()
@@ -169,13 +161,13 @@ class R_PC:
         """
         Запускает выполнение runnable-объекта на сигнале.
 
-        Args:
-            runnable: экземпляр класса пазла для выполнения
-            signal: сигнал для обработки
-            result: объект результата для записи ошибки при необходимости
+        :param runnable: экземпляр класса пазла для выполнения
+        :param signal: сигнал для обработки
+        :param    result: объект результата для записи ошибки при необходимости
 
-        Returns:
-            Объект Result с обновленными данными (результатами или ошибкой)
+        :raise RunError, код ошибки ErrorCode.RUN_PAZZLE_OUT_OF_SIGNAL, если логика пазла потребовала обращения за пределы предоставленного сигнала
+
+        :return Объект Result с обновленными данными (результатами или ошибкой)
         """
         try:
             result.params_measurement = runnable.run(signal)

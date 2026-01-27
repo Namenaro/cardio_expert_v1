@@ -6,21 +6,17 @@ from PySide6.QtWidgets import QApplication
 from DA3.controller import Controller
 from DA3.main_form import MainForm
 from DA3.model import Model
+from CORE.logger import setup_logging, get_logger
 
 
-def setup_logging():
-    """Настройка логирования"""
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
 
 
 def main():
-    """Точка входа в приложение"""
     # Настраиваем логирование
-    setup_logging()
+    setup_logging(
+        level=logging.INFO,
+        log_file="app.log"  # Лог будет писаться в app.log
+    )
     logger = logging.getLogger(__name__)
 
     # Создаем экземпляр приложения Qt

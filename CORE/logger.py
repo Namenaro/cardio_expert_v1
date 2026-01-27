@@ -1,91 +1,89 @@
 """
-Простая конфигурация логирования для библиотеки CORE
+Простая конфигурация логирования для приложения
 """
 import logging
 import sys
+import os
 from typing import Optional
 
 
-class CoreLogger:
-    """Простой класс для управления логированием CORE"""
+class AppLogger:
+    """Класс для управления глобальным логированием приложения"""
 
-    ROOT_NAME = "core"
-
-    # Глобальные настройки по умолчанию
+    ROOT_LOGGER = logging.getLogger('')  # Корневой логгер Python
     _default_level = logging.WARNING
-    _default_format = "%(name)s - %(levelname)s - %(message)s"
+    _default_format = "%(asctime)s | %(name)s | %(levelname)s | %(message)s"
     _default_handler = None
 
     @classmethod
-    def setup(cls,
-              level: int = logging.WARNING,
-              format_str: Optional[str] = None,
-              handler: Optional[logging.Handler] = None) -> None:
+    def setup(
+            cls,
+            level: int = logging.WARNING,
+            format_str: Optional[str] = None,
+            handler: Optional[logging.Handler] = None,
+            log_file: Optional[str] = None,
+            clear_log_on_start: bool = True  # Флаг очистки файла
+    ) -> None:
         """
-        Настройка логирования для всей библиотеки CORE
+        Настройка глобального логирования.
 
         Args:
-            level: Уровень логирования
-            format_str: Формат логов (если None, используется формат по умолчанию)
-            handler: Обработчик (если None, используется StreamHandler)
+            level: Уровень логирования.
+            format_str: Формат логов.
+            handler: Обработчик (если None, используется StreamHandler).
+            log_file: Путь к файлу лога (если указан, добавляется файловый обработчик).
+            clear_log_on_start: Если True, файл лога очищается при старте.
         """
-        # Сохраняем настройки
         cls._default_level = level
         if format_str:
             cls._default_format = format_str
 
-        # Создаем обработчик по умолчанию если не передан
+        # Создаём обработчики
+        handlers = []
+
+        # Консольный обработчик
         if handler is None:
             handler = logging.StreamHandler(sys.stdout)
-
-        # Настраиваем форматтер
         formatter = logging.Formatter(cls._default_format)
         handler.setFormatter(formatter)
-        cls._default_handler = handler
+        handlers.append(handler)
 
-        # Настраиваем корневой логгер CORE
-        root_logger = logging.getLogger(cls.ROOT_NAME)
-        root_logger.setLevel(level)
-        root_logger.handlers = []  # Очищаем старые обработчики
-        root_logger.addHandler(handler)
-        root_logger.propagate = False
+        # Файловый обработчик (если указан файл)
+        if log_file:
+            # Очищаем файл, если нужно
+            if clear_log_on_start and os.path.exists(log_file):
+                open(log_file, 'w').close()  # Полное очищение
+
+            file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
+            file_handler.setFormatter(formatter)
+            handlers.append(file_handler)
+
+        # Настраиваем корневой логгер
+        cls.ROOT_LOGGER.setLevel(level)
+        cls.ROOT_LOGGER.handlers = []  # Очищаем старые обработчики
+        for h in handlers:
+            cls.ROOT_LOGGER.addHandler(h)
 
     @classmethod
     def get_logger(cls, name: str) -> logging.Logger:
-        """
-        Получение логгера с именем
-
-        Args:
-            name: Имя логгера (например 'core.form_dataset')
-
-        Returns:
-            Настроенный логгер
-        """
-        # Добавляем префикс 'core.' если не указан
-        if not name.startswith(cls.ROOT_NAME):
-            name = f"{cls.ROOT_NAME}.{name}"
-
-        # Получаем логгер
+        """Получение логгера с именем."""
         logger = logging.getLogger(name)
-
-        # Если у логгера нет обработчиков, наследуем от корневого
-        if not logger.handlers and logger.parent:
-            logger.setLevel(cls._default_level)
-            if cls._default_handler:
-                logger.addHandler(cls._default_handler)
-
+        logger.setLevel(cls._default_level)
         return logger
 
 
-# Создаем глобальный экземпляр
-logger = CoreLogger()
+# Глобальный экземпляр
+logger = AppLogger()
 
 
-def setup_logging(level: int = logging.WARNING):
-    """Простая настройка логирования"""
-    CoreLogger.setup(level=level)
-
+def setup_logging(
+        level: int = logging.INFO,
+        log_file: Optional[str] = None,
+        clear_log_on_start: bool = True
+):
+    """Простая настройка логирования."""
+    AppLogger.setup(level=level, log_file=log_file, clear_log_on_start=clear_log_on_start)
 
 def get_logger(name: str) -> logging.Logger:
-    """Получение логгера"""
-    return CoreLogger.get_logger(name)
+    """Получение логгера."""
+    return AppLogger.get_logger(name)
