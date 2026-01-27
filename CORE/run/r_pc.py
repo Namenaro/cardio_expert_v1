@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional
 
@@ -9,6 +10,7 @@ from CORE.pazzles_lib.pc_base import PCBase
 from CORE.run import Exemplar
 from CORE.run.run_pazzle import PazzleParser
 
+logger = logging.getLogger(__name__)
 
 class R_PC:
     @dataclass
@@ -98,6 +100,7 @@ class R_PC:
         except Exception as e:
             result.status = False
             result.err_msg = str(e)
+            logger.exception(str(e))
             return None
 
     def _collect_input_points(self, parser: PazzleParser, exemplar: Exemplar, result: R_PC.Result) -> Dict[str, float]:
@@ -113,6 +116,7 @@ class R_PC:
         try:
             required_points = parser.map_point_names()
         except Exception as e:
+            logger.exception(str(e))
             result.status = False
             result.err_msg = f"Не удалось получить список имён необходимых PC-пазлу {self.base_pazzle.id} входных точек: {e}"
             return {}
@@ -142,6 +146,7 @@ class R_PC:
         try:
             required_params = parser.map_input_params_names()
         except Exception as e:
+            logger.exception(str(e))
             result.status = False
             result.err_msg = f"Не удалось получить список имён необходимых PC-пазлу {self.base_pazzle.id} входных параметров: {e}"
             return {}
@@ -172,6 +177,7 @@ class R_PC:
         try:
             result.params_measurement = runnable.run(signal)
         except RunError as e:
+            logger.exception(str(e))
             if e.code == ErrorCode.RUN_PAZZLE_OUT_OF_SIGNAL:
                 raise
             else:
@@ -181,5 +187,6 @@ class R_PC:
         except Exception as e:
             result.status = False
             class_name = self.base_pazzle.class_ref.name
+            logger.exception(str(e))
             result.err_msg = f"Возникла внутренняя ошибка в классе {class_name}: {str(e)}"
         return result
