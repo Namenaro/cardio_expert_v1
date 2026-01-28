@@ -9,8 +9,6 @@ from CORE.pazzles_lib.pc_base import PCBase
 from CORE.run import Exemplar
 from CORE.run.run_pazzle import PazzleParser
 
-logger = logging.getLogger(__name__)
-
 
 class R_PC:
     def __init__(self, base_pazzle: BasePazzle, form_points: List[Point], form_params: List[Parameter]):
@@ -76,7 +74,6 @@ class R_PC:
             args = parser.get_constructor_arguments()
             return cls(**args)
         except Exception as e:
-            logger.exception(f"Ошибка создания экземпляра пазла {self.base_pazzle.id}: {e}")
             raise RunPazzleError.class_creation_failed(self.base_pazzle.id, str(e))
 
     def _collect_input_points(self, parser: PazzleParser, exemplar: Exemplar) -> Tuple[Dict[str, float], List[str]]:
@@ -92,7 +89,6 @@ class R_PC:
         try:
             required_points = parser.map_point_names()
         except Exception as e:
-            logger.exception(f"Ошибка получения соответствия имен точек для пазла {self.base_pazzle.id}: {e}")
             raise RunPazzleError.points_mapping_failed(self.base_pazzle.id, str(e))
 
         # Сбор данных точек
@@ -121,7 +117,6 @@ class R_PC:
         try:
             required_params = parser.map_input_params_names()
         except Exception as e:
-            logger.exception(f"Ошибка получения соответствия имен параметров для пазла {self.base_pazzle.id}: {e}")
             raise RunPazzleError.params_mapping_failed(self.base_pazzle.id, str(e))
 
         # Сбор данных параметров
@@ -153,9 +148,7 @@ class R_PC:
             # Дописываем имя класса и пробрасываем дальше
             if not e.class_name:
                 e.class_name = self.base_pazzle.class_ref.name
-            logger.warning(f"Пазл {e.class_name} запросил данные за пределами сигнала: {e.message}")
             raise
         except Exception as e:
-            logger.exception(f"Внутренняя ошибка при выполнении пазла {self.base_pazzle.id}: {e}")
             class_name = self.base_pazzle.class_ref.name
             raise RunPazzleError.execution_error(self.base_pazzle.id, class_name, str(e))

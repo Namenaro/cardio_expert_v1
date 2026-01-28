@@ -1,19 +1,29 @@
+import logging
 from enum import Enum
 from typing import List, Optional
 
+logger = logging.getLogger(__name__)
+
 
 class ErrorCode(Enum):
-    RUN_PAZZLE_OUT_OF_SIGNAL = "RUN_PAZZLE_OUT_OF_SIGNAL"
-
+    # ошибки парсинга при создании запускаемого объекта пазла (возможна неконстистентность БД)
     PAZZLE_CLASS_CREATION_FAILED = "PAZZLE_CLASS_CREATION_FAILED"
     PAZZLE_POINTS_MAPPING_FAILED = "PAZZLE_POINTS_MAPPING_FAILED"
     PAZZLE_PARAMS_MAPPING_FAILED = "PAZZLE_PARAMS_MAPPING_FAILED"
 
+    # ошибки сопоставления ожидаемых пазлом
+    # точек/параметров из экземпляра формы и фактически полученными
     MISSING_INPUT_POINTS = "MISSING_INPUT_POINTS"
     MISSING_INPUT_PARAMS = "MISSING_INPUT_PARAMS"
 
+    # Проблемы при запуске уже созданного пазла на конкретном сигнале
     PAZZLE_EXECUTION_ERROR = "PAZZLE_EXECUTION_ERROR"
     SM_CHANGED_LEN = "SM_CHANGED_LEN"
+    PS_POINT_OUT_OF_INTERVAL = "PS_POINT_OUT_OF_INTERVAL"
+
+    # выбрасывается только программистом библиотеки пазлов и не является критической
+    # например, если пытаемся запустить пазл на крайнем кусочке сигнала и он слишком короткий
+    RUN_PAZZLE_OUT_OF_SIGNAL = "RUN_PAZZLE_OUT_OF_SIGNAL"
 
 
 class CoreError(Exception):
@@ -29,6 +39,9 @@ class PazzleOutOfSignal(CoreError):
         super().__init__(message)
         self.class_name = class_name
         self.message = message
+
+        # Автоматическое логирование при создании исключения
+        logger.warning(f"PazzleOutOfSignalr в классе: {class_name}")
 
 
 class RunPazzleError(CoreError):
@@ -47,6 +60,20 @@ class RunPazzleError(CoreError):
         self.class_name = class_name
         self.error = error
 
+        # Автоматическое логирование при создании исключения
+        logger.exception(f"RunPazzleError: {message}")
+
+    @classmethod
+    def selected_point_out_of_interval(cls, left_t: float, right_t: float,
+                                       point: float, class_name: str, pazzle_id: int) -> 'RunPazzleError':
+        return cls(
+            code=ErrorCode.PS_POINT_OUT_OF_INTERVAL.value,
+            message=f" SM-пазл {pazzle_id}  вернул как минимум одну точку вне интервала."
+                    f"Интервал [{left_t}, {right_t}], точка {point} ",
+            class_name=class_name,
+            pazzle_id=pazzle_id
+        )
+
     @classmethod
     def sm_changed_len_of_signal(cls, delta_time: float, class_name: str, pazzle_id) -> 'RunPazzleError':
         """При запуске sm новый сигнал не совпал по длине с оригинальным"""
@@ -56,6 +83,7 @@ class RunPazzleError(CoreError):
             pazzle_id=pazzle_id,
             class_name=class_name
         )
+
     @classmethod
     def class_creation_failed(cls, pazzle_id: int, error: str) -> 'RunPazzleError':
         """Ошибка создания экземпляра класса пазла"""

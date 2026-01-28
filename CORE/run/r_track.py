@@ -3,6 +3,7 @@ from typing import List
 from CORE.db_dataclasses import Track
 
 from CORE.run import Exemplar
+from CORE.run.r_sm import R_SM
 from CORE.run.step_interval import Interval
 from CORE.run.utils import delete_simialr_points
 
@@ -11,7 +12,7 @@ class RTrack:
     def __init__(self, track: Track):
         self.id: int = track.id
 
-        self.rSM_objects: List[] = []
+        self.rSM_objects: List[R_SM] = []
         self.rPS_objects: List[] = []
 
     def run(self, exemplar: Exemplar, interval: Interval) -> List[float]:

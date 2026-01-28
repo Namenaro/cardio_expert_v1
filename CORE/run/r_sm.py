@@ -1,17 +1,10 @@
 from __future__ import annotations
 
-import logging
-from typing import Dict, Any, List, Tuple, Optional
-
 from CORE import Signal
-from CORE.db_dataclasses import BasePazzle, Point, Parameter
+from CORE.db_dataclasses import BasePazzle
 from CORE.exeptions import RunPazzleError, PazzleOutOfSignal
-from CORE.pazzles_lib.pc_base import PCBase
 from CORE.pazzles_lib.sm_base import SMBase
-from CORE.run import Exemplar
 from CORE.run.run_pazzle import PazzleParser
-
-logger = logging.getLogger(__name__)
 
 
 class R_SM:
@@ -29,8 +22,10 @@ class R_SM:
         Основной метод выполнения пазла на конкретном сигнале.
 
         Создает и запускает rannable объект пазла
+        :param signal сигнал,  для которого будет создаваться модифицированный
+        :param left_t левая граница интервала, в котором позже будут выбираться целевый точки шага
+        :param right_t левая граница интервала, в котором позже будут выбираться целевый точки шага
 
-        :param exemplar: экземпляр формы для обработки
         :raise PazzleOutOfSignal: если логика пазла потребовала обращения за пределы предоставленного сигнала
         :raise RunPazzleError: различные ошибки выполнения пазла
         :return модифицированный сигнал той же длины
@@ -44,8 +39,6 @@ class R_SM:
         new_signal = self._execute_runnable(runnable, signal, left_t=left_t, right_t=right_t)
 
         if len(signal) != len(new_signal):
-            logger.exception(
-                f"SM-объект {self.base_pazzle.id} изменил длину сигнала на {len(signal) - len(new_signal)} секунд ")
             raise RunPazzleError.sm_changed_len_of_signal(delta_time=(len(signal) - len(new_signal)),
                                                           class_name=self.base_pazzle.class_ref.name,
                                                           pazzle_id=self.base_pazzle.id)
@@ -64,7 +57,7 @@ class R_SM:
             args = parser.get_constructor_arguments()
             return cls(**args)
         except Exception as e:
-            logger.exception(f"Ошибка создания экземпляра SM пазла {self.base_pazzle.id}: {e}")
+
             raise RunPazzleError.class_creation_failed(self.base_pazzle.id, str(e))
 
     def _execute_runnable(self, runnable: SMBase, signal: Signal, left_t: float, right_t: float) -> Signal:
@@ -83,9 +76,7 @@ class R_SM:
             # Дописываем имя класса и пробрасываем дальше
             if not e.class_name:
                 e.class_name = self.base_pazzle.class_ref.name
-            logger.warning(f"Пазл {e.class_name} запросил данные за пределами сигнала: {e.message}")
             raise
         except Exception as e:
-            logger.exception(f"Внутренняя ошибка при выполнении пазла {self.base_pazzle.id}: {e}")
             class_name = self.base_pazzle.class_ref.name
             raise RunPazzleError.execution_error(self.base_pazzle.id, class_name, str(e))
