@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Optional, List
 
 from CORE.run import Exemplar
+from CORE.run.r_hc import R_HC
 from CORE.run.r_pc import R_PC
 from CORE.run.r_track import RTrack
 from CORE.run.step_interval import Interval
@@ -14,7 +15,7 @@ class RStep:
         self.interval: Interval = interval
         self.target_point_name: str = target_point_name
 
-        self.rHC_objects = []
+        self.rHC_objects: List[R_HC] = []
         self.rPC_objects: List[R_PC] = []
 
         self.r_tracks: List[RTrack] = []

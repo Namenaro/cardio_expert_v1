@@ -13,6 +13,7 @@ class ErrorCode(Enum):
     MISSING_INPUT_PARAMS = "MISSING_INPUT_PARAMS"
 
     PAZZLE_EXECUTION_ERROR = "PAZZLE_EXECUTION_ERROR"
+    SM_CHANGED_LEN = "SM_CHANGED_LEN"
 
 
 class CoreError(Exception):
@@ -46,6 +47,15 @@ class RunPazzleError(CoreError):
         self.class_name = class_name
         self.error = error
 
+    @classmethod
+    def sm_changed_len_of_signal(cls, delta_time: float, class_name: str, pazzle_id) -> 'RunPazzleError':
+        """При запуске sm новый сигнал не совпал по длине с оригинальным"""
+        return cls(
+            code=ErrorCode.SM_CHANGED_LEN.value,
+            message=f"SM-объект изменил длину сигнала на {delta_time}",
+            pazzle_id=pazzle_id,
+            class_name=class_name
+        )
     @classmethod
     def class_creation_failed(cls, pazzle_id: int, error: str) -> 'RunPazzleError':
         """Ошибка создания экземпляра класса пазла"""
