@@ -17,7 +17,7 @@ class Exemplar:
         :param signal: объект сигнала, на котором размещаются точки
         """
         self.signal = signal
-        self._points: Dict[str, Tuple[float, Any]] = {}  # Хранилище точек: имя -> (координата, track_id)
+        self._points: Dict[str, Tuple[float, int]] = {}  # Хранилище точек: имя -> (координата, track_id)
         self._parameters: Dict[str, Any] = {}  # Хранилище параметров: имя -> значение
         self.evaluation_result: Optional[float] = None
 
@@ -150,3 +150,6 @@ class Exemplar:
             raise TypeError("evaluation_result должно быть в диапазоне")
 
         self._evaluation_result = value
+
+    def __len__(self):
+        return len(self._points)

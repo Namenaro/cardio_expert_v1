@@ -24,6 +24,9 @@ class ErrorCode(Enum):
     # Проблемы запуска треков
     EMTY_SIGNAL_FOR_TRACK = "EMTY_SIGNAL_FOR_TRACK"
     TRACK_RESULT_POINTS_OUT_OF_INTERVAL = "TRACK_RESULT_POINTS_OUT_OF_INTERVAL"
+    STEP_NO_TRACKS = "STEP_NO_TRACKS"
+    INVALID_TARGET_POINT_FOR_STEP = "INVALID_TARGET_POINT_FOR_STEP"
+    EMPTY_RESULT_FOR_STEP = "EMPTY_RESULT_FOR_STEP"
 
 
 class CoreError(Exception):
@@ -173,4 +176,39 @@ class RunTrackError(CoreError):
             message=f"Итоговые точки трека {track_id} попали вне допустимого для него интервала (интервал [{left_t}, {right_t}])",
             code=ErrorCode.TRACK_RESULT_POINTS_OUT_OF_INTERVAL,
             track_id=track_id
+        )
+
+
+class RunStepError(CoreError):
+    def __init__(self, message: str, code, num_in_form: int, error=""):
+        self.error = error
+        self.num_in_form = num_in_form
+        self.code = code
+        self.message = message
+
+        # Автоматическое логирование при создании исключения
+        logger.exception(f"{self.__class__.__name__}: {message}")
+
+    @classmethod
+    def empty_tracks_list(cls, num_in_form: int):
+        return cls(
+            message=f"В шаге (№{num_in_form} в форме) при запуске обнаружен пустой список треков",
+            code=ErrorCode.STEP_NO_TRACKS,
+            num_in_form=num_in_form
+        )
+
+    @classmethod
+    def invalid_target_point(cls, num_in_form: int):
+        return cls(
+            message=f"В шаге (№{num_in_form} в форме) при запуске обнаружено пустое имя целевой точки",
+            code=ErrorCode.INVALID_TARGET_POINT_FOR_STEP,
+            num_in_form=num_in_form
+        )
+
+    @classmethod
+    def empty_result(cls, num_in_form: int):
+        return cls(
+            message=f"Шаг (№{num_in_form} в форме) не смог поставить свою целевую точку (пустой список найденных точек)",
+            code=ErrorCode.EMPTY_RESULT_FOR_STEP,
+            num_in_form=num_in_form
         )
