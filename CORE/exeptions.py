@@ -12,7 +12,7 @@ class ErrorCode(Enum):
     PAZZLE_PARAMS_MAPPING_FAILED = "PAZZLE_PARAMS_MAPPING_FAILED"
 
     # ошибки сопоставления ожидаемых пазлом
-    # точек/параметров из экземпляра формы и фактически полученными
+    # точек/параметров и фактически полученными
     MISSING_INPUT_POINTS = "MISSING_INPUT_POINTS"
     MISSING_INPUT_PARAMS = "MISSING_INPUT_PARAMS"
 
@@ -21,9 +21,9 @@ class ErrorCode(Enum):
     SM_CHANGED_LEN = "SM_CHANGED_LEN"
     PS_POINT_OUT_OF_INTERVAL = "PS_POINT_OUT_OF_INTERVAL"
 
-    # выбрасывается только программистом библиотеки пазлов и не является критической
-    # например, если пытаемся запустить пазл на крайнем кусочке сигнала и он слишком короткий
-    RUN_PAZZLE_OUT_OF_SIGNAL = "RUN_PAZZLE_OUT_OF_SIGNAL"
+    # Проблемы запуска треков
+    EMTY_SIGNAL_FOR_TRACK = "EMTY_SIGNAL_FOR_TRACK"
+    TRACK_RESULT_POINTS_OUT_OF_INTERVAL = "TRACK_RESULT_POINTS_OUT_OF_INTERVAL"
 
 
 class CoreError(Exception):
@@ -33,7 +33,9 @@ class CoreError(Exception):
 
 
 class PazzleOutOfSignal(CoreError):
-    """Исключение, выбрасываемое пазлом при выходе за пределы сигнала"""
+    """Исключение, выбрасываемое пазлом при выходе за пределы сигнала.
+      выбрасывается только программистом библиотеки пазлов и не является критической ошбикой.
+     Это штатно, например, если пытаемся запустить пазл на крайнем кусочке сигнала и он слишком короткий"""
 
     def __init__(self, message: str = "", class_name: Optional[str] = None):
         super().__init__(message)
@@ -143,4 +145,32 @@ class RunPazzleError(CoreError):
             pazzle_id=pazzle_id,
             class_name=class_name,
             error=error
+        )
+
+
+class RunTrackError(CoreError):
+    def __init__(self, message: str, track_id: int, code):
+        super().__init__(message)
+        self.code = code  # уникальный код ошибки
+        self.track_id = track_id
+
+        # Автоматическое логирование при создании исключения
+        logger.exception(f"RunTrackError: {message}")
+
+    @classmethod
+    def emty_signal(cls, track_id: int) -> 'RunTrackError':
+        """ Сигнал нулевой длины поступил на вход треку при его запуске"""
+        return cls(
+            message=f"На вход треку {track_id} поступил пустой сигнал - невозможно выбрать точки",
+            code=ErrorCode.EMTY_SIGNAL_FOR_TRACK,
+            track_id=track_id
+        )
+
+    @classmethod
+    def selected_points_out_of_interval(cls, track_id: int, left_t: float, right_t: float) -> 'RunTrackError':
+        """ Сигнал нулевой длины поступил на вход треку при его запуске"""
+        return cls(
+            message=f"Итоговые точки трека {track_id} попали вне допустимого для него интервала (интервал [{left_t}, {right_t}])",
+            code=ErrorCode.TRACK_RESULT_POINTS_OUT_OF_INTERVAL,
+            track_id=track_id
         )

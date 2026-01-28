@@ -8,7 +8,6 @@ from CORE.exeptions import RunPazzleError, PazzleOutOfSignal
 from CORE.pazzles_lib.ps_base import PSBase
 
 from CORE.run.run_pazzle import PazzleParser
-from CORE.run.utils import delete_simialr_points
 
 
 class R_PS:
@@ -52,7 +51,6 @@ class R_PS:
                                                                     point=point,
                                                                     class_name=self.base_pazzle.class_ref.name,
                                                                     pazzle_id=self.base_pazzle.id)
-        delete_simialr_points(selected_points)
         return selected_points
 
     def _create_runnable(self, parser: PazzleParser) -> PSBase:
