@@ -1,8 +1,7 @@
 from typing import List
 
 from CORE.db_dataclasses import Track
-from CORE.pazzles_lib.ps_base import PSBase
-from CORE.pazzles_lib.sm_base import SMBase
+
 from CORE.run import Exemplar
 from CORE.run.step_interval import Interval
 from CORE.run.utils import delete_simialr_points
@@ -12,8 +11,8 @@ class RTrack:
     def __init__(self, track: Track):
         self.id: int = track.id
 
-        self.rSM_objects: List[SMBase] = []
-        self.rPS_objects: List[PSBase] = []
+        self.rSM_objects: List[] = []
+        self.rPS_objects: List[] = []
 
     def run(self, exemplar: Exemplar, interval: Interval) -> List[float]:
         # 1. Запускаем SM-объекты в том  порядке, в каком они идут в списке и получаем измененный сигнал
