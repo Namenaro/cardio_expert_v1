@@ -51,6 +51,9 @@ class Signal:
 
         return self.time[0] <= t <= self.time[-1]
 
+    def __len__(self):
+        return self.time[-1] - self.time[0]
+
 
 if __name__ == "__main__":
     from math import sin
