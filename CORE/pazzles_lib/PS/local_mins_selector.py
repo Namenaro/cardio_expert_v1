@@ -2,10 +2,11 @@ from typing import Optional, List
 import numpy as np
 from scipy.signal import find_peaks
 
+from CORE.pazzles_lib.ps_base import PSBase
 from CORE.signal_1d import Signal
 
 
-class LocalMinsSelector:
+class LocalMinsSelector(PSBase):
     """Все локальные минимумы на интервале"""
 
     def run(self, signal: Signal, left_t: Optional[float] = None, right_t: Optional[float] = None) -> List[float]:

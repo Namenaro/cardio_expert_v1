@@ -1,10 +1,11 @@
 from typing import Optional, List
 import numpy as np
 
+from CORE.pazzles_lib.ps_base import PSBase
 from CORE.signal_1d import Signal
 
 
-class TopBestInterpolationPoints:
+class TopBestInterpolationPoints(PSBase):
     """ Топ N вариантов, как поставить одну точку так, чтобы линейная интерполяция через нее привела к наименьшему расхождению с реальным сигналом"""
 
     def __init__(self, N: int = 3):

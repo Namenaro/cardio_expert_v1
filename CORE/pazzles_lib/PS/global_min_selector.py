@@ -1,9 +1,10 @@
+from CORE.pazzles_lib.ps_base import PSBase
 from CORE.signal_1d import Signal
 
 from typing import Optional, List
 
 
-class GlobalMinSelector:
+class GlobalMinSelector(PSBase):
     """ Глобальный минимум на интервале"""
 
     def run(self, signal: Signal, left_t: Optional[float] = None, right_t: Optional[float] = None) -> List[float]:

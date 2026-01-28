@@ -2,7 +2,7 @@ import os
 import importlib.util
 import sys
 from pathlib import Path
-from typing import Dict, Type
+from typing import Dict, Type, List
 
 
 def discover_puzzle_classes(package_path: str) -> Dict[str, Type]:
@@ -47,3 +47,7 @@ def discover_puzzle_classes(package_path: str) -> Dict[str, Type]:
                 classes[attr_name] = attr
 
     return classes
+
+
+def delete_simialr_points(points_coords: List[float]) -> List[float]:
+    pass
