@@ -3,17 +3,19 @@ from typing import List
 from CORE.db_dataclasses import Track
 
 from CORE.run import Exemplar
+from CORE.run.r_ps import R_PS
 from CORE.run.r_sm import R_SM
 from CORE.run.step_interval import Interval
 from CORE.run.utils import delete_simialr_points
+
 
 
 class RTrack:
     def __init__(self, track: Track):
         self.id: int = track.id
 
-        self.rSM_objects: List[R_SM] = []
-        self.rPS_objects: List[] = []
+        self.rSM_objects: List[R_SM] = [R_SM(base_pazzle=sm) for sm in track.SMs]
+        self.rPS_objects: List[R_PS] = [R_PS(base_pazzle=rs) for rs in track.PSs]
 
     def run(self, exemplar: Exemplar, interval: Interval) -> List[float]:
         # 1. Запускаем SM-объекты в том  порядке, в каком они идут в списке и получаем измененный сигнал

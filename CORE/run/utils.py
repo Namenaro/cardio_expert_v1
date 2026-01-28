@@ -4,6 +4,8 @@ import sys
 from pathlib import Path
 from typing import Dict, Type, List
 
+from CORE.constants import EPSILON_FOR_DUBLES
+
 
 def discover_puzzle_classes(package_path: str) -> Dict[str, Type]:
     """
@@ -49,5 +51,31 @@ def discover_puzzle_classes(package_path: str) -> Dict[str, Type]:
     return classes
 
 
-def delete_simialr_points(points_coords: List[float]) -> List[float]:
-    pass
+def delete_similar_points(points_coords: List[float]) -> None:
+    """
+    Удаляет из списка координат points_coords точки, которые находятся ближе друг к другу,
+    чем EPSILON_FOR_DUBLES. В результате оставшиеся точки попарно удалены друг от друга
+    на расстояние >= EPSILON_FOR_DUBLES.
+
+    :param points_coords: список координат точек (изменяется напрямую)
+    """
+    if len(points_coords) <= 1:
+        return  # Ничего удалять не нужно
+
+    # Сортируем координаты
+    points_coords.sort()
+
+    # Список для хранения индексов точек, которые нужно оставить
+    keep_indices = [0]  # Всегда оставляем первую точку
+
+    last_kept_coord = points_coords[0]
+
+    for i in range(1, len(points_coords)):
+        current_coord = points_coords[i]
+        # Если текущая точка достаточно удалена от последней сохранённой — оставляем её
+        if abs(current_coord - last_kept_coord) >= EPSILON_FOR_DUBLES:
+            keep_indices.append(i)
+            last_kept_coord = current_coord
+
+    # Перестраиваем исходный список, оставляя только нужные точки
+    points_coords[:] = [points_coords[i] for i in keep_indices]
