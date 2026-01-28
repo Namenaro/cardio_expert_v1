@@ -16,10 +16,19 @@ logger = get_logger(__name__)
 
 
 class ExemplarsDataset:
-    def __init__(self, form_dataset_name: str, outer_dataset: ThirdPartyDataset):
+    """
+    Класс, который на основе датасета с сырой разметкой точек генерирует
+    словарь объектов класса Exemplar.
+    Ключ словаря совпадает с ключом записей в датасете сырых записей.
+    Если предоставлен объект формы, то экземпляры содержат не отолько точки,
+    но и параметры, и сведения о проваленных условиях формы
+    """
+
+    def __init__(self, form_dataset_name: str, outer_dataset: ThirdPartyDataset, form: Form = None):
         self.form_dataset_name = form_dataset_name
         self.outer_dataset = outer_dataset  # Внешний датасет, на сигналах которого производилась наша разметка экземпляров формы
         self.point_names: List[str] = []  # Имена точек формы
+        self.form: Optional[Form] = form
         self._exemplars: Dict[str, Exemplar] = {}  # Размеченные нами вручную экземпляры
 
         full_path = os.path.join(EXEMPLARS_DATASETS_PATH, form_dataset_name)
@@ -33,6 +42,9 @@ class ExemplarsDataset:
         exemplar = Exemplar(signal)
         for point_name, point_coord in entry.points.items():
             exemplar.add_point(point_name=point_name, point_coord_t=point_coord, track_id=None)
+        if self.form is not None:
+            exemplar.parametrise_from_form(self.form)
+            exemplar.check_HCs_from_form(self.form)
         return exemplar
 
     def _load_data(self, filepath: str):

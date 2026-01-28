@@ -1,11 +1,12 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 import pandas as pd
 
 from CORE.datasets_wrappers.form_associated.exemplars_dataset import ExemplarsDataset
 from CORE.db_dataclasses import Form
-from CORE.run.parametriser import Parametriser
+from CORE.run.r_pc import R_PC
+
 from CORE.run.run_form import RunForm
 
 
@@ -36,7 +37,7 @@ class ParametrisedDataset:
         return cls(data)
 
     @classmethod
-    def from_raw_dataset(cls, raw_exemplars: ExemplarsDataset, parametriser: Parametriser):
+    def from_raw_dataset(cls, raw_exemplars: ExemplarsDataset):
         """
         Создаёт экземпляр ParametrisedDataset на основе объекта датасета экземпляров
         """
@@ -46,9 +47,6 @@ class ParametrisedDataset:
         for exemplar_id, exemplar in raw_exemplars._exemplars.items():
             # Первый столбец таблицы это id записи непараметризованного (сыорго датасета)
             row = {'id': exemplar_id}
-
-            # В сыром датасете параметры экзепляра не посчитаны, но расставлены все точки. На их основе заполяем параметры
-            parametriser.parametrise_exemplar(exemplar)
 
             # Добавляем все параметры из _parameters экземпляра Exemplar в строку таблицы
             for param_name, param_value in exemplar._parameters.items():

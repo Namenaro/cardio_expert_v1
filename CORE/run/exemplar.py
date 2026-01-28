@@ -1,7 +1,10 @@
-from typing import Any, Dict, Tuple, Optional
+from typing import Any, Dict, Tuple, Optional, List
 
 from CORE import Signal
+from CORE.db_dataclasses import Form
 from CORE.logger import get_logger
+from CORE.run.r_hc import R_HC
+from CORE.run.r_pc import R_PC
 
 logger = get_logger(__name__)
 
@@ -20,6 +23,9 @@ class Exemplar:
         self._points: Dict[str, Tuple[float, int]] = {}  # Хранилище точек: имя -> (координата, track_id)
         self._parameters: Dict[str, Any] = {}  # Хранилище параметров: имя -> значение
         self.evaluation_result: Optional[float] = None
+
+        self.failed_PCs_ids: Optional[
+            List[int]] = None  # id проваленных жестких условий. Если None, то они не проверялись
 
     def add_point(self, point_name: str, point_coord_t: float, track_id: Any) -> bool:
         """
@@ -153,3 +159,25 @@ class Exemplar:
 
     def __len__(self):
         return len(self._points)
+
+    def parametrise(self, r_pcs: List[R_PC]):
+        pass
+
+    def fit_conditions(self, r_hcs: List[R_HC]) -> bool:
+        pass
+
+    def parametrise_from_form(self, form: Form):
+        r_pcs = [
+            R_PC(base_pazzle=pc, form_points=form.points, form_params=form.parameters)
+            for pc in form.HC_PC_objects
+            if pc.is_PC()
+        ]
+        assert len(r_pcs) > 0, "Форма не содержит параметризаторов, должен быть хотя бы один"
+        self.parametrise(r_pcs)
+
+    def check_HCs_from_form(self, form: Form) -> None:
+        """
+        Заполняет список id проваленных жесткий условий
+        :param form: форма, из которой берется список жсетких условий
+        :return:
+        """

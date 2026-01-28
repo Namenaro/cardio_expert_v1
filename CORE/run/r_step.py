@@ -1,6 +1,5 @@
 from copy import deepcopy
-from dataclasses import dataclass
-from typing import Optional, List, Dict, Tuple
+from typing import Optional, List, Tuple
 
 from CORE import Signal
 from CORE.constants import EPSILON_FOR_DUBLES
@@ -12,8 +11,13 @@ from CORE.run.r_track import RTrack
 from CORE.run.step_interval import Interval
 
 
-
 class RStep:
+    """ Класс для запуска одного шага распознавания формы на канкретном сигнале.
+    Производит "наращивание" переданного ему экземпляра
+    на одну точку (с опутствующей параметризацией).
+
+    При этом, поскольку
+    на данную точку множсетво кандидатов, то результатом наращивания станут несколько экземпляров"""
     def __init__(self, interval: Interval,
                  r_tracks: List[RTrack],
                  target_point_name: str,
