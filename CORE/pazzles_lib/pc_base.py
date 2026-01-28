@@ -3,6 +3,8 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Tuple
 
 from CORE import Signal
+from CORE.exeptions import PazzleOutOfSignal
+
 
 
 class PCBase(ABC):
@@ -56,7 +58,7 @@ class PCBase(ABC):
         Выполнение алгоритма. Предполагается, что перед запуском этого метода методы регистрации
         входных точек и входных параметров уже запускались.
 
-        :raise RunError, код ошибки ErrorCode.RUN_PAZZLE_OUT_OF_SIGNAL, если логика пазла потребовала обращения за пределы предоставленного сигнала
+        :raise PazzleOutOfSignal, если логика пазла потребовала обращения за пределы предоставленного сигнала
 
         :param signal: Входной сигнал для анализа
         :return: Результаты расчета параметров {имя_параметра :его_вычисленное_значение}

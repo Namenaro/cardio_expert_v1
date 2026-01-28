@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Tuple, Optional, List
 
 from CORE import Signal
+from CORE.exeptions import PazzleOutOfSignal
 
 
 class SMBase(ABC):
@@ -16,7 +17,7 @@ class SMBase(ABC):
           необходимость изменить весь сигнал.
           В данном интервале будут искать особые точки PS-пазлы этого трека.
 
-        :raise RunError, код ошибки ErrorCode.RUN_PAZZLE_OUT_OF_SIGNAL, если логика пазла потребовала обращения за пределы предоставленного сигнала
+        :raise PazzleOutOfSignal, если логика пазла потребовала обращения за пределы предоставленного сигнала
 
         :param signal: входной сигнал для анализа
         :param left_t: левая граница разрешенного интервала поиска особый точек шага (не ищутся азлом типа SM)

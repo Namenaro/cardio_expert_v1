@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Tuple, Optional, List
 
 from CORE import Signal
+from CORE.exeptions import PazzleOutOfSignal
 
 
 class PSBase(ABC):
@@ -13,7 +14,7 @@ class PSBase(ABC):
         """
          Выполнение алгоритма выбора точек на интервале [left_t, right_t]
 
-        :raise RunError, код ошибки ErrorCode.RUN_PAZZLE_OUT_OF_SIGNAL, если логика пазла потребовала обращения за пределы предоставленного сигнала
+        :raise PazzleOutOfSignal, если логика пазла потребовала обращения за пределы предоставленного сигнала
 
         :param signal: входной сигнал для анализа
         :param left_t: левая граница разрешенного интервала поиска точек
