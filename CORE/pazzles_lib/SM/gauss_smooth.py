@@ -1,5 +1,6 @@
 import numpy as np
 
+from CORE.pazzles_lib.sm_base import SMBase
 from CORE.signal_1d import Signal
 from copy import deepcopy
 from CORE.signal_1d import Signal
@@ -11,7 +12,7 @@ from scipy.signal import convolve
 from typing import Optional
 
 
-class GaussianSmooth:
+class GaussianSmooth(SMBase):
     """ Сглаживание сигнала гауссовым ядром"""
 
     def __init__(self, sigma: float = 2.5, kernel_size_t: float = 0.3):

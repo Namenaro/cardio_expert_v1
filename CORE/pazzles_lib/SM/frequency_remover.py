@@ -2,10 +2,12 @@ import numpy as np
 from scipy.fft import fft, ifft, fftfreq, rfft, irfft
 from copy import deepcopy
 from typing import Optional, Literal
+
+from CORE.pazzles_lib.sm_base import SMBase
 from CORE.signal_1d import Signal
 
 
-class FrequencyFilter:
+class FrequencyFilter(SMBase):
     """Фильтрация частот с помощью преобразования Фурье"""
 
     def __init__(self, cutoff_freq: float = 40.0, filter_type: Literal['lowpass', 'highpass'] = 'lowpass'):
