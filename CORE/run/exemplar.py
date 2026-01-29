@@ -3,8 +3,6 @@ from typing import Any, Dict, Tuple, Optional, List
 from CORE import Signal
 from CORE.db_dataclasses import Form
 from CORE.logger import get_logger
-from CORE.run.r_hc import R_HC
-from CORE.run.r_pc import R_PC
 
 logger = get_logger(__name__)
 from CORE.exeptions import CoreError
@@ -162,41 +160,3 @@ class Exemplar:
     def __len__(self):
         return len(self._points)
 
-    def parametrise(self, r_pcs: List[R_PC]):
-        """
-        По очереди (порядок важен) примеряет обънкты вида PC к данному экземпляру.
-        Результаты расчета записываются в текущий экземпляр.
-        :param r_pcs:
-        :return:
-        """
-        for r_pc in r_pcs:
-            measured_new_params = r_pc.run(self)
-            for param_name, param_value in measured_new_params.items():
-                self.add_parameter(param_name, param_value=param_value)
-
-
-    def fit_conditions(self, r_hcs: List[R_HC]) -> bool:
-        for r_hc in r_hcs:
-            fitted = r_hc.run(self)
-            if fitted:
-                self.passed_PCs_ids.append(r_hc.id)
-            else:
-                self.failed_PCs_ids.append(r_hc.id)
-
-    def parametrise_from_form(self, form: Form):
-        r_pcs = [
-            R_PC(base_pazzle=pc, form_points=form.points, form_params=form.parameters)
-            for pc in form.HC_PC_objects
-            if pc.is_PC()
-        ]
-        assert len(r_pcs) > 0, "Форма не содержит параметризаторов, должен быть хотя бы один"
-        self.parametrise(r_pcs)
-
-    def check_HCs_from_form(self, form: Form) -> None:
-        """
-        Заполняет список id проваленных жесткий условий
-        :param form: форма, из которой берется список жсетких условий
-        :return:
-        """
-        r_hcs = [R_HC(pazzle, form_params=form.parameters) for pazzle in form.HC_PC_objects if pazzle.is_HC()]
-        return self.fit_conditions(r_hcs)
