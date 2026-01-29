@@ -161,7 +161,8 @@ class Exemplar:
         return len(self._points)
 
     def parametrise(self, r_pcs: List[R_PC]):
-        pass
+        for r_pc in r_pcs:
+
 
     def fit_conditions(self, r_hcs: List[R_HC]) -> bool:
         pass

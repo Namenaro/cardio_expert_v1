@@ -11,6 +11,9 @@ from CORE.run.run_pazzle import PazzleParser
 
 
 class R_PC:
+    """ Класс измерителя параметров. Принимает экземпляр с частично заполннными
+    точками/параметроми и проводит замер некоторых новых параметров,
+    которым он посвещен"""
     def __init__(self, base_pazzle: BasePazzle, form_points: List[Point], form_params: List[Parameter]):
         """
         Инициализация экземпляра R_PC из класса, служащего (де)сериализаци из БД.
@@ -33,11 +36,12 @@ class R_PC:
         3. Сбор данных параметров из экземпляра
         4. Настройка runnable-объекта
         5. Запуск и получение результата
+        6. Ремампинг имен параметров из сигнатуры класса в соотвествющие имена параметров из сигнутры формы
 
         :param exemplar: экземпляр формы для обработки
         :raise PazzleOutOfSignal: если логика пазла потребовала обращения за пределы предоставленного сигнала
         :raise RunPazzleError: различные ошибки выполнения пазла
-        :return Словарь с результатами измерений
+        :return Словарь с результатами измерений {имя_параметра_в форме: его померенное значение}
         """
         parser = PazzleParser(self.base_pazzle, form_points=self.form_points, form_params=self.form_params)
 
@@ -59,7 +63,10 @@ class R_PC:
         runnable.register_input_parameters(**params_data)
 
         # 5. Запуск и получение результата
-        return self._execute_runnable(runnable, exemplar.signal)
+        measurement_res = self._execute_runnable(runnable, exemplar.signal)
+
+        # 6. Ремампинг имен параметров из сигнатуры класса в соотвествющие имена из сигнутры формы
+        return self._remap_output_params_to_form_params(measurement_res, parser)
 
     def _create_runnable(self, parser: PazzleParser) -> PCBase:
         """
@@ -152,3 +159,24 @@ class R_PC:
         except Exception as e:
             class_name = self.base_pazzle.class_ref.name
             raise RunPazzleError.execution_error(self.base_pazzle.id, class_name, str(e))
+
+    def _remap_output_params_to_form_params(
+            self,
+            params_of_class_calculated: Dict[str, Any],
+            parser: PazzleParser
+    ) -> Dict[str, Any]:
+        """
+        Преобразует словарь параметров: заменяет ключи (имена из сигнатуры класса)
+        на соответствующие имена параметров формы.
+
+        :param params_of_class_calculated: {имя параметра в сигнатуре: значение}
+        :param parser: объект, предоставляющий отображение имён
+        :return: {имя параметра в форме: значение}
+        """
+        cls_names_to_form_names: Dict[str, str] = parser.map_output_params_names()
+
+        return {
+            form_name: params_of_class_calculated[cls_name]
+            for cls_name, form_name in cls_names_to_form_names.items()
+            if cls_name in params_of_class_calculated
+        }
