@@ -15,6 +15,7 @@ class Parametriser:
         Результаты расчета записываются в текущий экземпляр.
         :param r_pcs:
         :return:
+        :raises PazzleOutOfSignal, RunPazzleError
         """
         for r_pc in r_pcs:
             measured_new_params = r_pc.run(exemplar)
@@ -23,11 +24,12 @@ class Parametriser:
 
     def fit_conditions(self, exemplar: Exemplar, r_hcs: List[R_HC]) -> bool:
         """
-        Применяет список жестких условий к экземпляру. При этому в экзепрляр
+        Применяет список жестких условий к экземпляру. При этом в экзепрляр
         производится дозапись информации о том, какие условия выполнены и какие провалены.
         :param exemplar:
-        :param r_hcs:
-        :return:
+        :param r_hcs: объекты жестких условий для их проверки на этом экземпляре
+        :return: True если все переданные условия выполнены
+        :raises RunPazzleError
         """
         for r_hc in r_hcs:
             fitted = r_hc.run(exemplar)
@@ -42,6 +44,7 @@ class Parametriser:
         Считая, что у экземпляра заполнены все точки, измерить и внести в него все параметры
         :param exemplar: экземпляр, в котором будут измеряться параметры
         :param form: форма для этого экземпляра
+        :raises RunPazzleError, PazzleOutOfSignal
         :return:
         """
         r_pcs = [
@@ -57,6 +60,7 @@ class Parametriser:
         Считая, что у данного экземпляра заполнене все параметры, проверят жесткие условия.
         Заполняет список id проваленных/выполненных жесткий условий, записывает его в данный экземпляр
         :param form: форма, из которой берется список жсетких условий
+        :raises RunPazzleError
         :return: true если все условия формы выполнились
         """
         r_hcs = [R_HC(pazzle, form_params=form.parameters) for pazzle in form.HC_PC_objects if pazzle.is_HC()]
