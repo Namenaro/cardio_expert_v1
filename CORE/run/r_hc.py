@@ -20,6 +20,8 @@ class R_HC:
         self.base_pazzle = base_pazzle
         self.form_params = form_params
 
+        self.id = base_pazzle.id
+
     def run(self, exemplar: Exemplar) -> bool:
         """
         Основной метод выполнения пазла на конкретном экземпляре.

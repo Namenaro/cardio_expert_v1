@@ -7,6 +7,8 @@ from CORE.run.r_hc import R_HC
 from CORE.run.r_pc import R_PC
 
 logger = get_logger(__name__)
+from CORE.exeptions import CoreError
+
 
 class Exemplar:
     """ Экземпляр формы — конкретная расстановка точек на конкретном одномерном сигнале ЭКГ.
@@ -24,8 +26,8 @@ class Exemplar:
         self._parameters: Dict[str, Any] = {}  # Хранилище параметров: имя -> значение
         self.evaluation_result: Optional[float] = None
 
-        self.failed_PCs_ids: Optional[
-            List[int]] = None  # id проваленных жестких условий. Если None, то они не проверялись
+        self.failed_PCs_ids: [List[int]] = []  # id проваленных жестких условий.
+        self.passed_PCs_ids: [List[int]] = []  # id успешно выполнившихся жестких условий.
 
     def add_point(self, point_name: str, point_coord_t: float, track_id: Any) -> bool:
         """
@@ -40,7 +42,7 @@ class Exemplar:
         """
         # Проверяем, что имя точки ещё не используется
         if point_name in self._points:
-            raise ValueError(f"Точка {point_name} уже сущетсвует, не должно возникать попыток перезаписи")
+            raise CoreError(f"Точка {point_name} уже сущетсвует, не должно возникать попыток перезаписи")
 
         # Проверяем, что момент времени находится в пределах сигнала
         if not self.signal.is_moment_in_signal(point_coord_t):
@@ -80,7 +82,7 @@ class Exemplar:
         :raises ValueError: если точка не найдена
         """
         if not self.contains_point(point_name):
-            raise ValueError(f"Точка {point_name} не найдена")
+            raise CoreError(f"Точка {point_name} не найдена")
 
         return self._points[point_name][1]  # Возвращаем track_id (второй элемент пары)
 
@@ -95,7 +97,7 @@ class Exemplar:
 
         # Если параметр уже существует
         if param_name in self._parameters:
-            raise ValueError(f"{param_name} уже сущетсвует, не должно возникать попыток перезаписи")
+            raise CoreError(f"{param_name} уже сущетсвует, не должно возникать попыток перезаписи")
 
         self._parameters[param_name] = param_value
 
@@ -149,11 +151,11 @@ class Exemplar:
         """
         # Валидация типа
         if value is not None and not isinstance(value, float):
-            raise TypeError("evaluation_result должно быть float или None")
+            raise CoreError("evaluation_result должно быть float или None")
 
         # Валидации диапазона
         if isinstance(value, float) and not (0 <= value <= 1):
-            raise TypeError("evaluation_result должно быть в диапазоне")
+            raise CoreError("evaluation_result должно быть в диапазоне")
 
         self._evaluation_result = value
 
@@ -161,11 +163,25 @@ class Exemplar:
         return len(self._points)
 
     def parametrise(self, r_pcs: List[R_PC]):
+        """
+        По очереди (порядок важен) примеряет обънкты вида PC к данному экземпляру.
+        Результаты расчета записываются в текущий экземпляр.
+        :param r_pcs:
+        :return:
+        """
         for r_pc in r_pcs:
+            measured_new_params = r_pc.run(self)
+            for param_name, param_value in measured_new_params.items():
+                self.add_parameter(param_name, param_value=param_value)
 
 
     def fit_conditions(self, r_hcs: List[R_HC]) -> bool:
-        pass
+        for r_hc in r_hcs:
+            fitted = r_hc.run(self)
+            if fitted:
+                self.passed_PCs_ids.append(r_hc.id)
+            else:
+                self.failed_PCs_ids.append(r_hc.id)
 
     def parametrise_from_form(self, form: Form):
         r_pcs = [
@@ -182,3 +198,5 @@ class Exemplar:
         :param form: форма, из которой берется список жсетких условий
         :return:
         """
+        r_hcs = [R_HC(pazzle, form_params=form.parameters) for pazzle in form.HC_PC_objects if pazzle.is_HC()]
+        return self.fit_conditions(r_hcs)
