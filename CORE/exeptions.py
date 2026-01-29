@@ -27,6 +27,7 @@ class ErrorCode(Enum):
     STEP_NO_TRACKS = "STEP_NO_TRACKS"
     INVALID_TARGET_POINT_FOR_STEP = "INVALID_TARGET_POINT_FOR_STEP"
     EMPTY_RESULT_FOR_STEP = "EMPTY_RESULT_FOR_STEP"
+    PAZZLE_PROBLEM_IN_TRACK = "PAZZLE_PROBLEM_IN_TRACK"
 
 
 class CoreError(Exception):
@@ -152,10 +153,11 @@ class RunPazzleError(CoreError):
 
 
 class RunTrackError(CoreError):
-    def __init__(self, message: str, track_id: int, code):
+    def __init__(self, message: str, track_id: int, code, error: str):
         super().__init__(message)
         self.code = code  # уникальный код ошибки
         self.track_id = track_id
+        self.error: str = ""
 
         # Автоматическое логирование при создании исключения
         logger.exception(f"RunTrackError: {message}")
@@ -177,6 +179,14 @@ class RunTrackError(CoreError):
             code=ErrorCode.TRACK_RESULT_POINTS_OUT_OF_INTERVAL,
             track_id=track_id
         )
+
+    @classmethod
+    def internal_problem_in_pazzle(cls, track_id: int, error: str):
+        return cls(track_id=track_id,
+                   error=error,
+                   code=ErrorCode.PAZZLE_PROBLEM_IN_TRACK,
+                   message=f"При выполнении трека {track_id} возникла внутренняя ошибка пазла\t {error}")
+
 
 
 class RunStepError(CoreError):

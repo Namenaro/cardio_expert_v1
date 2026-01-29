@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from typing import Dict, Any, List, Tuple
 
 from CORE.db_dataclasses import BasePazzle, Point, Parameter
