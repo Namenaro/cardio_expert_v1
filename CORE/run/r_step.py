@@ -1,18 +1,16 @@
 from copy import deepcopy
 from typing import Optional, List, Tuple
 
-
 from CORE import Signal
 from CORE.constants import EPSILON_FOR_DUBLES
 from CORE.exeptions import RunStepError, PazzleOutOfSignal
+from CORE.logger import get_logger
 from CORE.run import Exemplar
 from CORE.run.parametriser import Parametriser
 from CORE.run.r_hc import R_HC
 from CORE.run.r_pc import R_PC
 from CORE.run.r_track import RTrack
 from CORE.run.step_interval import Interval
-
-from CORE.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -24,14 +22,10 @@ class RStep:
 
     При этом, поскольку на данную точку множсетво кандидатов,
      то результатом наращивания станут несколько экземпляров"""
-    def __init__(self, interval: Interval,
-                 r_tracks: List[RTrack],
-                 target_point_name: str,
-                 num_in_form: int,
-                 center: Optional[float] = None,
-                 rHC_objects: Optional[List[R_HC]] = None,
-                 rPC_objects: Optional[List[R_PC]] = None
-                 ):
+
+    def __init__(self, interval: Interval, r_tracks: List[RTrack], target_point_name: str, num_in_form: int,
+                 center: Optional[float] = None, rHC_objects: Optional[List[R_HC]] = None,
+                 rPC_objects: Optional[List[R_PC]] = None):
         self.num_in_form: int = num_in_form
         self.center = center
 
@@ -66,11 +60,7 @@ class RStep:
         left_t, right_t = self.interval.get_interval_coords(center=self.center, exemplar=exemplar)
 
         # 2. Запускаем по очереди все треки, получаем пары  вида track_id:одна_из_результирующих_точек
-        filtered_pairs = self._run_all_tracks(
-            exemplar.signal,
-            left_t=left_t,
-            right_t=right_t
-        )
+        filtered_pairs = self._run_all_tracks(exemplar.signal, left_t=left_t, right_t=right_t)
 
         if len(filtered_pairs) == 0:
             return []
@@ -142,9 +132,7 @@ class RStep:
 
         for track_id, point_coord in filtered_pairs:
             child_exemplar = deepcopy(parent_exemplar)
-            child_exemplar.add_point(point_name=self.target_point_name,
-                                     point_coord_t=point_coord,
-                                     track_id=track_id)
+            child_exemplar.add_point(point_name=self.target_point_name, point_coord_t=point_coord, track_id=track_id)
             exemplars.append(child_exemplar)
             assert len(parent_exemplar) == len(child_exemplar) - 1, "Должно было произойти наращивание на одну точку"
 
