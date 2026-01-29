@@ -32,7 +32,10 @@ class RTrack:
         :param left_t: левая граница интервала
         :param right_t: правая граница интервала
         :raises RunTrackError, PazzleOutOfSignal
-        :return:
+
+        :return: список координат точек, являющихся кандидатами на target_point этого шага;
+        Список может быть пустым. Если сигнала объективно не хавтило для анализа, то
+         PazzleOutOfSignal пробрасывается наверх
         """
         if len(signal):
             raise RunTrackError.emty_signal(self.id)

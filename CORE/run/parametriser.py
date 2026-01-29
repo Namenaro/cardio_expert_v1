@@ -47,11 +47,8 @@ class Parametriser:
         :raises RunPazzleError, PazzleOutOfSignal
         :return:
         """
-        r_pcs = [
-            R_PC(base_pazzle=pc, form_points=form.points, form_params=form.parameters)
-            for pc in form.HC_PC_objects
-            if pc.is_PC()
-        ]
+        r_pcs = [R_PC(base_pazzle=pc, form_points=form.points, form_params=form.parameters) for pc in form.HC_PC_objects
+                 if pc.is_PC()]
         assert len(r_pcs) > 0, "Форма не содержит параметризаторов, должен быть хотя бы один"
         self.parametrise(exemplar, r_pcs=r_pcs)
 
