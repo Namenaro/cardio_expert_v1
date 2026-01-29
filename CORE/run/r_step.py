@@ -1,14 +1,20 @@
 from copy import deepcopy
 from typing import Optional, List, Tuple
 
+
 from CORE import Signal
 from CORE.constants import EPSILON_FOR_DUBLES
-from CORE.exeptions import RunStepError
+from CORE.exeptions import RunStepError, PazzleOutOfSignal
 from CORE.run import Exemplar
+from CORE.run.parametriser import Parametriser
 from CORE.run.r_hc import R_HC
 from CORE.run.r_pc import R_PC
 from CORE.run.r_track import RTrack
 from CORE.run.step_interval import Interval
+
+from CORE.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class RStep:
@@ -36,6 +42,11 @@ class RStep:
         self.rPC_objects = rPC_objects if rPC_objects is not None else []
 
         self.r_tracks: List[RTrack] = r_tracks
+        self.out_of_signal_tracks = 0
+
+    def get_out_of_signals_procent(self):
+        """ В скольки процентах треков произошел выход за пределы предоставленного сигнала"""
+        return self.out_of_signal_tracks / len(self.r_tracks)
 
     def run(self, exemplar: Exemplar) -> List[Exemplar]:
         """
@@ -43,7 +54,7 @@ class RStep:
         Родительский экзепляр не меняется. Дочерние экземпляры имеют гарантированно разные точки (т.е. дочерние экземпляры прорежены по последней точке)
 
         :param exemplar: Экземляр формы (в котором выполнены все шаги, предыдущие к данному)
-        :raises RunStepError, RunTrackError, RunPazzleError, PazzleOutOfSignal
+        :raises RunStepError, RunTrackError, RunPazzleError
         :return: Список экземпляров, в каждом из которых на одну точку больше, чем в "родительском"
         """
         if len(self.r_tracks) == 0:
@@ -61,15 +72,24 @@ class RStep:
             right_t=right_t
         )
 
+        if len(filtered_pairs) == 0:
+            return []
+
         # 3. На основе списка точек-кандидатов (уже профильтрованных от дублей) создаем дочерние экземпляры
         exemplars = self._init_exemplars(exemplar, filtered_pairs)
 
         # 4. Параметризуем полученные экземпляры
-        for exemplar in exemplars:
-            exemplar.parametrise(self.rPC_objects)
+        parametriser = Parametriser()
+        try:
+            for exemplar in exemplars:
+                parametriser.parametrise(exemplar, r_pcs=self.rPC_objects)
+        except PazzleOutOfSignal:
+            logger.info(
+                "PazzleOutOfSignal: параметризация прервана из-за нехватки сигнала одному или нескольким PC шага")
+            return []
 
         # 5. Удялаяем те, которые нарушили жесткие условия на параметры
-        exemplars = [ex for ex in exemplars if ex.fit_conditions(self.rHC_objects)]
+        exemplars = [ex for ex in exemplars if parametriser.fit_conditions(ex, self.rHC_objects)]
 
         return exemplars
 
@@ -85,14 +105,17 @@ class RStep:
 
         # Шаг 1: собираем все пары (id, point)
         for track in self.r_tracks:
-            selected_points = track.run(signal, left_t=left_t, right_t=right_t)
-            for point in selected_points:
-                all_pairs.append((track.id, point))
+            try:
+                selected_points = track.run(signal, left_t=left_t, right_t=right_t)
+                for point in selected_points:
+                    all_pairs.append((track.id, point))
+            except PazzleOutOfSignal:
+                # Некоторые треки могли требовать больший врагмент сигнала для
+                # анализа, чем предодставляет данный экземпляр.
+                # Такая проблема в одном из треков не является железным показанием к свертыванию шага.
+                self.out_of_signal_tracks += 1
 
         # Шаг 2: фильтруем близкие точки
-        if len(all_pairs) == 0:
-            raise RunStepError.empty_result(self.num_in_form)
-
         # Сортируем по значению точки (для удобства сравнения соседних)
         all_pairs.sort(key=lambda pair: pair[1])
 

@@ -4,7 +4,7 @@ from typing import List
 
 from CORE import Signal
 from CORE.db_dataclasses import Track
-from CORE.exeptions import RunTrackError, RunPazzleError
+from CORE.exeptions import RunTrackError, RunPazzleError, PazzleOutOfSignal
 from CORE.run.r_ps import R_PS
 from CORE.run.r_sm import R_SM
 from CORE.run.utils import delete_similar_points
@@ -48,6 +48,10 @@ class RTrack:
             )
         except RunPazzleError as e:
             raise RunTrackError.internal_problem_in_pazzle(track_id=self.id, error=str(e))
+        except PazzleOutOfSignal:
+            # не имеет смысла выполнять этот трек, т..к. один из его SM вылез за пределы доступного сигнала.
+            # Но это не обязательно аварийная ситуация - поэтому надо переделать наверх, шагу
+            raise
 
         if any(point < left_t or point > right_t for point in points_selected):
             raise RunTrackError.selected_points_out_of_interval(track_id=self.id, right_t=right_t, left_t=left_t)

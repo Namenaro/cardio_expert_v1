@@ -26,7 +26,7 @@ class ErrorCode(Enum):
     TRACK_RESULT_POINTS_OUT_OF_INTERVAL = "TRACK_RESULT_POINTS_OUT_OF_INTERVAL"
     STEP_NO_TRACKS = "STEP_NO_TRACKS"
     INVALID_TARGET_POINT_FOR_STEP = "INVALID_TARGET_POINT_FOR_STEP"
-    EMPTY_RESULT_FOR_STEP = "EMPTY_RESULT_FOR_STEP"
+
     PAZZLE_PROBLEM_IN_TRACK = "PAZZLE_PROBLEM_IN_TRACK"
 
 
@@ -67,7 +67,7 @@ class RunPazzleError(CoreError):
         self.error = error
 
         # Автоматическое логирование при создании исключения
-        logger.exception(f"RunPazzleError: {message}")
+        logger.exception(f"RunPazzleError: {message}\t код ошибки: {self.code}")
 
     @classmethod
     def selected_point_out_of_interval(cls, left_t: float, right_t: float,
@@ -160,7 +160,7 @@ class RunTrackError(CoreError):
         self.error: str = ""
 
         # Автоматическое логирование при создании исключения
-        logger.exception(f"RunTrackError: {message}")
+        logger.exception(f"RunTrackError: {message}\t код ошибки {self.code}")
 
     @classmethod
     def emty_signal(cls, track_id: int) -> 'RunTrackError':
@@ -212,13 +212,5 @@ class RunStepError(CoreError):
         return cls(
             message=f"В шаге (№{num_in_form} в форме) при запуске обнаружено пустое имя целевой точки",
             code=ErrorCode.INVALID_TARGET_POINT_FOR_STEP,
-            num_in_form=num_in_form
-        )
-
-    @classmethod
-    def empty_result(cls, num_in_form: int):
-        return cls(
-            message=f"Шаг (№{num_in_form} в форме) не смог поставить свою целевую точку (пустой список найденных точек)",
-            code=ErrorCode.EMPTY_RESULT_FOR_STEP,
             num_in_form=num_in_form
         )
