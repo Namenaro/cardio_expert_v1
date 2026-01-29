@@ -63,7 +63,7 @@ class RStep:
         filtered_pairs = self._run_all_tracks(exemplar.signal, left_t=left_t, right_t=right_t)
 
         if len(filtered_pairs) == 0:
-            return []
+            return []  # возможны две причины такого исхода: искомых точек дейтсвительно нет или длины сигнала недостаточно для анализа
 
         # 3. На основе списка точек-кандидатов (уже профильтрованных от дублей) создаем дочерние экземпляры
         exemplars = self._init_exemplars(exemplar, filtered_pairs)

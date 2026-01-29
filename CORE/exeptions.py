@@ -29,6 +29,9 @@ class ErrorCode(Enum):
 
     PAZZLE_PROBLEM_IN_TRACK = "PAZZLE_PROBLEM_IN_TRACK"
 
+    # ошибки связанные с формой вцелом
+    INVALID_INTERVAL_DESERIALISED = "INVALID_INTERVAL_DESERIALISED"
+
 
 class CoreError(Exception):
     def __init__(self, message: str):
@@ -213,4 +216,23 @@ class RunStepError(CoreError):
             message=f"В шаге (№{num_in_form} в форме) при запуске обнаружено пустое имя целевой точки",
             code=ErrorCode.INVALID_TARGET_POINT_FOR_STEP,
             num_in_form=num_in_form
+        )
+
+
+class FormError(CoreError):
+    def __init__(self, message: str, code, form_id: int, error=""):
+        self.error = error
+        self.form_id = form_id
+        self.code = code
+        self.message = message
+
+        # Автоматическое логирование при создании исключения
+        logger.exception(f"{self.__class__.__name__}: {message}")
+
+    @classmethod
+    def invalid_interval_deserialised(cls, form_id: int, step_num: int, error: str):
+        return cls(
+            message=f"В шаге (№{step_num} в форме{form_id}) при перевод db класса в r класса ошибка парсинге интервала, {error}",
+            code=ErrorCode.INVALID_INTERVAL_DESERIALISED,
+            form_id=form_id
         )
