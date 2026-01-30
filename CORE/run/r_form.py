@@ -8,36 +8,9 @@ from CORE.run.r_hc import R_HC
 from CORE.run.r_pc import R_PC
 from CORE.run.r_step import RStep
 from CORE.run.r_track import RTrack
+from CORE.run.schema import Schema
 from CORE.run.step_interval import Interval
 
-
-class Schema:
-    def __init__(self, form: Form):
-        pass
-
-    def get_PCs_by_step_num(self, step_num) -> List[BasePazzle]:
-        pass
-
-    def get_HCs_by_step_num(self, step_num) -> List[BasePazzle]:
-        pass
-
-    def get_point_by_step_num(self, step_num) -> Point:
-        pass
-
-    def _get_points_without_steps(self) -> List[Point]:
-        pass
-
-    def _get_unrichable_PCs(self) -> List[BasePazzle]:
-        pass
-
-    def _get_unrichable_HCs(self) -> List[BasePazzle]:
-        pass
-
-    def _get_unused_points(self) -> List[Point]:
-        pass
-
-    def __str__(self):
-        pass
 
 
 
@@ -115,7 +88,19 @@ class RForm:
         :return: объект интервал для этого шага
         """
         try:
-            interval = ......
+            interval = Interval()
+            # Правое ограничение (имя точки или размер отступа)
+            if step.right_point:
+                interval.set_point_right(step.right_point.name)
+            else:
+                interval.set_right_padding(step.right_padding_t)
+
+            # Левое ограничение (имя точки или размер отступа)
+            if step.left_point:
+                interval.set_point_left(step.left_point.name)
+            else:
+                interval.set_left_padding(step.left_padding_t)
+
             return interval
         except Exception as e:
             raise FormError.invalid_interval_deserialised(form_id=self.form.id,
