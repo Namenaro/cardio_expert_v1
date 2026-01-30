@@ -236,3 +236,7 @@ class FormError(CoreError):
             code=ErrorCode.INVALID_INTERVAL_DESERIALISED,
             form_id=form_id
         )
+
+
+class SchemaError(CoreError):
+    pass
