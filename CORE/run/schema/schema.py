@@ -135,19 +135,22 @@ class Schema:
             raise SchemaError(message)
 
     def get_PCs_by_step_num(self, step_num) -> List[BasePazzle]:
-        pass
+        pcs = [wpc.pc for wpc in self.steps_sorted[step_num].wPCs]
+        return pcs
+
 
     def get_HCs_by_step_num(self, step_num) -> List[BasePazzle]:
-        pass
+        hcs = [whc.hc for whc in self.steps_sorted[step_num].wHCs]
+        return hcs
 
     def to_text(self) -> str:
         text = "<<< Схема выполнения формы >>>"
 
         # Если есть ошибки, то сначала покажем их
         if self.context.is_ok():
-            text += "ФОРМА ВАЛИДНА! \n"
+            text += "\n ФОРМА ВАЛИДНА!"
         else:
-            text += "\n\n --- ОШИБКИ --- :"
+            text += "\n --- ОШИБКИ ---\n :"
             for err_msg in self.context.errors:
                 text += err_msg + "\n"
 
@@ -155,3 +158,4 @@ class Schema:
         text += "\n --- ШАГИ --- : \n"
         for schemed_step in self.steps_sorted:
             text += schemed_step.to_text()
+        return text
