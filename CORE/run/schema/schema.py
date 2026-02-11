@@ -21,9 +21,7 @@ class Schema:
     Использование класса:
 
     Нужно зупусить Schema.compile() и если вернуло False,
-    краткие данные о проблемах формы можно извлечь из
-    объекта Schema.context:Context. Из него будет понятно, на
-    каком шаге формы имеются пробоемы и какие.
+    краткие данные о проблемах формы можно извлечь через Schema.get_errors().
 
     Для понятного отображения итогов построения схемы (включая ошибки)
     нужно использовать метод Schema.to_text(), возвращаемый им текст удобен
@@ -159,3 +157,11 @@ class Schema:
         for schemed_step in self.steps_sorted:
             text += schemed_step.to_text()
         return text
+
+    def get_errors(self) -> str:
+        if self.context.is_ok():
+            return "Ошибок нет"
+
+        current_num_step = self.context.nums_of_steps_done[-1] if self.context.nums_of_steps_done else 0
+        err_info = f" При выполнеии {current_num_step} шага ошибки: \n {'\n'.join(self.context.errors)}"
+        return err_info
