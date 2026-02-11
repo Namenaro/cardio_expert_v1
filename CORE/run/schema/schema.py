@@ -8,18 +8,8 @@ from CORE.run.run_pazzle import PazzleParser
 from CORE.run.schema.context import Context
 from CORE.run.schema.schemed_HC import HC_Wrapper
 from CORE.run.schema.schemed_PC import PC_Wrapper
-from DA3.form_widgets.hcs_widget.HC_card import HCCard
+from CORE.run.schema.schemed_step import SchemedStep
 
-
-class SchemedStep:
-    def __init__(self, step: Step):
-        self.step = step
-        self.wPCs: List[PC_Wrapper] = []
-        self.wHCs: List[HC_Wrapper] = []
-
-    def to_text(self) -> str:
-        text = f"Шаг {self.step.num_in_form} -> ставится точка {self.step.target_point.name}\n"
-        "Проверяются параметры: "  # TODO
 
 class Schema:
     """
@@ -30,7 +20,7 @@ class Schema:
 
     Использование класса:
 
-    Нужно оберуть Schema.run() в try/exept и если произошло падение, то
+    Нужно зупусить Schema.compile() и если вернуло False,
     краткие данные о проблемах формы можно извлечь из
     объекта Schema.context:Context. Из него будет понятно, на
     каком шаге формы имеются пробоемы и какие.
@@ -47,14 +37,88 @@ class Schema:
         self.wHCs: List[HC_Wrapper] = []
         self.wPCs: List[PC_Wrapper] = []
 
-        self.steps_sorted: List[SchemedStep] = []
+        self.steps_sorted: List[SchemedStep] = [SchemedStep(step) for step in form.steps]
 
-    def run(self) -> None:
+    def compile(self) -> bool:
         """
         Основной метод.  Генерирует схему
-        :return:
+        :return: True если не обнаружено проблем при компиляции формы.
+           Если обнаружены, то см. errors в self.context
         """
         self._init_HC_PC()
+
+        for step in self.steps_sorted:
+            # границы интервала
+            sucess, absent_points = step.fit_interval(self.context)
+            if not sucess:
+                self.context.errors.append(f"При задании интервалане найдены точки{absent_points} ")
+
+            # для данного шага подбираем PC и HC
+            self._find_PCs_for_step(step)
+            self._find_HCs_for_step(step)
+
+            # отмечаем шаг пройденным
+            self.context.add_point(step.get_step_obj().target_point.name)
+
+        if len(self.wHCs):
+            ids = [whc.hc.id for whc in self.wHCs]
+            self.context.errors.append(f"Остались нераспределенные HC, id ={ids}")
+
+        if len(self.wPCs):
+            ids = [wpc.pc.id for wpc in self.wPCs]
+            self.context.errors.append(f"Остались нераспределенные PC, id ={ids}")
+
+        return self.context.is_ok()
+
+    def _find_PCs_for_step(self, step: SchemedStep) -> None:
+        """
+        Заполняем список PC для данного шага при текущем контексте
+        :param step: шаг, для которого вы пытаемся найти упорядоченный список PC
+        :return:
+        """
+        PCs_list_changed = True
+
+        while True:
+            if not PCs_list_changed:
+                break
+
+            if len(self.wPCs) == 0:
+                break
+
+            # пытаемся найти ровно один PC:
+            for i in range(len(self.wPCs)):
+                is_ready, _, _ = self.wPCs[i].fit_context(self.context)
+                if is_ready:
+                    # Добавляем этот пазл в шаг
+                    step.wPCs.append(self.wPCs[i])
+
+                    # Заносим в контекст id пазла и добавленные пазлом параметры
+                    self.context.add_PC(pazzle_id=self.wPCs[i].pc.id)
+                    params = self.wPCs[i].returned_params()
+                    map(self.context.add_param, params)
+
+                    # Удаляем пазл из нерассмотренных
+                    del self.wPCs[i]
+
+                    # поскольку в контексте появились новые параметры,
+                    # то нужно заново делать обход всех PC, т.к. даже тем из них, кому
+                    # до этого момента не хватало параметров, может их тепепрь хватить
+                    PCs_list_changed = True
+                    break
+
+    def _find_HCs_for_step(self, step: SchemedStep):
+        """
+        Заполняем список HC для данного шага при текущем контексте
+        :param step: заполняемый сейчас шаг
+        :return:
+        """
+        for i in range((len(self.wHCs) - 1), -1, -1):  # с конца, т.к. удаление по индексу в цикле
+            hc = self.wHCs[i]
+            is_ready, _ = hc.fit_context(self.context)
+            if is_ready:
+                step.wHCs.append(hc.hc.id)
+                del self.wHCs[i]
+
 
     def _init_HC_PC(self):
         try:
