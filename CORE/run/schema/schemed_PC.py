@@ -58,3 +58,12 @@ class PC_Wrapper:
         is_ready = len(missing_params) == 0 and len(missing_points) == 0
 
         return is_ready, missing_params, missing_points
+
+    def __str__(self):
+        text = f"[ id: {self.pc.id} возвращает {', '.join(self.returned_params())}, требует "
+        if self.required_params_names:
+            text += f"параметры {', '.join(self.required_params_names)}    "
+        if self.required_points_names:
+            text += f"точки {', '.join(self.required_points_names)}"
+        text += "] "
+        return text

@@ -50,3 +50,8 @@ class HC_Wrapper:
         is_ready = len(missing_params) == 0
 
         return is_ready, missing_params
+
+    def __str__(self):
+        text = f"[ id: {self.hc.id} для {', '.join(self.required_params_names)}]"
+
+        return text

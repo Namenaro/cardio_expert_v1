@@ -149,10 +149,7 @@ class Schema:
         text = ""
 
         # Если есть ошибки, то сначала покажем их
-        if self.context.is_ok():
-            text += "\n ФОРМА ВАЛИДНА!"
-        else:
-
+        if not self.context.is_ok():
             text += self.get_errors()
 
         # Схема шагов формы (которые удалось построить до возникновения ошибки)
