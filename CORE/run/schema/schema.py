@@ -149,8 +149,7 @@ class Schema:
             text += "\n ФОРМА ВАЛИДНА!"
         else:
             text += "\n --- ОШИБКИ ---\n :"
-            for err_msg in self.context.errors:
-                text += err_msg + "\n"
+            text += self.get_errors()
 
         # Схема шагов формы (которые удалось построить до возникновения ошибки)
         text += "\n --- ШАГИ --- : \n"

@@ -1,6 +1,8 @@
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QSizePolicy, QScrollArea, QApplication)
 
 from CORE.db_dataclasses import Form
+from DA3 import app_signals
 from DA3.form_widgets import (FormInfoWidget, HCsWidget, PCsWidget, PointsWidget, ParametersWidget, StepsWidget)
 
 
@@ -20,6 +22,9 @@ class MainForm(QMainWindow):
 
     def setup_ui(self):
         self.setWindowTitle("Главная форма приложения")
+
+        # Добавляем меню
+        self.setup_menu()
 
         # Создаем центральный виджет с прокруткой
         scroll_area = QScrollArea()
@@ -107,3 +112,27 @@ class MainForm(QMainWindow):
         self.hcs_widget.reset_form(form)
         self.pcs_widget.reset_form(form)
         self.steps_widget.reset_steps(form.steps)
+
+    def setup_menu(self):
+        """Создать и настроить главное меню приложения"""
+        menu_bar = self.menuBar()
+
+        # Меню «Компилировать»
+        compile_menu = menu_bar.addMenu("Компилировать")
+        compile_action = compile_menu.addAction("Запустить компиляцию")
+        compile_action.triggered.connect(self.on_compile)
+
+        # Меню «Тест»
+        test_menu = menu_bar.addMenu("Тест")
+        test_action = test_menu.addAction("Запустить тесты")
+        test_action.triggered.connect(self.on_test)
+
+    @Slot()
+    def on_compile(self):
+        """Запросить запуск компилятора формы"""
+        app_signals.menu_signals.request_compile.emit()
+
+    @Slot()
+    def on_test(self):
+        """Заглушка для действия «Тест»"""
+        print("Запускаются тесты...")

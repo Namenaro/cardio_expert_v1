@@ -89,6 +89,9 @@ class AppSignals:
         db_delete_ps_sm = Signal(Del_Upd_SM_PS_Params)
         db_update_ps_sm = Signal(Del_Upd_SM_PS_Params)
 
+    class _MenuSignals(_SignalCategory):
+        request_compile = Signal()
+
     # Экземпляры категорий сигналов
     form = _Form()
     point = _Point()
@@ -96,3 +99,4 @@ class AppSignals:
     track = _Track()
     step = _Step()
     base_pazzle = _BasePazzle()
+    menu_signals = _MenuSignals()

@@ -1,8 +1,10 @@
 import logging
 from typing import Optional
 from CORE.db_dataclasses import *
+from CORE.run.schema import Schema
 from DA3.model import Model
 from DA3.main_form import MainForm
+from DA3.run_widgets.compilator_widget import CompilerWindow
 from DA3.start_dialog import select_form_from_dialog
 from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QMessageBox
@@ -46,6 +48,7 @@ class Controller(QObject):
         self.step_controller = StepController(self)
         self.track_controller = TrackController(self)
 
+
     def _init_controller_signals(self):
         """
         Явная инициализация сигналов в специализированных контроллерах.
@@ -71,6 +74,8 @@ class Controller(QObject):
         self.track_controller.init_signals(track_signals=app_signals.track, pazzle_signals=app_signals.base_pazzle)
 
         self.logger.info("Сигналы инициализированы в специализированных контроллерах")
+
+        app_signals.menu_signals.request_compile.connect(self.run_compilator)
 
     # ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
 
@@ -170,3 +175,12 @@ class Controller(QObject):
     def reinit_by_empty(self):
         self.current_form = Form()
         self.main_window.refresh(self.current_form)
+
+    def run_compilator(self):
+        self.logger.info("Запускается компилятор")
+        schema = Schema(form=self.current_form)
+        success = schema.compile()
+        report = schema.to_text()
+
+        compiler_window = CompilerWindow(success=success, report=report, parent=self.main_window)
+        compiler_window.exec()
