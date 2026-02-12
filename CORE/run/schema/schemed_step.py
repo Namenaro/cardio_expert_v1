@@ -29,7 +29,11 @@ class SchemedStep:
             self.required_points_names.append(step.right_point.name)
 
     def to_text(self) -> str:
-        text = f"Шаг {self.step.num_in_form} -> ставится точка {self.step.target_point.name}\n"
+        text = f"\n ШАГ {self.step.num_in_form}--------------------------------------\n Целевая: {self.step.target_point.name}"
+        text += f"\n Опорные: {'  '.join(self.required_points_names)}"
+        text += f"\n PCs: {'  '.join([str(wpc.pc.id) for wpc in self.wPCs])}"
+        text += f"\n HCs: {'  '.join([str(whc.hc.id) for whc in self.wHCs])}\n"
+
         return text
 
     def required_points_names(self) -> List[str]:

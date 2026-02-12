@@ -25,6 +25,7 @@ class ClassesRegistry:
             self._initialized = True
             self.auto_discover()
 
+
     def register(self, name: str, cls: Type):
         self._registry[name] = cls
 
@@ -32,8 +33,11 @@ class ClassesRegistry:
         """Автоматически находит все классы во всех подпапках пакета"""
         import CORE.pazzles_lib
 
+        # Сохраняем базовый пакет
+        base_package = CORE.pazzles_lib.__name__  # "CORE.pazzles_lib"
+
         # Список папок для поиска
-        subfolders = ['НС', 'PC', 'PS', 'SM']
+        subfolders = ['HC', 'PC', 'PS', 'SM']
 
         for subfolder in subfolders:
             # Полный путь к подпапке
@@ -46,13 +50,14 @@ class ClassesRegistry:
             # Ищем модули в этой папке
             for _, module_name, _ in pkgutil.iter_modules([subfolder_path]):
                 try:
-                    # Импортируем модуль из подпапки
-                    module = importlib.import_module(f"pazzles_lib.{subfolder}.{module_name}")
+                    # Импортируем модуль с полным путем
+                    module = importlib.import_module(f"{base_package}.{subfolder}.{module_name}")
 
                     # Регистрируем все подходящие классы
                     for name, obj in inspect.getmembers(module):
                         if self._is_valid_class(obj, module):
                             self.register(name, obj)
+
                 except Exception as e:
                     logger.error(f"Warning: Не смогли загрузить модуль {subfolder}.{module_name}: {e}")
                     continue
@@ -79,7 +84,8 @@ class ClassesRegistry:
             KeyError: Если класс с таким именем не найден в реестре
         """
         if key not in self._registry:
-            raise KeyError(f"Класс '{key}' не найден в реестре. Доступные классы: {list(self._registry.keys())}")
+            raise KeyError(
+                f"Класс '{key}' не найден в реестре. Доступные классы: {'\\n'.join(list(self._registry.keys()))}")
         return self._registry[key]
 
     def get_available_classes(self):

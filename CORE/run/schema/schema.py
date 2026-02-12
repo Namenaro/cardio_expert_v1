@@ -49,14 +49,14 @@ class Schema:
             # границы интервала
             sucess, absent_points = step.fit_interval(self.context)
             if not sucess:
-                self.context.errors.append(f"При задании интервалане найдены точки{absent_points} ")
+                self.context.errors.append(f"При задании интервала не найдены точки{absent_points} ")
+
+            self.context.add_point(step.get_step_obj().target_point.name)
 
             # для данного шага подбираем PC и HC
             self._find_PCs_for_step(step)
             self._find_HCs_for_step(step)
 
-            # отмечаем шаг пройденным
-            self.context.add_point(step.get_step_obj().target_point.name)
 
         if len(self.wHCs):
             ids = [whc.hc.id for whc in self.wHCs]
@@ -83,6 +83,8 @@ class Schema:
             if len(self.wPCs) == 0:
                 break
 
+            PCs_list_changed = False
+
             # пытаемся найти ровно один PC:
             for i in range(len(self.wPCs)):
                 is_ready, _, _ = self.wPCs[i].fit_context(self.context)
@@ -93,7 +95,8 @@ class Schema:
                     # Заносим в контекст id пазла и добавленные пазлом параметры
                     self.context.add_PC(pazzle_id=self.wPCs[i].pc.id)
                     params = self.wPCs[i].returned_params()
-                    map(self.context.add_param, params)
+                    for param in params:
+                        self.context.add_param(param)
 
                     # Удаляем пазл из нерассмотренных
                     del self.wPCs[i]
@@ -114,7 +117,8 @@ class Schema:
             hc = self.wHCs[i]
             is_ready, _ = hc.fit_context(self.context)
             if is_ready:
-                step.wHCs.append(hc.hc.id)
+                step.wHCs.append(hc)
+                self.context.add_HC(pazzle_id=hc.hc.id)
                 del self.wHCs[i]
 
 
@@ -142,17 +146,17 @@ class Schema:
         return hcs
 
     def to_text(self) -> str:
-        text = "<<< Схема выполнения формы >>>"
+        text = ""
 
         # Если есть ошибки, то сначала покажем их
         if self.context.is_ok():
             text += "\n ФОРМА ВАЛИДНА!"
         else:
-            text += "\n --- ОШИБКИ ---\n :"
+
             text += self.get_errors()
 
         # Схема шагов формы (которые удалось построить до возникновения ошибки)
-        text += "\n --- ШАГИ --- : \n"
+        text += "\n Выполнение по шагам: \n"
         for schemed_step in self.steps_sorted:
             text += schemed_step.to_text()
         return text
