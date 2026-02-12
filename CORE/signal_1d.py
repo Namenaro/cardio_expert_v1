@@ -1,5 +1,9 @@
 from typing import List, Optional
 
+import bisect
+
+from CORE.utils import find_closest_sorted
+
 
 class Signal:
     """  Представляет одномерный дискретный сигнал с временной разметкой. """
@@ -53,6 +57,21 @@ class Signal:
 
     def __len__(self):
         return self.time[-1] - self.time[0]
+
+    def get_amplplitude_in_moment(self, time_moment_sec) -> Optional[float]:
+        """
+        Получить значение сигнала в момент времени time_moment_sec.
+        Примечание: находим блидайший к интересующему нас моменту отсчет, для каторого значение сигнала известно
+        :param time_moment_sec: момент времени, в секундах
+        :return:
+        """
+        if not self.is_moment_in_signal(time_moment_sec):
+            return None
+        nearest_index = find_closest_sorted(self.time, time_moment_sec=time_moment_sec)
+        amplitude = self.signal_mv[nearest_index]
+        return amplitude
+
+
 
 
 if __name__ == "__main__":

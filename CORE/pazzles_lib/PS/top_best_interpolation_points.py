@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
     # Создаем паззл
     ps = TopBestInterpolationPoints(N=3)
-    t_moments = ps.run(signal=signal, left_t = 0.8, right_t = 0.82)
+    t_moments = ps.run(signal=signal, left_t=0.2, right_t=0.82)
 
     # Визуализация
     fig, ax = plt.subplots(figsize=(10, 4))
