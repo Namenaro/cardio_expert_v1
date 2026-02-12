@@ -43,6 +43,7 @@ class AppSignals:
         request_main_info_redactor = Signal(Form)
         db_add_form = Signal(Form)
         db_update_form_main_info = Signal(Form)
+        db_delete_form = Signal(Form)
 
     class _Point(_SignalCategory):
         request_point_redactor = Signal(Point)

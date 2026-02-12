@@ -166,3 +166,7 @@ class Controller(QObject):
         except Exception as e:
             self.logger.exception(f"Ошибка при инициализации формы: {e}")
             return False
+
+    def reinit_by_empty(self):
+        self.current_form = Form()
+        self.main_window.refresh(self.current_form)

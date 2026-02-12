@@ -4,14 +4,13 @@ from typing import Optional, Any, Dict
 from dataclasses import dataclass, field
 
 
-class InterpolationError(PCBase):
-    """ Если построить лин.интерполяцию по 2 точкам (левая,  правая),
-    то какое расхождение будет с сигналом внутри этого промежутка"""
+class DistanceBtw2Points(PCBase):
+    """ Расстояние между двумя точками. Какую указать левой
+    или правой неважно, результат считается по модулю. Ед.изменения секунды."""
 
     # Схема выходных данных
     OUTPUT_SCHEMA = {
-        'error_in_procents': (float, "Ошибка интерполяции в процентах"),
-        'error_in_mV': (float, "Ошибка интерполяции в мв")
+        'distance_in_seconds': (float, "расстояние как abs(left - right)"),
     }
 
     def register_points(self, point_left: float, point_right: float) -> None:
@@ -22,19 +21,16 @@ class InterpolationError(PCBase):
         self.point_left = point_left
         self.point_right = point_right
 
-    def register_input_parameters(self, some_example_param: bool):
+    def register_input_parameters(self):
         """
-        :param some_example_param: блаблабла
-        :return:
+        Параметров не требуется
         """
-        self.some_example_param = some_example_param  # TODO удалить потом, а пока чисто для теста парсера
+        pass
 
     def run(self, signal: Signal) -> Dict[str, Any]:
-        err_in_mV = 8.3
-        err_in_procents = 0.11
+        dist = abs(self.point_left - self.point_right)
         return {
-            'error_in_procents': err_in_procents,
-            'error_in_mV': err_in_mV
+            'distance_in_seconds': dist
         }
 
 
@@ -51,7 +47,7 @@ if __name__ == "__main__":
     signal = signal.get_fragment(0.0, 0.9)
 
     # Создаем паззл
-    pc = InterpolationError()
+    pc = DistanceBtw2Points()
     pc.register_input_parameters(some_example_param=True)
     p1 = 0.3
     p3 = 0.5

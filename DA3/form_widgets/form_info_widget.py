@@ -119,6 +119,22 @@ class FormInfoWidget(QWidget):
 
         main_layout.addWidget(self.edit_button)
 
+        # Кнопка удаления формы
+        self.delete_button = QPushButton("Удалить форму")
+        self.delete_button.setStyleSheet("""
+            background-color: #ff4444;
+            color: white;
+            font-weight: bold;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+        """)
+        self.delete_button.setMinimumHeight(40)
+        self.delete_button.clicked.connect(self.on_delete_clicked)
+        self.delete_button.setEnabled(False)  # По умолчанию выключена, пока форма не установлена
+
+        main_layout.addWidget(self.delete_button)
+
         self.setStyleSheet("background-color: #e6e6ff;")
 
     def reset_form(self, form: Form) -> None:
@@ -137,8 +153,9 @@ class FormInfoWidget(QWidget):
             # Показываем плейсхолдер для изображения
             self._show_placeholder("Форма не выбрана")
 
-            # Выключаем кнопку редактирования
+            # Выключаем кнопки редактирования и удаления
             self.edit_button.setEnabled(False)
+            self.delete_button.setEnabled(False)
             return
 
         # Обновляем основную информацию
@@ -150,8 +167,9 @@ class FormInfoWidget(QWidget):
         # Обновляем изображение
         self._update_image_display()
 
-        # Включаем кнопку редактирования
+        # Включаем кнопки редактирования и удаления
         self.edit_button.setEnabled(True)
+        self.delete_button.setEnabled(True)
 
     def _update_image_display(self):
         """Обновить отображение изображения формы"""
@@ -203,3 +221,24 @@ class FormInfoWidget(QWidget):
     def on_edit_clicked(self) -> None:
         if self._form is not None:
             app_signals.form.request_main_info_redactor.emit(self._form)
+
+    @Slot()
+    def on_delete_clicked(self) -> None:
+        """Обработчик нажатия кнопки удаления формы"""
+        if self._form is None:
+            return
+
+        from PySide6.QtWidgets import QMessageBox
+
+        # Показываем диалоговое окно с подтверждением
+        reply = QMessageBox.question(
+            self,
+            "Подтверждение удаления",
+            "Удалить форму?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            # Эмит сигнала на удаление формы из БД
+            app_signals.form.db_delete_form.emit(self._form)
