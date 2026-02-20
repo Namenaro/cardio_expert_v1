@@ -12,36 +12,29 @@ from CORE.run.schema import Schema
 from CORE.run.step_interval import Interval
 
 
-
-
-
-class RForm:
+class RStepsListCreator:
     """
     Класс, который на основе датакласса формы конструирует
     запускаемые объекты шагов ее выполнения, заодно проверяя внутреннюю
     согласованность датакласса, полученнного десериализацией формы из
     базы данных форм
      """
-    def __init__(self):
-        self.id = None
-        self.steps: List[RStep] = []
 
-    def from_db_form(self, form: Form):
+    def from_db_form(self, form: Form, schema: Schema) -> List[RStep]:
         """
         :raises SchemaError, FormError
         :param form: датакласс формы, на  основе которого конструкируем этот
-        :return:
+        :param schema: схема, по которой заполняем запускабельные шаги
+        :return: self
         """
         self.form = form
 
-        # Составляем пошаговую схема выполнения формы
-        schema = Schema(form)
-
         # Инициализуирем шаги
-        self.steps = []
+        self.rsteps: List[RStep] = []
         for step_bd in form.steps:
             r_step = self._init_rstep(step_bd, schema)
-            self.steps.append(r_step)
+            self.rsteps.append(r_step)
+        return self.rsteps
 
     def _init_rstep(self, step: Step, schema: Schema):
         """

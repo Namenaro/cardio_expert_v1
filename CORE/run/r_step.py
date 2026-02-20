@@ -23,11 +23,15 @@ class RStep:
     При этом, поскольку на данную точку множсетво кандидатов,
      то результатом наращивания станут несколько экземпляров"""
 
-    def __init__(self, interval: Interval, r_tracks: List[RTrack], target_point_name: str, num_in_form: int,
-                 center: Optional[float] = None, rHC_objects: Optional[List[R_HC]] = None,
+    def __init__(self, interval: Interval,
+                 r_tracks: List[RTrack],
+                 target_point_name: str,
+                 num_in_form: int,
+                 rHC_objects: Optional[List[R_HC]] = None,
                  rPC_objects: Optional[List[R_PC]] = None):
+
         self.num_in_form: int = num_in_form
-        self.center = center
+        self.center: Optional[float] = None
 
         self.interval: Interval = interval
         self.target_point_name: str = target_point_name
@@ -37,6 +41,9 @@ class RStep:
 
         self.r_tracks: List[RTrack] = r_tracks
         self.out_of_signal_tracks = 0
+
+    def set_step_as_first(self, center: float):
+        self.center = center
 
     def get_out_of_signals_procent(self):
         """ В скольки процентах треков произошел выход за пределы предоставленного сигнала"""
