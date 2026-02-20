@@ -24,8 +24,8 @@ class Exemplar:
         self._parameters: Dict[str, Any] = {}  # Хранилище параметров: имя -> значение
         self.evaluation_result: Optional[float] = None
 
-        self.failed_PCs_ids: [List[int]] = []  # id проваленных жестких условий.
-        self.passed_PCs_ids: [List[int]] = []  # id успешно выполнившихся жестких условий.
+        self.failed_HCs_ids: [List[int]] = []  # id проваленных жестких условий.
+        self.passed_HCs_ids: [List[int]] = []  # id успешно выполнившихся жестких условий.
 
     def add_point(self, point_name: str, point_coord_t: float, track_id: Any) -> bool:
         """
