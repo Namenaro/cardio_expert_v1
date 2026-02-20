@@ -21,8 +21,7 @@ class RawEntry:
         )
 
     def validate_points(self, expected_point_names: list) -> bool:
-        """Валидация точек (метод есть, но не вызывается)"""
-        # Проверяем наличие всех ожидаемых точек
+        """Проверяем наличие всех ожидаемых точек"""
         for point_name in expected_point_names:
             if point_name not in self.points:
                 return False
