@@ -7,7 +7,7 @@ from CORE.datasets_wrappers.form_associated.exemplars_dataset import ExemplarsDa
 from CORE.db_dataclasses import Form
 from CORE.run.r_pc import R_PC
 
-from CORE.run.run_form import RunForm
+from CORE.run.run_form import RForm
 
 
 class ParametrisedDataset:

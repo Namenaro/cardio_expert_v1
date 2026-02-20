@@ -4,26 +4,27 @@ from CORE import Signal
 from CORE.db_dataclasses import Form
 from CORE.exeptions import SchemaError
 from CORE.run import Exemplar
+from CORE.run.eval import Evaluator
 from CORE.run.exemplars_pool import ExemplarsPool
 from CORE.run.r_steps_creator import RStepsListCreator
 from CORE.run.r_step import RStep
 from CORE.run.schema import Schema
 
 
-class RunForm:
+class RForm:
     """
     Основной класс, экспортируемый библиотекой устновщика форм - запускает устновку формы на одномерном сигнале, и выдает несколько вариантов ее установки
     """
 
-    def __init__(self, form: Form, max_pool_size: int = 5):
+    def __init__(self, form: Form, evaluator: Evaluator, max_pool_size: int = 5):
         form = form
-        self.max_pool_size = max_pool_size
-
         schema = Schema(form)
         sucess = schema.compile()
         if not sucess:
             raise SchemaError
 
+        self.max_pool_size = max_pool_size
+        self.evaluator = evaluator
         self.rsteps: List[RStep] = RStepsListCreator().from_db_form(form, schema)
 
     def run(self, big_signal: Signal, seminal_point: float) -> ExemplarsPool:
@@ -56,6 +57,7 @@ class RunForm:
 
                 # все дочерние экземпляры от всех старых экземпляров собираем воедино
                 for exemplar in exemplars:
+                    exemplar.evaluation_result = self.evaluator.eval_exemplar(exemplar)
                     new_pool.add_exemplar(exemplar)
 
             exemplars_pool = new_pool
