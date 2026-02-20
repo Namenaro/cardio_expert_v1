@@ -104,16 +104,15 @@ class ParametrisedDataset:
         # Возвращаем соответствующие id
         return self.violations_frame.loc[violated_mask, self.ID_COLUMN].tolist()
 
+    def get_parameter_values(self, param_name: str) -> List[Any]:
+        """
+        Возвращает список значений указанного параметра для всех экземпляров
+        :param: param_name имя параметра
+        :return List[Any]: список значений параметра
+        """
+        if self.parameters_frame.empty or param_name not in self.parameters_frame.columns:
+            raise CoreError(
+                f"Из датасета параметров запрошен несуществующий параметр {param_name}, исходная форма содержит параметры: {self.param_names}")
 
-def get_parameter_values(self, param_name: str) -> List[Any]:
-    """
-    Возвращает список значений указанного параметра для всех экземпляров
-    :param: param_name имя параметра
-    :return List[Any]: список значений параметра
-    """
-    if self.parameters_frame.empty or param_name not in self.parameters_frame.columns:
-        raise CoreError(
-            f"Из датасета параметров запрошен несуществующий параметр {param_name}, исходная форма содержит параметры: {self.param_names}")
-
-    # Возвращаем значения параметра в виде списка (без индексов)
-    return self.parameters_frame[param_name].tolist()
+        # Возвращаем значения параметра в виде списка (без индексов)
+        return self.parameters_frame[param_name].tolist()
