@@ -24,12 +24,11 @@ class ExemplarsDataset:
     но и параметры, и сведения о проваленных условиях формы
     """
 
-    def __init__(self, form_dataset_name: str, outer_dataset: ThirdPartyDataset, form: Form = None):
+    def __init__(self, form_dataset_name: str, outer_dataset: ThirdPartyDataset):
         self.form_dataset_name = form_dataset_name
         self.outer_dataset = outer_dataset  # Внешний датасет, на сигналах которого производилась наша разметка экземпляров формы
         self.point_names: List[str] = []  # Имена точек формы
-        self.form: Optional[Form] = form
-        self._exemplars: Dict[str, Exemplar] = {}  # Размеченные нами вручную экземпляры
+        self.exemplars: Dict[str, Exemplar] = {}  # Размеченные нами вручную экземпляры
 
         full_path = os.path.join(EXEMPLARS_DATASETS_PATH, form_dataset_name)
         self._load_data(full_path)
@@ -42,9 +41,7 @@ class ExemplarsDataset:
         exemplar = Exemplar(signal)
         for point_name, point_coord in entry.points.items():
             exemplar.add_point(point_name=point_name, point_coord_t=point_coord, track_id=None)
-        if self.form is not None:
-            exemplar.parametrise_from_form(self.form)
-            exemplar.check_HCs_from_form(self.form)
+
         return exemplar
 
     def _load_data(self, filepath: str):
@@ -61,9 +58,9 @@ class ExemplarsDataset:
             for entry_id, entry_data in data_dict.items():
                 entry = RawEntry.from_dict(entry_id, entry_data)
                 exemplar = self._entry_to_exemplar(entry)
-                self._exemplars[entry_id] = exemplar
+                self.exemplars[entry_id] = exemplar
 
-            logger.info(f"Загружено {len(self._exemplars)} записей")
+            logger.info(f"Загружено {len(self.exemplars)} записей")
 
         except Exception as e:
             logger.error(f"Ошибка загрузки {filepath}: {e}")
@@ -71,19 +68,19 @@ class ExemplarsDataset:
 
     def get_exemplar_by_id(self, id: str) -> Optional[Exemplar]:
         """Получение записи по ID"""
-        return self._exemplars.get(id)
+        return self.exemplars.get(id)
 
     def get_all_ids(self) -> List[str]:
         """Получение всех ID"""
-        return list(self._exemplars.keys())
+        return list(self.exemplars.keys())
 
     def __len__(self) -> int:
         """Количество записей"""
-        return len(self._exemplars)
+        return len(self.exemplars)
 
     def __contains__(self, id: str) -> bool:
         """Проверка наличия ID"""
-        return id in self._exemplars
+        return id in self.exemplars
 
 
 if __name__ == "__main__":

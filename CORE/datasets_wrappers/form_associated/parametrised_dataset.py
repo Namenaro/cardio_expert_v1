@@ -7,8 +7,6 @@ from CORE.datasets_wrappers.form_associated.exemplars_dataset import ExemplarsDa
 from CORE.db_dataclasses import Form
 from CORE.run.r_pc import R_PC
 
-from CORE.run.run_form import RForm
-
 
 class ParametrisedDataset:
     def __init__(self, data: Optional[pd.DataFrame] = None):
@@ -44,7 +42,7 @@ class ParametrisedDataset:
 
         rows = []
 
-        for exemplar_id, exemplar in raw_exemplars._exemplars.items():
+        for exemplar_id, exemplar in raw_exemplars.exemplars.items():
             # Первый столбец таблицы это id записи непараметризованного (сыорго датасета)
             row = {'id': exemplar_id}
 

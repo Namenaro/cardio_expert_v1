@@ -6,7 +6,7 @@ from CORE.constants import EPSILON_FOR_DUBLES
 from CORE.exeptions import RunStepError, PazzleOutOfSignal
 from CORE.logger import get_logger
 from CORE.run import Exemplar
-from CORE.run.parametriser import Parametriser
+from CORE.datasets_wrappers.form_associated.parametriser import Parametriser
 from CORE.run.r_hc import R_HC
 from CORE.run.r_pc import R_PC
 from CORE.run.r_track import RTrack

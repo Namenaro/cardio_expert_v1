@@ -33,6 +33,5 @@ class Form:
     # измерители параметров проверяльщики жестких условий на параметры
     HC_PC_objects: List[BasePazzle] = field(default_factory=list)
 
-
-    def deep_copy(self):
-        return copy.deepcopy(self)
+    def __len__(self):
+        return len(self.steps)
