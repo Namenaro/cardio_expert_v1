@@ -1,10 +1,9 @@
-import numpy as np
 from scipy.stats import percentileofscore
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 
-from CORE.run import Exemplar
 from CORE.datasets_wrappers.form_associated.parametrised_dataset import ParametrisedDataset
+from CORE.run import Exemplar
 from CORE.run.eval.base_eval import BaseEvaluator
 
 

@@ -1,10 +1,8 @@
-import numpy as np
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.preprocessing import StandardScaler
-from abc import ABC, abstractmethod
 
-from CORE.run import Exemplar
 from CORE.datasets_wrappers.form_associated.parametrised_dataset import ParametrisedDataset
+from CORE.run import Exemplar
 from CORE.run.eval.base_eval import BaseEvaluator
 
 

@@ -1,10 +1,9 @@
-import numpy as np
-from sklearn.svm import OneClassSVM
-from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import RobustScaler  # более устойчив к выбросам
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import OneClassSVM
 
-from CORE.run import Exemplar
 from CORE.datasets_wrappers.form_associated.parametrised_dataset import ParametrisedDataset
+from CORE.run import Exemplar
 from CORE.run.eval.base_eval import BaseEvaluator
 
 

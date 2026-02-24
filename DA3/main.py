@@ -3,10 +3,10 @@ import sys
 
 from PySide6.QtWidgets import QApplication
 
+from CORE.logger import setup_logging, AppLogger
 from DA3.controller import Controller
 from DA3.main_form import MainForm
 from DA3.model import Model
-from CORE.logger import setup_logging, get_logger, AppLogger
 
 
 def main():

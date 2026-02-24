@@ -4,13 +4,12 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader, TensorDataset
-from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-import warnings
+from sklearn.preprocessing import StandardScaler
+from torch.utils.data import DataLoader, TensorDataset
 
-from CORE.run import Exemplar
 from CORE.datasets_wrappers.form_associated.parametrised_dataset import ParametrisedDataset
+from CORE.run import Exemplar
 from CORE.run.eval.base_eval import BaseEvaluator
 
 

@@ -1,9 +1,8 @@
 import numpy as np
-from typing import Dict, List
 
 from CORE.datasets_wrappers.form_associated.parametrised_dataset import ParametrisedDataset
 from CORE.run import Exemplar
-from CORE.run.eval.eval import BaseEvaluator
+from CORE.run.eval.base_eval import BaseEvaluator
 
 
 class MahalanobisEval(BaseEvaluator):
@@ -105,11 +104,7 @@ if __name__ == "__main__":
     param2 = 2 * param1 + np.random.normal(0, 0.5, n_samples)  # корреляция с шумом
     param3 = 0.5 * param1 + np.random.normal(0, 0.2, n_samples)  # корреляция с шумом
 
-    test_data = {
-        'param1': param1.tolist(),
-        'param2': param2.tolist(),
-        'param3': param3.tolist()
-    }
+    test_data = {'param1': param1.tolist(), 'param2': param2.tolist(), 'param3': param3.tolist()}
 
 
     def mock_get_parameter_values(param_name):
@@ -125,8 +120,7 @@ if __name__ == "__main__":
     evaluator = MahalanobisEval(mock_dataset)
 
     # Тест 1: Нормальный экземпляр (в центре распределения)
-    normal_values = {
-        'param1': 3.0,  # среднее
+    normal_values = {'param1': 3.0,  # среднее
         'param2': 6.0,  # среднее (примерно)
         'param3': 1.5  # среднее (примерно)
     }
@@ -143,11 +137,7 @@ if __name__ == "__main__":
     print(f"\nОценка нормального экземпляра: {normal_score:.4f}")
 
     # Тест 2: Слегка отклоняющийся экземпляр
-    mild_values = {
-        'param1': 4.0,
-        'param2': 7.5,
-        'param3': 2.2
-    }
+    mild_values = {'param1': 4.0, 'param2': 7.5, 'param3': 2.2}
 
 
     def mock_mild_get_value(param_name):
@@ -160,11 +150,7 @@ if __name__ == "__main__":
     print(f"Оценка слегка отклоняющегося: {mild_score:.4f}")
 
     # Тест 3: Выброс
-    outlier_values = {
-        'param1': 10.0,
-        'param2': -5.0,
-        'param3': 5.0
-    }
+    outlier_values = {'param1': 10.0, 'param2': -5.0, 'param3': 5.0}
 
 
     def mock_outlier_get_value(param_name):
