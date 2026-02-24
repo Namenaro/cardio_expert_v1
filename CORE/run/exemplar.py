@@ -27,6 +27,9 @@ class Exemplar:
         self.failed_HCs_ids: [List[int]] = []  # id проваленных жестких условий.
         self.passed_HCs_ids: [List[int]] = []  # id успешно выполнившихся жестких условий.
 
+    def get_param_names(self) -> List[str]:
+        return list(self._parameters.keys())
+
     def add_point(self, point_name: str, point_coord_t: float, track_id: Any) -> bool:
         """
         Добавляет точку на сигнал.
