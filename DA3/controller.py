@@ -1,11 +1,10 @@
 import logging
-from typing import Optional
 from CORE.db_dataclasses import *
 from CORE.run.schema import Schema
 from DA3.model import Model
 from DA3.main_form import MainForm
 from DA3.run_widgets.compilator_widget import CompilerWindow
-from DA3.start_dialog import select_form_from_dialog
+from DA3.dialogs.start_dialog import select_form_from_dialog
 from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QMessageBox
 
