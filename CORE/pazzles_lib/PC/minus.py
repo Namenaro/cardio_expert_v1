@@ -34,7 +34,7 @@ class Minus(PCBase):
 
 # Пример использования
 if __name__ == "__main__":
-    from CORE.visualisation.signal_1d_drawer import Signal_1D_Drawer
+    from CORE.plt_visualisation.signal_1d_drawer import Signal_1D_Drawer
     from CORE.datasets_wrappers.LUDB import LUDB, LEADS_NAMES
     import matplotlib.pyplot as plt
 

@@ -1,13 +1,9 @@
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MultipleLocator
-from dataclasses import dataclass
-from typing import Optional, List, Callable, Union
-from enum import Enum
-import random
+from typing import Optional, List
 from CORE.signal_1d import Signal
-from CORE.visualisation.drawinfg_entities_dataclasses import LineStyle, VerticalLineInfo
-from CORE.visualisation.popup_window import PopupWindow
-from CORE.visualisation.renderer import SignalRenderer
+from CORE.plt_visualisation.helpers.drawinfg_entities_dataclasses import LineStyle, VerticalLineInfo
+from CORE.plt_visualisation.helpers.popup_window import PopupWindow
+from CORE.plt_visualisation.helpers.renderer import SignalRenderer
 
 
 class Drawer:
@@ -33,7 +29,7 @@ class Drawer:
     def add_signal(self, signal: Signal, color='#202020', name: Optional[str] = None):
         """Добавляет сигнал для отрисовки."""
         self.renderer.add_signal(signal, color, name)
-        self.redraw()
+        # self.redraw()
 
     def add_vertical_line(self, x: float, y_min: float, y_max: float,
                           color: str = 'red',
@@ -42,7 +38,7 @@ class Drawer:
                           sub_label: Optional[str] = None):
         """Добавляет одиночную вертикальную линию для отрисовки."""
         self.renderer.add_vertical_line(x, y_min, y_max, color, style, label, sub_label)
-        self.redraw()
+        #self.redraw()
 
     def add_vertical_lines_group(self, lines: List[VerticalLineInfo],
                                  color: str,
@@ -57,7 +53,7 @@ class Drawer:
             label: Метка группы для легенды
         """
         self.renderer.add_vertical_lines_group(lines, color, label)
-        self.redraw()
+        #self.redraw()
 
     def add_interval(self, left: float, right: float,
                      color: str = 'yellow',
@@ -74,7 +70,7 @@ class Drawer:
             label: Подпись для легенды
         """
         self.renderer.add_interval(left, right, color, alpha, label)
-        self.redraw()
+        #self.redraw()
 
     def get_user_point(self) -> Optional[float]:
         """Возвращает текущую пользовательскую точку."""
@@ -90,7 +86,7 @@ class Drawer:
 
     def _on_popup_closed(self):
         """Вызывается при закрытии попап-окна."""
-        print("Попап-окно закрыто")
+
         # Перерисовываем основной график, чтобы показать актуальную точку
         self.redraw()
         # Очищаем ссылку на попап

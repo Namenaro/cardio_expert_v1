@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 
 from CORE.signal_1d import Signal
-from CORE.visualisation.drawinfg_entities_dataclasses import SignalInfo, VerticalLineInfo, VerticalLineGroupInfo, \
+from CORE.plt_visualisation.helpers.drawinfg_entities_dataclasses import SignalInfo, VerticalLineInfo, \
+    VerticalLineGroupInfo, \
     IntervalInfo, LineStyle
 
 

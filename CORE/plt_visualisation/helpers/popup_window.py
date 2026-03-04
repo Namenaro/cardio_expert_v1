@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
-from typing import Optional, List, Callable, Union
+from typing import Optional, Callable
 
-from CORE.visualisation.renderer import SignalRenderer
+from CORE.plt_visualisation.helpers.renderer import SignalRenderer
 
 
 class PopupWindow:
