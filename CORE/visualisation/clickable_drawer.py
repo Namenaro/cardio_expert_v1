@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional, List, Callable
 from enum import Enum
 from CORE.signal_1d import Signal
 
@@ -64,6 +64,10 @@ class SignalRenderer:
     def set_user_point(self, x: float):
         """Устанавливает пользовательскую точку."""
         self.user_setted_center = x
+
+    def get_user_point(self) -> Optional[float]:
+        """Возвращает текущую пользовательскую точку."""
+        return self.user_setted_center
 
     def draw(self, ax: plt.Axes):
         """
@@ -132,18 +136,24 @@ class PopupWindow:
     Получает renderer в конструктор и отображает его содержимое.
     """
 
-    def __init__(self, renderer: SignalRenderer, on_user_point_set: callable):
+    def __init__(self, renderer: SignalRenderer, on_user_point_set: Callable[[float], None],
+                 on_closing: Optional[Callable[[], None]] = None):
         """
         Args:
             renderer: Объект SignalRenderer с данными для отображения
             on_user_point_set: Функция, вызываемая при установке пользовательской точки
+            on_closing: Функция, вызываемая при закрытии окна
         """
         self.renderer = renderer
         self.on_user_point_set = on_user_point_set
+        self.on_closing = on_closing
         self.window = None
         self.fig = None
         self.ax = None
         self.canvas = None
+        self.user_line = None
+        self.dragging = False
+        self.drag_start_x = None
 
     def show(self):
         """Показывает всплывающее окно."""
@@ -161,14 +171,12 @@ class PopupWindow:
         self.fig, self.ax = plt.subplots(figsize=(12, 6))
 
         # Отрисовываем содержимое
-        self.renderer.draw(self.ax)
+        self._draw_content()
 
         # Создаем корневое окно tkinter
         self.window = tk.Tk()
         self.window.title("Увеличенный вид сигнала")
-
-        # Обработчик закрытия окна
-        self.window.protocol("WM_DELETE_WINDOW", self._cleanup)
+        self.window.protocol("WM_DELETE_WINDOW", self._on_popup_closing)
 
         # Создаем canvas для отображения графика
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.window)
@@ -180,33 +188,147 @@ class PopupWindow:
         toolbar.update()
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
-        # Подключаем обработчик правого клика
-        def on_click(event):
-            if event.inaxes == self.ax and event.button == 3:  # Правая кнопка
-                self.on_user_point_set(event.xdata)
-                # Не закрываем окно, просто обновим содержимое после того,
-                # как основной drawer обновит renderer
-                self.window.after(100, self.update_content)  # Небольшая задержка для гарантии обновления
-
-        self.fig.canvas.mpl_connect('button_press_event', on_click)
+        # Подключаем обработчики мыши для перетаскивания
+        self.fig.canvas.mpl_connect('button_press_event', self._on_mouse_press)
+        self.fig.canvas.mpl_connect('motion_notify_event', self._on_mouse_move)
+        self.fig.canvas.mpl_connect('button_release_event', self._on_mouse_release)
 
         # Настраиваем и показываем окно
         self.fig.tight_layout()
         self.window.mainloop()
 
+    def _draw_content(self):
+        """Отрисовывает содержимое без полной очистки."""
+        self.ax.clear()
+
+        # Отрисовываем все сигналы
+        for signal_info in self.renderer.signals:
+            time = signal_info.signal.time
+            values = signal_info.signal.signal_mv
+            self.ax.plot(time, values,
+                         color=signal_info.color,
+                         label=signal_info.name)
+
+        # Отрисовываем все вертикальные линии
+        for line_info in self.renderer.vertical_lines:
+            self.ax.axvline(x=line_info.x,
+                            ymin=line_info.y_min,
+                            ymax=line_info.y_max,
+                            color=line_info.color,
+                            linestyle=line_info.style.value,
+                            label=line_info.label)
+
+        # Настройка внешнего вида
+        self.ax.set_xlabel('Время, с')
+        self.ax.set_ylabel('Амплитуда, мВ')
+        self.ax.set_aspect(self.renderer.minor_cell_sec / self.renderer.minor_cell_mv)
+
+        self.ax.xaxis.set_major_locator(MultipleLocator(self.renderer.major_cell_sec))
+        self.ax.xaxis.set_minor_locator(MultipleLocator(self.renderer.minor_cell_sec))
+
+        self.ax.yaxis.set_major_locator(MultipleLocator(self.renderer.major_cell_mv))
+        self.ax.yaxis.set_minor_locator(MultipleLocator(self.renderer.minor_cell_mv))
+
+        self.ax.grid(True, 'major', color=self.renderer.major_grid_color)
+        self.ax.grid(True, 'minor', color=self.renderer.minor_grid_color, linewidth=0.5)
+
+        # Отрисовываем пользовательскую точку как отдельный объект Line2D
+        if self.renderer.user_setted_center is not None:
+            self.user_line = self.ax.axvline(x=self.renderer.user_setted_center,
+                                             color='black',
+                                             linewidth=2,
+                                             linestyle='--',
+                                             label='Центр пользователя')
+        else:
+            self.user_line = None
+
+        # Добавляем легенду если есть подписи
+        has_labels = (any(s.name for s in self.renderer.signals) or
+                      any(l.label for l in self.renderer.vertical_lines) or
+                      self.renderer.user_setted_center is not None)
+        if has_labels:
+            self.ax.legend()
+
+    def _update_user_line(self, x: float):
+        """Обновляет позицию пользовательской линии без полной перерисовки."""
+        if self.user_line:
+            try:
+                # Удаляем старую линию
+                self.user_line.remove()
+            except:
+                pass
+
+        # Создаем новую линию
+        self.user_line = self.ax.axvline(x=x,
+                                         color='black',
+                                         linewidth=2,
+                                         linestyle='--')
+
+        # Обновляем renderer
+        self.renderer.set_user_point(x)
+
+        # Перерисовываем только canvas
+        self.fig.canvas.draw_idle()
+
+    def _on_mouse_press(self, event):
+        """Обработчик нажатия кнопки мыши."""
+        if event.inaxes != self.ax:
+            return
+
+        # Правая кнопка - установка точки
+        if event.button == 3:
+            self._update_user_line(event.xdata)
+            self.on_user_point_set(event.xdata)
+
+        # Левая кнопка - начало перетаскивания (если кликнули близко к линии)
+        elif event.button == 1 and self.user_line and self.renderer.user_setted_center is not None:
+            # Проверяем, кликнули ли рядом с линией (в пределах 0.02 по оси X)
+            if abs(event.xdata - self.renderer.user_setted_center) < 0.02:
+                self.dragging = True
+                self.drag_start_x = event.xdata
+
+    def _on_mouse_move(self, event):
+        """Обработчик движения мыши."""
+        if not self.dragging or event.inaxes != self.ax:
+            return
+
+        # Обновляем позицию линии при перетаскивании
+        self._update_user_line(event.xdata)
+        self.on_user_point_set(event.xdata)
+
+    def _on_mouse_release(self, event):
+        """Обработчик отпускания кнопки мыши."""
+        if self.dragging:
+            self.dragging = False
+            self.drag_start_x = None
+
+    def _on_popup_closing(self):
+        """Вызывается при закрытии попап-окна."""
+        # Вызываем колбэк закрытия, если он есть
+        if self.on_closing:
+            self.on_closing()
+        self._cleanup()
+
     def _cleanup(self):
         """Очищает ресурсы при закрытии окна."""
         if self.window:
             self.window.destroy()
-        self.window = None
-        self.fig = None
-        self.ax = None
-        self.canvas = None
+            self.window = None
+            self.fig = None
+            self.ax = None
+            self.canvas = None
+            self.user_line = None
 
     def update_content(self):
         """Обновляет содержимое окна."""
         if self.window is not None and self.ax is not None:
-            self.renderer.draw(self.ax)
+            self._draw_content()
+            self.fig.canvas.draw_idle()
+            self.window.lift()  # Поднимаем окно наверх
+
+    def is_alive(self) -> bool:
+        """Проверяет, активно ли окно."""
+        return self.window is not None
 
 
 class Signal_1D_Drawer:
@@ -236,11 +358,23 @@ class Signal_1D_Drawer:
         self.renderer.add_vertical_line(x, y_min, y_max, color, style, label)
         self.redraw()
 
+    def get_user_point(self) -> Optional[float]:
+        """Возвращает текущую пользовательскую точку."""
+        return self.renderer.get_user_point()
+
     def _set_point_by_user(self, x: float):
-        """Устанавливает пользовательскую точку и обновляет все окна."""
-        print(f"Установлена пользовательская точка: {x:.3f}")  # Для отладки
+        """Устанавливает пользовательскую точку и обновляет renderer."""
+        print(f"Установлена пользовательская точка: {x:.3f}")
         self.renderer.set_user_point(x)
+        # Не перерисовываем основной график сразу
+
+    def _on_popup_closed(self):
+        """Вызывается при закрытии попап-окна."""
+        print("Попап-окно закрыто")
+        # Перерисовываем основной график, чтобы показать актуальную точку
         self.redraw()
+        # Очищаем ссылку на попап
+        self.popup = None
 
     def _on_click(self, event):
         """Обработчик кликов мыши. Левый клик - открывает всплывающее окно."""
@@ -252,12 +386,17 @@ class Signal_1D_Drawer:
 
     def _show_popup_window(self):
         """Показывает всплывающее окно."""
-        if self.popup is None:
-            # Создаем новое окно, передавая ему наш renderer
-            self.popup = PopupWindow(self.renderer, self._set_point_by_user)
-
-        # Показываем окно
-        self.popup.show()
+        if self.popup is not None and self.popup.is_alive():
+            # Если окно уже существует и активно, просто обновляем его содержимое
+            self.popup.update_content()
+        else:
+            # Создаем новое окно, если старого нет или оно закрыто
+            self.popup = PopupWindow(
+                self.renderer,
+                self._set_point_by_user,
+                self._on_popup_closed
+            )
+            self.popup.show()
 
     def redraw(self):
         """Перерисовывает основной график."""
