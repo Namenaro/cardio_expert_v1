@@ -31,15 +31,26 @@ class VerticalLineInfo:
     label: Optional[str] = None
 
 
+@dataclass
+class IntervalInfo:
+    """Хранит информацию об интервале для отрисовки"""
+    left: float
+    right: float
+    color: str = 'yellow'
+    alpha: Optional[float] = None  # Если None, используется глобальная прозрачность из SignalRenderer
+    label: Optional[str] = None
+
+
 class SignalRenderer:
     """
     Класс, отвечающий только за логику рисования.
-    Хранит контент (сигналы, линии) и умеет рисовать их на любом ax.
+    Хранит контент (сигналы, линии, интервалы) и умеет рисовать их на любом ax.
     """
 
     def __init__(self):
         self.signals: List[SignalInfo] = []
         self.vertical_lines: List[VerticalLineInfo] = []
+        self.intervals: List[IntervalInfo] = []
         self.user_setted_center: Optional[float] = None
 
         # Настройки миллиметровки
@@ -49,6 +60,9 @@ class SignalRenderer:
         self.major_cell_sec = 0.2
         self.minor_grid_color = "#f4bfbf"
         self.major_grid_color = "#e37373"
+
+        # Настройки для интервалов
+        self.intervals_opacity = 0.3  # Глобальная прозрачность для интервалов
 
     def add_signal(self, signal: Signal, color='#202020', name: Optional[str] = None):
         """Добавляет сигнал для отрисовки."""
@@ -60,6 +74,22 @@ class SignalRenderer:
                           label: Optional[str] = None):
         """Добавляет вертикальную линию для отрисовки."""
         self.vertical_lines.append(VerticalLineInfo(x, y_min, y_max, color, style, label))
+
+    def add_interval(self, left: float, right: float,
+                     color: str = 'yellow',
+                     alpha: Optional[float] = None,
+                     label: Optional[str] = None):
+        """
+        Добавляет интервал для отрисовки.
+
+        Args:
+            left: Левая граница интервала
+            right: Правая граница интервала
+            color: Цвет заливки
+            alpha: Прозрачность (если None, используется глобальная intervals_opacity)
+            label: Подпись для легенды
+        """
+        self.intervals.append(IntervalInfo(left, right, color, alpha, label))
 
     def set_user_point(self, x: float):
         """Устанавливает пользовательскую точку."""
@@ -79,30 +109,48 @@ class SignalRenderer:
         # Очищаем текущий axes
         ax.clear()
 
-        # Отрисовываем все сигналы
+        # Сначала рисуем интервалы (чтобы они были на заднем плане)
+        for interval_info in self.intervals:
+            # Определяем прозрачность
+            alpha = interval_info.alpha if interval_info.alpha is not None else self.intervals_opacity
+
+            # Создаем полупрозрачную область во всю высоту графика
+            # Используем ax.axvspan для создания вертикальной области
+            span = ax.axvspan(interval_info.left, interval_info.right,
+                              alpha=alpha,
+                              color=interval_info.color,
+                              label=interval_info.label)
+
+            # Устанавливаем zorder низкий, чтобы интервалы были под сигналами и линиями
+            span.set_zorder(1)
+
+        # Затем рисуем сигналы (средний план)
         for signal_info in self.signals:
             time = signal_info.signal.time
             values = signal_info.signal.signal_mv
-            ax.plot(time, values,
-                    color=signal_info.color,
-                    label=signal_info.name)
+            line = ax.plot(time, values,
+                           color=signal_info.color,
+                           label=signal_info.name,
+                           zorder=2)
 
-        # Отрисовываем все вертикальные линии
+        # Затем вертикальные линии (передний план)
         for line_info in self.vertical_lines:
-            ax.axvline(x=line_info.x,
-                       ymin=line_info.y_min,
-                       ymax=line_info.y_max,
-                       color=line_info.color,
-                       linestyle=line_info.style.value,
-                       label=line_info.label)
+            line = ax.axvline(x=line_info.x,
+                              ymin=line_info.y_min,
+                              ymax=line_info.y_max,
+                              color=line_info.color,
+                              linestyle=line_info.style.value,
+                              label=line_info.label,
+                              zorder=3)
 
-        # Отрисовываем пользовательскую точку если она установлена
+        # Пользовательская точка (самый передний план)
         if self.user_setted_center is not None:
-            ax.axvline(x=self.user_setted_center,
-                       color='black',
-                       linewidth=2,
-                       linestyle='--',
-                       label='Центр пользователя')
+            user_line = ax.axvline(x=self.user_setted_center,
+                                   color='black',
+                                   linewidth=2,
+                                   linestyle='--',
+                                   label='Центр пользователя',
+                                   zorder=4)
 
         # Настройка внешнего вида
         ax.set_xlabel('Время, с')
@@ -116,12 +164,13 @@ class SignalRenderer:
         ax.yaxis.set_major_locator(MultipleLocator(self.major_cell_mv))
         ax.yaxis.set_minor_locator(MultipleLocator(self.minor_cell_mv))
 
-        ax.grid(True, 'major', color=self.major_grid_color)
-        ax.grid(True, 'minor', color=self.minor_grid_color, linewidth=0.5)
+        ax.grid(True, 'major', color=self.major_grid_color, zorder=0)
+        ax.grid(True, 'minor', color=self.minor_grid_color, linewidth=0.5, zorder=0)
 
         # Добавляем легенду если есть подписи
         has_labels = (any(s.name for s in self.signals) or
                       any(l.label for l in self.vertical_lines) or
+                      any(i.label for i in self.intervals) or
                       self.user_setted_center is not None)
         if has_labels:
             ax.legend()
@@ -205,22 +254,33 @@ class PopupWindow:
         """Отрисовывает содержимое без полной очистки."""
         self.ax.clear()
 
-        # Отрисовываем все сигналы
+        # Сначала рисуем интервалы
+        for interval_info in self.renderer.intervals:
+            alpha = interval_info.alpha if interval_info.alpha is not None else self.renderer.intervals_opacity
+            span = self.ax.axvspan(interval_info.left, interval_info.right,
+                                   alpha=alpha,
+                                   color=interval_info.color,
+                                   label=interval_info.label,
+                                   zorder=1)
+
+        # Затем сигналы
         for signal_info in self.renderer.signals:
             time = signal_info.signal.time
             values = signal_info.signal.signal_mv
             self.ax.plot(time, values,
                          color=signal_info.color,
-                         label=signal_info.name)
+                         label=signal_info.name,
+                         zorder=2)
 
-        # Отрисовываем все вертикальные линии
+        # Затем вертикальные линии
         for line_info in self.renderer.vertical_lines:
             self.ax.axvline(x=line_info.x,
                             ymin=line_info.y_min,
                             ymax=line_info.y_max,
                             color=line_info.color,
                             linestyle=line_info.style.value,
-                            label=line_info.label)
+                            label=line_info.label,
+                            zorder=3)
 
         # Настройка внешнего вида
         self.ax.set_xlabel('Время, с')
@@ -233,8 +293,8 @@ class PopupWindow:
         self.ax.yaxis.set_major_locator(MultipleLocator(self.renderer.major_cell_mv))
         self.ax.yaxis.set_minor_locator(MultipleLocator(self.renderer.minor_cell_mv))
 
-        self.ax.grid(True, 'major', color=self.renderer.major_grid_color)
-        self.ax.grid(True, 'minor', color=self.renderer.minor_grid_color, linewidth=0.5)
+        self.ax.grid(True, 'major', color=self.renderer.major_grid_color, zorder=0)
+        self.ax.grid(True, 'minor', color=self.renderer.minor_grid_color, linewidth=0.5, zorder=0)
 
         # Отрисовываем пользовательскую точку если она установлена и нужна
         if self.is_user_point_needed and self.renderer.user_setted_center is not None:
@@ -242,13 +302,15 @@ class PopupWindow:
                                              color='black',
                                              linewidth=2,
                                              linestyle='--',
-                                             label='Центр пользователя')
+                                             label='Центр пользователя',
+                                             zorder=4)
         else:
             self.user_line = None
 
         # Добавляем легенду если есть подписи
         has_labels = (any(s.name for s in self.renderer.signals) or
                       any(l.label for l in self.renderer.vertical_lines) or
+                      any(i.label for i in self.renderer.intervals) or
                       (self.is_user_point_needed and self.renderer.user_setted_center is not None))
         if has_labels:
             self.ax.legend()
@@ -269,7 +331,8 @@ class PopupWindow:
         self.user_line = self.ax.axvline(x=x,
                                          color='black',
                                          linewidth=2,
-                                         linestyle='--')
+                                         linestyle='--',
+                                         zorder=4)
 
         # Обновляем renderer
         self.renderer.set_user_point(x)
@@ -371,6 +434,23 @@ class Signal_1D_Drawer:
         self.renderer.add_vertical_line(x, y_min, y_max, color, style, label)
         self.redraw()
 
+    def add_interval(self, left: float, right: float,
+                     color: str = 'yellow',
+                     alpha: Optional[float] = None,
+                     label: Optional[str] = None):
+        """
+        Добавляет интервал для отрисовки.
+
+        Args:
+            left: Левая граница интервала
+            right: Правая граница интервала
+            color: Цвет заливки
+            alpha: Прозрачность (если None, используется глобальная intervals_opacity)
+            label: Подпись для легенды
+        """
+        self.renderer.add_interval(left, right, color, alpha, label)
+        self.redraw()
+
     def get_user_point(self) -> Optional[float]:
         """Возвращает текущую пользовательскую точку."""
         return self.renderer.get_user_point() if self.is_user_point_needed else None
@@ -429,12 +509,9 @@ if __name__ == "__main__":
     signal = ludb.get_1d_signal(patient_id=patients_ids[0], lead_name=LEADS_NAMES.i)
     signal = signal.get_fragment(0.0, 1.9)
 
-    # Создаем основной график с возможностью установки пользовательской точки
+    # Создаем основной график
     fig, ax = plt.subplots(figsize=(10, 4))
-    drawer = Signal_1D_Drawer(ax, is_user_point_needed=False)
-
-    # Альтернатива - без возможности установки пользовательской точки
-    # drawer = Signal_1D_Drawer(ax, is_user_point_needed=False)
+    drawer = Signal_1D_Drawer(ax, is_user_point_needed=True)
 
     # Добавляем сигнал
     drawer.add_signal(signal, color='blue', name='Тестовый сигнал')
@@ -447,6 +524,19 @@ if __name__ == "__main__":
     drawer.add_vertical_line(x=1.0, y_min=0.3, y_max=0.7,
                              color='red', style=LineStyle.DASHED,
                              label='Штриховая метка')
+
+    # Добавляем интервалы для примера
+    drawer.add_interval(left=0.2, right=0.4,
+                        color='yellow', alpha=0.3,
+                        label='Интервал 1')
+
+    drawer.add_interval(left=0.7, right=0.9,
+                        color='lightblue', alpha=0.5,
+                        label='Интервал 2')
+
+    drawer.add_interval(left=1.2, right=1.5,
+                        color='lightgreen',
+                        label='Интервал 3')  # Использует глобальную прозрачность
 
     # Отрисовываем все (первый раз)
     drawer.redraw()
