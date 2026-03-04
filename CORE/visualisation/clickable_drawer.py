@@ -137,16 +137,19 @@ class PopupWindow:
     """
 
     def __init__(self, renderer: SignalRenderer, on_user_point_set: Callable[[float], None],
-                 on_closing: Optional[Callable[[], None]] = None):
+                 on_closing: Optional[Callable[[], None]] = None,
+                 is_user_point_needed: bool = True):
         """
         Args:
             renderer: Объект SignalRenderer с данными для отображения
             on_user_point_set: Функция, вызываемая при установке пользовательской точки
             on_closing: Функция, вызываемая при закрытии окна
+            is_user_point_needed: Флаг, разрешающий установку пользовательской точки
         """
         self.renderer = renderer
         self.on_user_point_set = on_user_point_set
         self.on_closing = on_closing
+        self.is_user_point_needed = is_user_point_needed
         self.window = None
         self.fig = None
         self.ax = None
@@ -188,10 +191,11 @@ class PopupWindow:
         toolbar.update()
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
-        # Подключаем обработчики мыши для перетаскивания
-        self.fig.canvas.mpl_connect('button_press_event', self._on_mouse_press)
-        self.fig.canvas.mpl_connect('motion_notify_event', self._on_mouse_move)
-        self.fig.canvas.mpl_connect('button_release_event', self._on_mouse_release)
+        # Подключаем обработчики мыши для перетаскивания (только если нужна пользовательская точка)
+        if self.is_user_point_needed:
+            self.fig.canvas.mpl_connect('button_press_event', self._on_mouse_press)
+            self.fig.canvas.mpl_connect('motion_notify_event', self._on_mouse_move)
+            self.fig.canvas.mpl_connect('button_release_event', self._on_mouse_release)
 
         # Настраиваем и показываем окно
         self.fig.tight_layout()
@@ -232,8 +236,8 @@ class PopupWindow:
         self.ax.grid(True, 'major', color=self.renderer.major_grid_color)
         self.ax.grid(True, 'minor', color=self.renderer.minor_grid_color, linewidth=0.5)
 
-        # Отрисовываем пользовательскую точку как отдельный объект Line2D
-        if self.renderer.user_setted_center is not None:
+        # Отрисовываем пользовательскую точку если она установлена и нужна
+        if self.is_user_point_needed and self.renderer.user_setted_center is not None:
             self.user_line = self.ax.axvline(x=self.renderer.user_setted_center,
                                              color='black',
                                              linewidth=2,
@@ -245,12 +249,15 @@ class PopupWindow:
         # Добавляем легенду если есть подписи
         has_labels = (any(s.name for s in self.renderer.signals) or
                       any(l.label for l in self.renderer.vertical_lines) or
-                      self.renderer.user_setted_center is not None)
+                      (self.is_user_point_needed and self.renderer.user_setted_center is not None))
         if has_labels:
             self.ax.legend()
 
     def _update_user_line(self, x: float):
         """Обновляет позицию пользовательской линии без полной перерисовки."""
+        if not self.is_user_point_needed:
+            return
+
         if self.user_line:
             try:
                 # Удаляем старую линию
@@ -272,7 +279,7 @@ class PopupWindow:
 
     def _on_mouse_press(self, event):
         """Обработчик нажатия кнопки мыши."""
-        if event.inaxes != self.ax:
+        if not self.is_user_point_needed or event.inaxes != self.ax:
             return
 
         # Правая кнопка - установка точки
@@ -289,7 +296,7 @@ class PopupWindow:
 
     def _on_mouse_move(self, event):
         """Обработчик движения мыши."""
-        if not self.dragging or event.inaxes != self.ax:
+        if not self.is_user_point_needed or not self.dragging or event.inaxes != self.ax:
             return
 
         # Обновляем позицию линии при перетаскивании
@@ -337,10 +344,16 @@ class Signal_1D_Drawer:
     Управляет основным графиком и всплывающим окном.
     """
 
-    def __init__(self, ax: plt.Axes):
+    def __init__(self, ax: plt.Axes, is_user_point_needed: bool = True):
+        """
+        Args:
+            ax: Объект Axes для отрисовки
+            is_user_point_needed: Флаг, разрешающий установку пользовательской точки
+        """
         self.ax = ax
         self.renderer = SignalRenderer()
         self.popup: Optional[PopupWindow] = None
+        self.is_user_point_needed = is_user_point_needed
 
         # Подключаем обработчик кликов
         self.ax.figure.canvas.mpl_connect('button_press_event', self._on_click)
@@ -360,10 +373,12 @@ class Signal_1D_Drawer:
 
     def get_user_point(self) -> Optional[float]:
         """Возвращает текущую пользовательскую точку."""
-        return self.renderer.get_user_point()
+        return self.renderer.get_user_point() if self.is_user_point_needed else None
 
     def _set_point_by_user(self, x: float):
         """Устанавливает пользовательскую точку и обновляет renderer."""
+        if not self.is_user_point_needed:
+            return
         print(f"Установлена пользовательская точка: {x:.3f}")
         self.renderer.set_user_point(x)
         # Не перерисовываем основной график сразу
@@ -394,7 +409,8 @@ class Signal_1D_Drawer:
             self.popup = PopupWindow(
                 self.renderer,
                 self._set_point_by_user,
-                self._on_popup_closed
+                self._on_popup_closed,
+                self.is_user_point_needed
             )
             self.popup.show()
 
@@ -413,9 +429,12 @@ if __name__ == "__main__":
     signal = ludb.get_1d_signal(patient_id=patients_ids[0], lead_name=LEADS_NAMES.i)
     signal = signal.get_fragment(0.0, 1.9)
 
-    # Создаем основной график
+    # Создаем основной график с возможностью установки пользовательской точки
     fig, ax = plt.subplots(figsize=(10, 4))
-    drawer = Signal_1D_Drawer(ax)
+    drawer = Signal_1D_Drawer(ax, is_user_point_needed=False)
+
+    # Альтернатива - без возможности установки пользовательской точки
+    # drawer = Signal_1D_Drawer(ax, is_user_point_needed=False)
 
     # Добавляем сигнал
     drawer.add_signal(signal, color='blue', name='Тестовый сигнал')
