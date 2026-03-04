@@ -1,3 +1,4 @@
-from CORE.visualisation.signal_1d_drawer import Signal_1D_Drawer
+from CORE.visualisation.drawer import Drawer
+from CORE.visualisation.drawinfg_entities_dataclasses import LineStyle, VerticalLineInfo
 
-__all__ = ['Signal_1D_Drawer']
+__all__ = ['Drawer', 'LineStyle', 'VerticalLineInfo']
