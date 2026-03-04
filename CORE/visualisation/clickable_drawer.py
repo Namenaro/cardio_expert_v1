@@ -3,6 +3,7 @@ from matplotlib.ticker import MultipleLocator
 from dataclasses import dataclass
 from typing import Optional, List, Callable
 from enum import Enum
+import random
 from CORE.signal_1d import Signal
 
 
@@ -29,6 +30,7 @@ class VerticalLineInfo:
     color: str = 'red'
     style: LineStyle = LineStyle.SOLID
     label: Optional[str] = None
+    sub_label: Optional[str] = None  # Дополнительная подпись снизу
 
 
 @dataclass
@@ -64,6 +66,10 @@ class SignalRenderer:
         # Настройки для интервалов
         self.intervals_opacity = 0.3  # Глобальная прозрачность для интервалов
 
+        # Настройки для подписей вертикальных линий
+        self.label_x_offset = 0.01  # Смещение подписи вправо от линии (в координатах данных)
+        self.label_random_range = 0.15  # Диапазон случайного смещения по вертикали (в долях от высоты)
+
     def add_signal(self, signal: Signal, color='#202020', name: Optional[str] = None):
         """Добавляет сигнал для отрисовки."""
         self.signals.append(SignalInfo(signal, color, name))
@@ -71,9 +77,10 @@ class SignalRenderer:
     def add_vertical_line(self, x: float, y_min: float, y_max: float,
                           color: str = 'red',
                           style: LineStyle = LineStyle.SOLID,
-                          label: Optional[str] = None):
+                          label: Optional[str] = None,
+                          sub_label: Optional[str] = None):
         """Добавляет вертикальную линию для отрисовки."""
-        self.vertical_lines.append(VerticalLineInfo(x, y_min, y_max, color, style, label))
+        self.vertical_lines.append(VerticalLineInfo(x, y_min, y_max, color, style, label, sub_label))
 
     def add_interval(self, left: float, right: float,
                      color: str = 'yellow',
@@ -115,7 +122,6 @@ class SignalRenderer:
             alpha = interval_info.alpha if interval_info.alpha is not None else self.intervals_opacity
 
             # Создаем полупрозрачную область во всю высоту графика
-            # Используем ax.axvspan для создания вертикальной области
             span = ax.axvspan(interval_info.left, interval_info.right,
                               alpha=alpha,
                               color=interval_info.color,
@@ -128,20 +134,24 @@ class SignalRenderer:
         for signal_info in self.signals:
             time = signal_info.signal.time
             values = signal_info.signal.signal_mv
-            line = ax.plot(time, values,
-                           color=signal_info.color,
-                           label=signal_info.name,
-                           zorder=2)
+            ax.plot(time, values,
+                    color=signal_info.color,
+                    label=signal_info.name,
+                    zorder=2)
 
-        # Затем вертикальные линии (передний план)
+        # Затем вертикальные линии (передний план) с подписями
         for line_info in self.vertical_lines:
+            # Рисуем вертикальную линию
             line = ax.axvline(x=line_info.x,
                               ymin=line_info.y_min,
                               ymax=line_info.y_max,
                               color=line_info.color,
                               linestyle=line_info.style.value,
-                              label=line_info.label,
                               zorder=3)
+
+            # Добавляем подписи, если они есть
+            if line_info.label or line_info.sub_label:
+                self._add_vertical_line_labels(ax, line_info)
 
         # Пользовательская точка (самый передний план)
         if self.user_setted_center is not None:
@@ -177,6 +187,64 @@ class SignalRenderer:
 
         # Обновляем отображение
         ax.figure.canvas.draw_idle()
+
+    def _add_vertical_line_labels(self, ax: plt.Axes, line_info: VerticalLineInfo):
+        """
+        Добавляет подписи к вертикальной линии со случайным позиционированием.
+
+        Args:
+            ax: Объект Axes для отрисовки
+            line_info: Информация о вертикальной линии
+        """
+        # Получаем текущие пределы по y
+        y_limits = ax.get_ylim()
+        y_min_total, y_max_total = y_limits
+
+        # Вычисляем высоту графика
+        y_height = y_max_total - y_min_total
+
+        # Вычисляем позиции для подписей на основе y_min и y_max линии
+        # Преобразуем относительные координаты (0-1) в абсолютные
+        y_line_min = y_min_total + line_info.y_min * y_height
+        y_line_max = y_min_total + line_info.y_max * y_height
+        y_line_height = y_line_max - y_line_min
+
+        # Позиция для главной подписи (верхняя половина линии)
+        if line_info.label:
+            # Случайная позиция в верхней половине линии (от середины до верха)
+            y_label_pos = y_line_min + y_line_height * (0.5 + random.uniform(0, 0.5))
+
+            # Добавляем главную подпись
+            ax.text(line_info.x + self.label_x_offset, y_label_pos,
+                    line_info.label,
+                    fontsize=9,
+                    color=line_info.color,
+                    verticalalignment='center',
+                    horizontalalignment='left',
+                    bbox=dict(boxstyle='round,pad=0.2',
+                              facecolor='white',
+                              edgecolor='none',
+                              alpha=0.7),
+                    zorder=4)
+
+        # Позиция для дополнительной подписи (нижняя половина линии)
+        if line_info.sub_label:
+            # Случайная позиция в нижней половине линии (от низа до середины)
+            y_sub_label_pos = y_line_min + y_line_height * random.uniform(0, 0.5)
+
+            # Добавляем дополнительную подпись
+            ax.text(line_info.x + self.label_x_offset, y_sub_label_pos,
+                    line_info.sub_label,
+                    fontsize=8,
+                    color=line_info.color,
+                    style='italic',
+                    verticalalignment='center',
+                    horizontalalignment='left',
+                    bbox=dict(boxstyle='round,pad=0.2',
+                              facecolor='white',
+                              edgecolor='none',
+                              alpha=0.7),
+                    zorder=4)
 
 
 class PopupWindow:
@@ -272,15 +340,19 @@ class PopupWindow:
                          label=signal_info.name,
                          zorder=2)
 
-        # Затем вертикальные линии
+        # Затем вертикальные линии с подписями
         for line_info in self.renderer.vertical_lines:
+            # Рисуем вертикальную линию
             self.ax.axvline(x=line_info.x,
                             ymin=line_info.y_min,
                             ymax=line_info.y_max,
                             color=line_info.color,
                             linestyle=line_info.style.value,
-                            label=line_info.label,
                             zorder=3)
+
+            # Добавляем подписи, если они есть
+            if line_info.label or line_info.sub_label:
+                self._add_vertical_line_labels(line_info)
 
         # Настройка внешнего вида
         self.ax.set_xlabel('Время, с')
@@ -314,6 +386,62 @@ class PopupWindow:
                       (self.is_user_point_needed and self.renderer.user_setted_center is not None))
         if has_labels:
             self.ax.legend()
+
+    def _add_vertical_line_labels(self, line_info: VerticalLineInfo):
+        """
+        Добавляет подписи к вертикальной линии со случайным позиционированием.
+
+        Args:
+            line_info: Информация о вертикальной линии
+        """
+        # Получаем текущие пределы по y
+        y_limits = self.ax.get_ylim()
+        y_min_total, y_max_total = y_limits
+
+        # Вычисляем высоту графика
+        y_height = y_max_total - y_min_total
+
+        # Вычисляем позиции для подписей на основе y_min и y_max линии
+        y_line_min = y_min_total + line_info.y_min * y_height
+        y_line_max = y_min_total + line_info.y_max * y_height
+        y_line_height = y_line_max - y_line_min
+
+        # Позиция для главной подписи (верхняя половина линии)
+        if line_info.label:
+            # Случайная позиция в верхней половине линии (от середины до верха)
+            y_label_pos = y_line_min + y_line_height * (0.5 + random.uniform(0, 0.5))
+
+            # Добавляем главную подпись
+            self.ax.text(line_info.x + self.renderer.label_x_offset, y_label_pos,
+                         line_info.label,
+                         fontsize=9,
+                         color=line_info.color,
+                         verticalalignment='center',
+                         horizontalalignment='left',
+                         bbox=dict(boxstyle='round,pad=0.2',
+                                   facecolor='white',
+                                   edgecolor='none',
+                                   alpha=0.7),
+                         zorder=4)
+
+        # Позиция для дополнительной подписи (нижняя половина линии)
+        if line_info.sub_label:
+            # Случайная позиция в нижней половине линии (от низа до середины)
+            y_sub_label_pos = y_line_min + y_line_height * random.uniform(0, 0.5)
+
+            # Добавляем дополнительную подпись
+            self.ax.text(line_info.x + self.renderer.label_x_offset, y_sub_label_pos,
+                         line_info.sub_label,
+                         fontsize=8,
+                         color=line_info.color,
+                         style='italic',
+                         verticalalignment='center',
+                         horizontalalignment='left',
+                         bbox=dict(boxstyle='round,pad=0.2',
+                                   facecolor='white',
+                                   edgecolor='none',
+                                   alpha=0.7),
+                         zorder=4)
 
     def _update_user_line(self, x: float):
         """Обновляет позицию пользовательской линии без полной перерисовки."""
@@ -429,9 +557,10 @@ class Signal_1D_Drawer:
     def add_vertical_line(self, x: float, y_min: float, y_max: float,
                           color: str = 'red',
                           style: LineStyle = LineStyle.SOLID,
-                          label: Optional[str] = None):
+                          label: Optional[str] = None,
+                          sub_label: Optional[str] = None):
         """Добавляет вертикальную линию для отрисовки."""
-        self.renderer.add_vertical_line(x, y_min, y_max, color, style, label)
+        self.renderer.add_vertical_line(x, y_min, y_max, color, style, label, sub_label)
         self.redraw()
 
     def add_interval(self, left: float, right: float,
@@ -516,27 +645,31 @@ if __name__ == "__main__":
     # Добавляем сигнал
     drawer.add_signal(signal, color='blue', name='Тестовый сигнал')
 
-    # Добавляем вертикальные линии для примера
+    # Добавляем вертикальные линии с подписями
     drawer.add_vertical_line(x=0.5, y_min=0.2, y_max=0.8,
                              color='green', style=LineStyle.SOLID,
-                             label='Сплошная метка')
+                             label='R', sub_label='peak')
+
+    drawer.add_vertical_line(x=0.7, y_min=0.3, y_max=0.7,
+                             color='orange', style=LineStyle.SOLID,
+                             label='T', sub_label='wave')
+
+    drawer.add_vertical_line(x=0.9, y_min=0.25, y_max=0.75,
+                             color='purple', style=LineStyle.DASHED,
+                             label='P', sub_label='onset')
 
     drawer.add_vertical_line(x=1.0, y_min=0.3, y_max=0.7,
                              color='red', style=LineStyle.DASHED,
-                             label='Штриховая метка')
+                             label='S', sub_label='offset')
 
     # Добавляем интервалы для примера
     drawer.add_interval(left=0.2, right=0.4,
                         color='yellow', alpha=0.3,
-                        label='Интервал 1')
-
-    drawer.add_interval(left=0.7, right=0.9,
-                        color='lightblue', alpha=0.5,
-                        label='Интервал 2')
+                        label='QRS complex')
 
     drawer.add_interval(left=1.2, right=1.5,
                         color='lightgreen',
-                        label='Интервал 3')  # Использует глобальную прозрачность
+                        label='ST segment')
 
     # Отрисовываем все (первый раз)
     drawer.redraw()
