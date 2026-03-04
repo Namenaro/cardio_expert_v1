@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from dataclasses import dataclass
-from typing import Optional, List, Callable
+from typing import Optional, List, Callable, Union
 from enum import Enum
 import random
 from CORE.signal_1d import Signal
@@ -30,7 +30,18 @@ class VerticalLineInfo:
     color: str = 'red'
     style: LineStyle = LineStyle.SOLID
     label: Optional[str] = None
-    sub_label: Optional[str] = None  # Дополнительная подпись снизу
+    sub_label: Optional[str] = None
+
+
+@dataclass
+class VerticalLineGroupInfo:
+    """
+    Хранит информацию о группе вертикальных линий для отрисовки.
+    Все линии группы рисуются одним цветом и имеют одну общую запись в легенде.
+    """
+    lines: List[VerticalLineInfo]
+    color: str
+    label: Optional[str] = None
 
 
 @dataclass
@@ -51,7 +62,8 @@ class SignalRenderer:
 
     def __init__(self):
         self.signals: List[SignalInfo] = []
-        self.vertical_lines: List[VerticalLineInfo] = []
+        self.vertical_lines: List[VerticalLineInfo] = []  # Одиночные линии
+        self.vertical_line_groups: List[VerticalLineGroupInfo] = []  # Группы линий
         self.intervals: List[IntervalInfo] = []
         self.user_setted_center: Optional[float] = None
 
@@ -79,8 +91,37 @@ class SignalRenderer:
                           style: LineStyle = LineStyle.SOLID,
                           label: Optional[str] = None,
                           sub_label: Optional[str] = None):
-        """Добавляет вертикальную линию для отрисовки."""
+        """Добавляет одиночную вертикальную линию для отрисовки."""
         self.vertical_lines.append(VerticalLineInfo(x, y_min, y_max, color, style, label, sub_label))
+
+    def add_vertical_lines_group(self, lines: List[VerticalLineInfo],
+                                 color: str,
+                                 label: Optional[str] = None):
+        """
+        Добавляет группу вертикальных линий для отрисовки.
+        Все линии группы рисуются одним цветом и имеют одну общую запись в легенде.
+
+        Args:
+            lines: Список объектов VerticalLineInfo (их цвета будут проигнорированы)
+            color: Цвет для всех линий группы
+            label: Метка группы для легенды
+        """
+        # Создаем копии линий с новым цветом, чтобы не изменять оригиналы
+        group_lines = []
+        for line in lines:
+            # Создаем новую линию с цветом группы, но сохраняем остальные параметры
+            group_line = VerticalLineInfo(
+                x=line.x,
+                y_min=line.y_min,
+                y_max=line.y_max,
+                color=color,  # Используем цвет группы
+                style=line.style,
+                label=line.label,  # Индивидуальные подписи сохраняются для отображения на графике
+                sub_label=line.sub_label
+            )
+            group_lines.append(group_line)
+
+        self.vertical_line_groups.append(VerticalLineGroupInfo(group_lines, color, label))
 
     def add_interval(self, left: float, right: float,
                      color: str = 'yellow',
@@ -139,28 +180,34 @@ class SignalRenderer:
                     label=signal_info.name,
                     zorder=2)
 
-        # Затем вертикальные линии (передний план) с подписями
+        # Рисуем одиночные вертикальные линии (передний план) с подписями
         for line_info in self.vertical_lines:
-            # Рисуем вертикальную линию
-            line = ax.axvline(x=line_info.x,
-                              ymin=line_info.y_min,
-                              ymax=line_info.y_max,
-                              color=line_info.color,
-                              linestyle=line_info.style.value,
-                              zorder=3)
+            self._draw_vertical_line(ax, line_info)
 
-            # Добавляем подписи, если они есть
-            if line_info.label or line_info.sub_label:
-                self._add_vertical_line_labels(ax, line_info)
+        # Рисуем группы вертикальных линий (передний план) с подписями
+        # Для групп создаем отдельные элементы для легенды
+        legend_elements = []
+        for group_info in self.vertical_line_groups:
+            # Рисуем все линии группы
+            for line_info in group_info.lines:
+                self._draw_vertical_line(ax, line_info)
+
+            # Добавляем элемент для легенды группы, если есть метка
+            if group_info.label:
+                from matplotlib.lines import Line2D
+                legend_elements.append(Line2D([0], [0],
+                                              color=group_info.color,
+                                              linestyle='-',
+                                              label=group_info.label))
 
         # Пользовательская точка (самый передний план)
         if self.user_setted_center is not None:
-            user_line = ax.axvline(x=self.user_setted_center,
-                                   color='black',
-                                   linewidth=2,
-                                   linestyle='--',
-                                   label='Центр пользователя',
-                                   zorder=4)
+            ax.axvline(x=self.user_setted_center,
+                       color='black',
+                       linewidth=2,
+                       linestyle='--',
+                       label='Центр пользователя',
+                       zorder=4)
 
         # Настройка внешнего вида
         ax.set_xlabel('Время, с')
@@ -177,16 +224,46 @@ class SignalRenderer:
         ax.grid(True, 'major', color=self.major_grid_color, zorder=0)
         ax.grid(True, 'minor', color=self.minor_grid_color, linewidth=0.5, zorder=0)
 
-        # Добавляем легенду если есть подписи
+        # Добавляем легенду
+        # Собираем все существующие легенды из графиков
         has_labels = (any(s.name for s in self.signals) or
                       any(l.label for l in self.vertical_lines) or
                       any(i.label for i in self.intervals) or
-                      self.user_setted_center is not None)
+                      self.user_setted_center is not None or
+                      legend_elements)
+
         if has_labels:
-            ax.legend()
+            # Получаем текущие элементы легенды из графика
+            current_handles, current_labels = ax.get_legend_handles_labels()
+
+            # Добавляем элементы групп
+            all_handles = list(current_handles) + legend_elements
+
+            if all_handles:
+                ax.legend(handles=all_handles)
 
         # Обновляем отображение
         ax.figure.canvas.draw_idle()
+
+    def _draw_vertical_line(self, ax: plt.Axes, line_info: VerticalLineInfo):
+        """
+        Рисует вертикальную линию и её подписи.
+
+        Args:
+            ax: Объект Axes для отрисовки
+            line_info: Информация о вертикальной линии
+        """
+        # Рисуем вертикальную линию
+        ax.axvline(x=line_info.x,
+                   ymin=line_info.y_min,
+                   ymax=line_info.y_max,
+                   color=line_info.color,
+                   linestyle=line_info.style.value,
+                   zorder=3)
+
+        # Добавляем подписи, если они есть
+        if line_info.label or line_info.sub_label:
+            self._add_vertical_line_labels(ax, line_info)
 
     def _add_vertical_line_labels(self, ax: plt.Axes, line_info: VerticalLineInfo):
         """
@@ -204,7 +281,6 @@ class SignalRenderer:
         y_height = y_max_total - y_min_total
 
         # Вычисляем позиции для подписей на основе y_min и y_max линии
-        # Преобразуем относительные координаты (0-1) в абсолютные
         y_line_min = y_min_total + line_info.y_min * y_height
         y_line_max = y_min_total + line_info.y_max * y_height
         y_line_height = y_line_max - y_line_min
@@ -340,19 +416,22 @@ class PopupWindow:
                          label=signal_info.name,
                          zorder=2)
 
-        # Затем вертикальные линии с подписями
+        # Затем одиночные вертикальные линии
         for line_info in self.renderer.vertical_lines:
-            # Рисуем вертикальную линию
-            self.ax.axvline(x=line_info.x,
-                            ymin=line_info.y_min,
-                            ymax=line_info.y_max,
-                            color=line_info.color,
-                            linestyle=line_info.style.value,
-                            zorder=3)
+            self.renderer._draw_vertical_line(self.ax, line_info)
 
-            # Добавляем подписи, если они есть
-            if line_info.label or line_info.sub_label:
-                self._add_vertical_line_labels(line_info)
+        # Затем группы вертикальных линий
+        legend_elements = []
+        for group_info in self.renderer.vertical_line_groups:
+            for line_info in group_info.lines:
+                self.renderer._draw_vertical_line(self.ax, line_info)
+
+            if group_info.label:
+                from matplotlib.lines import Line2D
+                legend_elements.append(Line2D([0], [0],
+                                              color=group_info.color,
+                                              linestyle='-',
+                                              label=group_info.label))
 
         # Настройка внешнего вида
         self.ax.set_xlabel('Время, с')
@@ -379,69 +458,12 @@ class PopupWindow:
         else:
             self.user_line = None
 
-        # Добавляем легенду если есть подписи
-        has_labels = (any(s.name for s in self.renderer.signals) or
-                      any(l.label for l in self.renderer.vertical_lines) or
-                      any(i.label for i in self.renderer.intervals) or
-                      (self.is_user_point_needed and self.renderer.user_setted_center is not None))
-        if has_labels:
-            self.ax.legend()
+        # Добавляем легенду
+        current_handles, current_labels = self.ax.get_legend_handles_labels()
+        all_handles = list(current_handles) + legend_elements
 
-    def _add_vertical_line_labels(self, line_info: VerticalLineInfo):
-        """
-        Добавляет подписи к вертикальной линии со случайным позиционированием.
-
-        Args:
-            line_info: Информация о вертикальной линии
-        """
-        # Получаем текущие пределы по y
-        y_limits = self.ax.get_ylim()
-        y_min_total, y_max_total = y_limits
-
-        # Вычисляем высоту графика
-        y_height = y_max_total - y_min_total
-
-        # Вычисляем позиции для подписей на основе y_min и y_max линии
-        y_line_min = y_min_total + line_info.y_min * y_height
-        y_line_max = y_min_total + line_info.y_max * y_height
-        y_line_height = y_line_max - y_line_min
-
-        # Позиция для главной подписи (верхняя половина линии)
-        if line_info.label:
-            # Случайная позиция в верхней половине линии (от середины до верха)
-            y_label_pos = y_line_min + y_line_height * (0.5 + random.uniform(0, 0.5))
-
-            # Добавляем главную подпись
-            self.ax.text(line_info.x + self.renderer.label_x_offset, y_label_pos,
-                         line_info.label,
-                         fontsize=9,
-                         color=line_info.color,
-                         verticalalignment='center',
-                         horizontalalignment='left',
-                         bbox=dict(boxstyle='round,pad=0.2',
-                                   facecolor='white',
-                                   edgecolor='none',
-                                   alpha=0.7),
-                         zorder=4)
-
-        # Позиция для дополнительной подписи (нижняя половина линии)
-        if line_info.sub_label:
-            # Случайная позиция в нижней половине линии (от низа до середины)
-            y_sub_label_pos = y_line_min + y_line_height * random.uniform(0, 0.5)
-
-            # Добавляем дополнительную подпись
-            self.ax.text(line_info.x + self.renderer.label_x_offset, y_sub_label_pos,
-                         line_info.sub_label,
-                         fontsize=8,
-                         color=line_info.color,
-                         style='italic',
-                         verticalalignment='center',
-                         horizontalalignment='left',
-                         bbox=dict(boxstyle='round,pad=0.2',
-                                   facecolor='white',
-                                   edgecolor='none',
-                                   alpha=0.7),
-                         zorder=4)
+        if all_handles:
+            self.ax.legend(handles=all_handles)
 
     def _update_user_line(self, x: float):
         """Обновляет позицию пользовательской линии без полной перерисовки."""
@@ -559,8 +581,23 @@ class Signal_1D_Drawer:
                           style: LineStyle = LineStyle.SOLID,
                           label: Optional[str] = None,
                           sub_label: Optional[str] = None):
-        """Добавляет вертикальную линию для отрисовки."""
+        """Добавляет одиночную вертикальную линию для отрисовки."""
         self.renderer.add_vertical_line(x, y_min, y_max, color, style, label, sub_label)
+        self.redraw()
+
+    def add_vertical_lines_group(self, lines: List[VerticalLineInfo],
+                                 color: str,
+                                 label: Optional[str] = None):
+        """
+        Добавляет группу вертикальных линий для отрисовки.
+        Все линии группы рисуются одним цветом и имеют одну общую запись в легенде.
+
+        Args:
+            lines: Список объектов VerticalLineInfo (их цвета будут проигнорированы)
+            color: Цвет для всех линий группы
+            label: Метка группы для легенды
+        """
+        self.renderer.add_vertical_lines_group(lines, color, label)
         self.redraw()
 
     def add_interval(self, left: float, right: float,
@@ -645,22 +682,21 @@ if __name__ == "__main__":
     # Добавляем сигнал
     drawer.add_signal(signal, color='blue', name='Тестовый сигнал')
 
-    # Добавляем вертикальные линии с подписями
+    # Добавляем одиночные вертикальные линии
     drawer.add_vertical_line(x=0.5, y_min=0.2, y_max=0.8,
                              color='green', style=LineStyle.SOLID,
                              label='R', sub_label='peak')
 
-    drawer.add_vertical_line(x=0.7, y_min=0.3, y_max=0.7,
-                             color='orange', style=LineStyle.SOLID,
-                             label='T', sub_label='wave')
-
-    drawer.add_vertical_line(x=0.9, y_min=0.25, y_max=0.75,
-                             color='purple', style=LineStyle.DASHED,
-                             label='P', sub_label='onset')
-
-    drawer.add_vertical_line(x=1.0, y_min=0.3, y_max=0.7,
-                             color='red', style=LineStyle.DASHED,
-                             label='S', sub_label='offset')
+    # Добавляем группу вертикальных линий (все будут красными)
+    group_lines = [
+        VerticalLineInfo(x=0.7, y_min=0.3, y_max=0.7,
+                         style=LineStyle.SOLID, label='T', sub_label='wave'),
+        VerticalLineInfo(x=0.9, y_min=0.25, y_max=0.75,
+                         style=LineStyle.DASHED, label='P', sub_label='onset'),
+        VerticalLineInfo(x=1.0, y_min=0.3, y_max=0.7,
+                         style=LineStyle.DASHED, label='S', sub_label='offset')
+    ]
+    drawer.add_vertical_lines_group(group_lines, color='red', label='Комплексы QRS')
 
     # Добавляем интервалы для примера
     drawer.add_interval(left=0.2, right=0.4,
