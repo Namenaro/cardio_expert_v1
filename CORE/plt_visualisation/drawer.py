@@ -8,15 +8,26 @@ from CORE.plt_visualisation.helpers.renderer import SignalRenderer
 
 class Drawer:
     """
-    Основной класс для визуализации 1-d сигналов, линий, интевалов на ax.
+    Основной класс для визуализации 1-d ЭКГ сигналов на миллиметровке, а также линий и интевалов поверх ЭКГ, с подписями.
     Управляет основным графиком и всплывающим окном.
+
+    :param ax: Объект matplotlib.axes.Axes для отрисовки
+    :param is_user_point_needed: Разрешить установку пользовательской точки. По умолчанию True. Получить установленную пользователем точку можно через get_user_point()
+
+    Класс обеспечивает:
+        - отрисовку одного или нескольких именованных сигналов на общем графике
+        - добавление вертикальных линий с поддержкой основной и дополнительной подписей
+        - группировку вертикальных линий с общей записью в легенде
+        - выделение участков полупрозрачными интервалами
+        - интерактивную пользовательскую точку (одну) с возможностью перетаскивания. Для ее установки надо кликнуть правой кнопкой мыши в попап-окне
+        - всплывающее окно с панелью навигации (зум, перетасккивание и т.д.). Для выхова попап-окна нужно кликнуть левой кнопкой мыши по основному ax
     """
 
     def __init__(self, ax: plt.Axes, is_user_point_needed: bool = True):
         """
         Args:
             ax: Объект Axes для отрисовки
-            is_user_point_needed: Флаг, разрешающий установку пользовательской точки
+            is_user_point_needed: Флаг, разрешающий установку одной пользовательской точки
         """
         self.ax = ax
         self.renderer = SignalRenderer()
@@ -38,7 +49,7 @@ class Drawer:
                           sub_label: Optional[str] = None):
         """Добавляет одиночную вертикальную линию для отрисовки."""
         self.renderer.add_vertical_line(x, y_min, y_max, color, style, label, sub_label)
-        #self.redraw()
+        # self.redraw()
 
     def add_vertical_lines_group(self, lines: List[VerticalLineInfo],
                                  color: str,
@@ -53,7 +64,7 @@ class Drawer:
             label: Метка группы для легенды
         """
         self.renderer.add_vertical_lines_group(lines, color, label)
-        #self.redraw()
+        # self.redraw()
 
     def add_interval(self, left: float, right: float,
                      color: str = 'yellow',
@@ -70,7 +81,7 @@ class Drawer:
             label: Подпись для легенды
         """
         self.renderer.add_interval(left, right, color, alpha, label)
-        #self.redraw()
+        # self.redraw()
 
     def get_user_point(self) -> Optional[float]:
         """Возвращает текущую пользовательскую точку."""
@@ -80,9 +91,7 @@ class Drawer:
         """Устанавливает пользовательскую точку и обновляет renderer."""
         if not self.is_user_point_needed:
             return
-        print(f"Установлена пользовательская точка: {x:.3f}")
         self.renderer.set_user_point(x)
-        # Не перерисовываем основной график сразу
 
     def _on_popup_closed(self):
         """Вызывается при закрытии попап-окна."""
