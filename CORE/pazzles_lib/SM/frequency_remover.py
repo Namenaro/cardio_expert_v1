@@ -118,7 +118,7 @@ class FrequencyFilter(SMBase):
 
 # Пример использования
 if __name__ == "__main__":
-    from CORE.plt_visualisation import Signal_1D_Drawer
+    from CORE.plt_visualisation import Drawer
     from CORE.datasets_wrappers.LUDB import LUDB, LEADS_NAMES
     import matplotlib.pyplot as plt
 
@@ -141,22 +141,22 @@ if __name__ == "__main__":
 
 
     # Визуализация
-    fig, axes = plt.subplots(4, 1, figsize=(12, 10), sharex=True)
+    fig, axes = plt.subplots(3, 1, figsize=(12, 10), sharex=True)
 
-    drawer1 = Signal_1D_Drawer(axes[0])
-    drawer1.draw_signal(old_signal, name="Исходный сигнал", color='black')
+    drawer1 = Drawer(axes[0])
+    drawer1.add_signal(old_signal, name="Исходный сигнал", color='black')
+    drawer1.redraw()
     axes[0].set_title("Исходный сигнал")
-    axes[0].grid(True, alpha=0.3)
 
-    drawer2 = Signal_1D_Drawer(axes[1])
-    drawer2.draw_signal(signal_lowpass, name="ФНЧ", color='blue')
+    drawer2 = Drawer(axes[1])
+    drawer2.add_signal(signal_lowpass, name="ФНЧ", color='blue')
+    drawer2.redraw()
     axes[1].set_title("ФНЧ - удалены высокие частоты")
-    axes[1].grid(True, alpha=0.3)
 
-    drawer3 = Signal_1D_Drawer(axes[2])
-    drawer3.draw_signal(signal_highpass, name="ФВЧ", color='red')
+    drawer3 = Drawer(axes[2])
+    drawer3.add_signal(signal_highpass, name="ФВЧ", color='red')
+    drawer3.redraw()
     axes[2].set_title("ФВЧ - удалены низкие частоты")
-    axes[2].grid(True, alpha=0.3)
 
     plt.tight_layout()
     plt.show()

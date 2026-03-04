@@ -26,7 +26,7 @@ class GlobalMaxSelector(PSBase):
 
 # Пример использования
 if __name__ == "__main__":
-    from CORE.plt_visualisation import Signal_1D_Drawer
+    from CORE.plt_visualisation import Drawer
     from CORE.datasets_wrappers.LUDB import LUDB, LEADS_NAMES
     import matplotlib.pyplot as plt
 
@@ -42,8 +42,9 @@ if __name__ == "__main__":
 
     # Визуализация
     fig, ax = plt.subplots(figsize=(10, 4))
-    drawer = Signal_1D_Drawer(ax)
-    drawer.draw_signal(old_signal)
+    drawer = Drawer(ax)
+    drawer.add_signal(old_signal)
+    drawer.redraw()
     for t_moment in t_moments:
         ax.axvline(x=t_moment, ymin=0, ymax=1, color='r', linestyle='--', linewidth=1)
     plt.show()

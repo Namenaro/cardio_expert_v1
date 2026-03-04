@@ -98,7 +98,7 @@ class GaussianSmooth(SMBase):
 
 # Пример использования
 if __name__ == "__main__":
-    from CORE.plt_visualisation.signal_1d_drawer import Signal_1D_Drawer
+    from CORE.plt_visualisation import Drawer
     from CORE.datasets_wrappers.LUDB import LUDB, LEADS_NAMES
     import matplotlib.pyplot as plt
 
@@ -116,9 +116,10 @@ if __name__ == "__main__":
 
     # Визуализация
     fig, ax = plt.subplots(figsize=(10, 4))
-    drawer = Signal_1D_Drawer(ax)
-    drawer.draw_signal(new_signal, name="new", color='blue')
-    drawer.draw_signal(old_signal, name="old")
+    drawer = Drawer(ax)
+    drawer.add_signal(new_signal, name="new", color='blue')
+    drawer.add_signal(old_signal, name="old")
+    drawer.redraw()
     plt.show()
 
 
