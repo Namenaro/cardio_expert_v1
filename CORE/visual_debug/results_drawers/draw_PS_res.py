@@ -3,7 +3,6 @@ from math import sin
 
 import matplotlib.pyplot as plt
 
-
 from CORE import Signal
 from CORE.visual_debug import PS_Res
 from CORE.visual_debug.plt_visualisation import Drawer
@@ -62,12 +61,15 @@ if __name__ == "__main__":
                 res_coords=[11.0, 12.0]
             )
 
-            # Создание визуализатора и сохраняем ссылку на draw (сигранение в self нужно, чтобы существовали обрабочики событий)
-            self.draw_ps_res = DrawPS_Res(ps_res_obj=test_ps_res)
-            fig = self.draw_ps_res.get_fig()
+            # Создание визуализатора
+            draw_ps_res = DrawPS_Res(ps_res_obj=test_ps_res)
+            fig = draw_ps_res.get_fig()
 
             # Встраивание matplotlib figure в PySide
             self.canvas = FigureCanvas(fig)
+
+            # Динамическое добавление атрибута ради того, чтобы обработчики кликов из drawer жили столько, сколько canvas
+            self.canvas.drawer = draw_ps_res.drawer
 
             layout.addWidget(self.canvas)
 
