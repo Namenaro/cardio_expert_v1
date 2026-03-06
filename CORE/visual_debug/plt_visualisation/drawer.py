@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
 from typing import Optional, List
 from CORE.signal_1d import Signal
-from CORE.plt_visualisation.helpers.drawinfg_entities_dataclasses import LineStyle, VerticalLineInfo
-from CORE.plt_visualisation.helpers.popup_window import PopupWindow
-from CORE.plt_visualisation.helpers.renderer import SignalRenderer
+from CORE.visual_debug.plt_visualisation.helpers.drawinfg_entities_dataclasses import LineStyle, VerticalLineInfo
+from CORE.visual_debug.plt_visualisation.helpers.popup_window import PopupWindow
+from CORE.visual_debug.plt_visualisation.helpers.renderer import SignalRenderer
 
 
 class Drawer:

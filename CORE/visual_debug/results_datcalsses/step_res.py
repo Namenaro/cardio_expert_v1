@@ -15,6 +15,6 @@ class StepRes:
 
     tracks_results: List[TrackRes]
 
-    def get_tracks_results(self) -> Dict[int:List[float]]:
+    def get_tracks_results(self) -> Dict[int, List[float]]:
         """ Возвращает словарь, где ключ - id трека, значение - найденные этим треком точки """
         return {track_obj.id: track_obj.get_all_ps_coords_flat() for track_obj in self.tracks_results}
