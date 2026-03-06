@@ -51,7 +51,7 @@ class TopBestInterpolationPoints(PSBase):
 
 # Пример использования
 if __name__ == "__main__":
-    from CORE.plt_visualisation import Drawer
+    from CORE.visual_debug.plt_visualisation import Drawer
     from CORE.datasets_wrappers.LUDB import LUDB, LEADS_NAMES
     import matplotlib.pyplot as plt
 
