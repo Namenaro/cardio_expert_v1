@@ -1,5 +1,6 @@
 import sys
 from math import sin
+from typing import Optional, List
 
 import matplotlib.pyplot as plt
 from PySide6.QtWidgets import QWidget, QLabel, QTextEdit
@@ -35,8 +36,10 @@ class PS_ResWidget(QWidget):
         self.ps_res_obj = None
         self.draw_ps_res = None
 
-    def reset_result_object(self, ps_res: PS_Res):
-        """Заполняет канвас на основе PS_Res и записывает ID в текстовое поле."""
+    def reset_data(self, ps_res: PS_Res, ground_true_point: Optional[float] = None):
+        """Заполняет канвас на основе PS_Res и записывает ID в текстовое поле.
+        :param ps_res объект с результатом запуска ps
+        :param ground_true_point правильная координата точки этого шага, из датасета (опционально)"""
         self.ps_res_obj = ps_res
 
         # Обновляем текстовое поле с ID
@@ -47,7 +50,7 @@ class PS_ResWidget(QWidget):
         self.ax.clear()
 
         # Создаём визуализатор и получаем фигуру
-        self.draw_ps_res = DrawPS_Res(ps_res_obj=ps_res)
+        self.draw_ps_res = DrawPS_Res(ps_res_obj=ps_res, ground_true_point=ground_true_point)
         updated_fig = self.draw_ps_res.get_fig()
 
         # Заменяем текущую фигуру на обновлённую
@@ -90,7 +93,7 @@ if __name__ == "__main__":
             self.rs_res_widget = PS_ResWidget()
 
             # Заполняем виджет данными из тестового PS_Res
-            self.rs_res_widget.reset_result_object(test_ps_res)
+            self.rs_res_widget.reset_data(test_ps_res, ground_true_point=10.55)
 
             # Добавляем виджет в layout
             layout.addWidget(self.rs_res_widget)

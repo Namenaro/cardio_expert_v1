@@ -1,24 +1,31 @@
 import sys
 from math import sin
+from typing import Optional
 
 import matplotlib.pyplot as plt
-
 
 from CORE import Signal
 from CORE.visual_debug import PS_Res
 from CORE.visual_debug.plt_visualisation import Drawer, VerticalLineInfo
 
 
-
 class DrawPS_Res:
-    def __init__(self, ps_res_obj: PS_Res, padding_procents: float = 20):
-        """ Создает fig и рисует на нем результат запуска PS, упакованный в PS_Res.
-            Обеспечивает обработчик нажатия по фигуре - откроет более подробное окно с панелью навигации (увеличение, сдвиг и т.д.)"""
+    """ Создает fig и рисует на нем результат запуска PS, упакованный в PS_Res.
+                Обеспечивает обработчик нажатия по фигуре - откроет более подробное окно с панелью навигации (увеличение, сдвиг и т.д.)"""
+
+    def __init__(self, ps_res_obj: PS_Res, padding_procents: float = 20, ground_true_point: Optional = None):
+        """
+
+        :param ps_res_obj: объект с результатом отработки PS на фрагменте сигнала
+        :param padding_procents: процент длины инстервала, который мы отстпаем влево и вправо от краних интервала, чтобы показать чуть больше, чем только интервал поиска этой точки
+        :param ground_true_point: правильная точка из датасета для этого шага
+        """
         self.ps_res = ps_res_obj
         self.fig, ax = plt.subplots(figsize=(10, 4))
         self.drawer = Drawer(ax=ax, is_user_point_needed=True)
         self.padding_procents = padding_procents
         self.y_min, self.ymax = ax.get_ylim()
+        self.ground_true_point = ground_true_point
 
     def get_fig(self):
         cropped_signal = self.ps_res.signal.get_cropped_with_padding(
@@ -30,8 +37,16 @@ class DrawPS_Res:
 
         self.drawer.add_interval(left=self.ps_res.left_coord, right=self.ps_res.right_coord, color="blue", alpha=0.1)
 
+        # Добавим точки, найденные нашим PS
         lines = [VerticalLineInfo(x=x, y_max=self.ymax, y_min=self.y_min) for x in self.ps_res.res_coords]
         self.drawer.add_vertical_lines_group(lines=lines, color="green", label="найденные точки")
+
+        # Если измвестна верная точка для этого шага, то их тоже рисуем
+        if self.ground_true_point:
+            self.drawer.add_vertical_line(x=self.ground_true_point, y_max=self.ymax, y_min=self.y_min, color="black",
+                                          label="dfdfdf")
+
+
         self.drawer.redraw()
 
         return self.fig
@@ -73,7 +88,7 @@ if __name__ == "__main__":
             )
 
             # Создание визуализатора
-            draw_ps_res = DrawPS_Res(ps_res_obj=test_ps_res)
+            draw_ps_res = DrawPS_Res(ps_res_obj=test_ps_res, ground_true_point=10.1)
             fig = draw_ps_res.get_fig()
 
             # Встраивание matplotlib figure в PySide
