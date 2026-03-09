@@ -1,119 +1,91 @@
-import sys
-from math import sin
-
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
 
-from CORE import Signal
-from CORE.visual_debug import SM_Res, TrackRes
+from CORE.visual_debug import TrackRes
 from CORE.visual_debug.plt_visualisation import Drawer
 
 
 class DrawTrackRes_SM:
-    def __init__(self, res_obj: TrackRes, padding_procents: float = 20):
-        """ Создает fig и рисует на нем результат запуска последовательно всех SM этого трека.
-         Обеспечивает обработчик нажатия по фигуре - откроет более подробное окно с панелью навигации (увеличение, сдвиг и т.д.)"""
-
+    def __init__(self, res_obj: TrackRes, padding_percent: float = 20):
+        """Создаёт fig и рисует на нём результат запуска последовательно всех SM этого трека.
+        Обеспечивает обработчик нажатия по фигуре — откроет более подробное окно с панелью навигации (увеличение, сдвиг и т. д.)"""
         self.res = res_obj
         self.fig, ax = plt.subplots(figsize=(10, 4))
         self.drawer = Drawer(ax=ax, is_user_point_needed=True)
-        self.padding_procents = padding_procents
+        self.padding_percent = padding_percent
         self.y_min, self.ymax = ax.get_ylim()
 
+    def _get_gradient_colors(self, n_colors: int) -> list:
+        """Генерирует градиент цветов из монотонной гаммы (от синего к фиолетовому)."""
+        if n_colors == 0:
+            return []
+        if n_colors == 1:
+            return ['#4169E1']  # тёмно-синий
+
+        # Создаём градиент от синего к фиолетовому
+        cmap = LinearSegmentedColormap.from_list(
+            "blue_purple_gradient",
+            ["#4169E1", "#8A2BE2"]  # Navy Blue → Blue Violet
+        )
+        colors = [cmap(i / (n_colors - 1)) for i in range(n_colors)]
+        return [self._rgb_to_hex(color) for color in colors]
+
+    @staticmethod
+    def _rgb_to_hex(rgb) -> str:
+        """Конвертирует RGB кортеж в HEX строку."""
+        r, g, b = int(rgb[0] * 255), int(rgb[1] * 255), int(rgb[2] * 255)
+        return f"#{r:02x}{g:02x}{b:02x}"
+
     def get_fig(self):
-        # Рисуем исходный сигнал до модификаций
+        # Рисуем исходный сигнал до модификаций — всегда чёрный
         old_signal = self.res.signal.get_cropped_with_padding(
             coord_left=self.res.left_coord,
             coord_right=self.res.right_coord,
-            padding_percent=self.padding_procents
+            padding_percent=self.padding_percent
         )
         self.drawer.add_signal(signal=old_signal, color='black', name="исходный сигнал")
 
         # Проверяем, есть ли вообще SM-результаты
         if self.res.sm_res_objs:
-            # Рисуем все стадии редктирвоания кроме последнего шага
-            for sm_res in self.res.sm_res_objs[:-1]:
+            n_intermediate = len(self.res.sm_res_objs) - 1
+
+            # Получаем градиент цветов для промежуточных сигналов
+            gradient_colors = self._get_gradient_colors(n_intermediate)
+
+            # Рисуем все стадии редактирования кроме последнего шага с градиентными цветами
+            for i, sm_res in enumerate(self.res.sm_res_objs[:-1]):
                 cropped_signal = sm_res.result_signal.get_cropped_with_padding(
                     coord_left=self.res.left_coord,
                     coord_right=self.res.right_coord,
-                    padding_percent=self.padding_procents
+                    padding_percent=self.padding_percent
                 )
-                self.drawer.add_signal(signal=cropped_signal, color='black', name=str(sm_res.id))
+                color = gradient_colors[i] if gradient_colors else 'gray'
+                self.drawer.add_signal(
+                    signal=cropped_signal,
+                    color=color,
+                    name=f"SM-{sm_res.id}"
+                )
 
-            # Рисуем результат последнего шага модификации сигнала
+            # Рисуем результат последнего шага модификации сигнала — всегда зелёный
             cropped_new = self.res.sm_res_objs[-1].result_signal.get_cropped_with_padding(
                 coord_left=self.res.left_coord,
                 coord_right=self.res.right_coord,
-                padding_percent=self.padding_procents
+                padding_percent=self.padding_percent
             )
             self.drawer.add_signal(signal=cropped_new, color='green', name="новый сигнал")
 
         # Отображаем интервал поиска точки на этом шаге (к которому принадлежит трек)
-        self.drawer.add_interval(left=self.res.left_coord, right=self.res.right_coord, color="blue", alpha=0.1)
+        self.drawer.add_interval(
+            left=self.res.left_coord,
+            right=self.res.right_coord,
+            color="blue",
+            alpha=0.1
+        )
 
         # Заполнив все рисуемые сущности, проводим их отрисовку на холст
         self.drawer.redraw()
-
         return self.fig
 
 
-if __name__ == "__main__":
-    from PySide6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QWidget)
-
-    from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
 
-    class MainWindow(QMainWindow):
-        def __init__(self):
-            super().__init__()
-            self.setWindowTitle("Визуализация сигнала")
-            self.setGeometry(100, 100, 800, 600)
-
-            # Центральный виджет
-            central_widget = QWidget()
-            self.setCentralWidget(central_widget)
-
-            # Layout
-            layout = QVBoxLayout(central_widget)
-
-            # Создание тестового сигнала
-            raw_signal = [sin(i) for i in range(80)]
-            test_signal = Signal(signal_mv=raw_signal, frequency=2)
-
-            new_raw = [-2 * sin(i) for i in range(80)]
-            new_signal = Signal(signal_mv=new_raw, frequency=2)
-
-            print(f"Длительность сигнала: {test_signal.get_duration():.2f} секунд")
-            print("Сигнал (первые 10 точек):", test_signal.signal_mv[:10])
-            print("Время (первые 10 точек):", test_signal.time[:10])
-
-            # Создание тестового PS_Res
-            test_res = SM_Res(
-                id=1,
-                old_signal=test_signal,
-                left_coord=10.0,
-                right_coord=14.0,
-                result_signal=new_signal
-
-            )
-
-            # Создание визуализатора
-            draw_ps_res = DrawSM_Res(res_obj=test_res)
-            fig = draw_ps_res.get_fig()
-
-            # Встраивание matplotlib figure в PySide
-            self.canvas = FigureCanvas(fig)
-
-            # Динамическое добавление атрибута ради того, чтобы обработчики кликов из drawer жили столько, сколько canvas
-            self.canvas.drawer = draw_ps_res.drawer
-
-            layout.addWidget(self.canvas)
-
-
-    def main():
-        app = QApplication(sys.argv)
-        window = MainWindow()
-        window.show()
-        sys.exit(app.exec())
-
-
-    main()
