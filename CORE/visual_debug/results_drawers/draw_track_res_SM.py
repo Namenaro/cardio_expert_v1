@@ -4,13 +4,13 @@ from math import sin
 import matplotlib.pyplot as plt
 
 from CORE import Signal
-from CORE.visual_debug import SM_Res
+from CORE.visual_debug import SM_Res, TrackRes
 from CORE.visual_debug.plt_visualisation import Drawer
 
 
-class DrawSM_Res:
-    def __init__(self, res_obj: SM_Res, padding_procents: float = 20):
-        """ Создает fig и рисует на нем результат запуска SM, упакованный в SM_Res.
+class DrawTrackRes_SM:
+    def __init__(self, res_obj: TrackRes, padding_procents: float = 20):
+        """ Создает fig и рисует на нем результат запуска последовательно всех SM этого трека.
          Обеспечивает обработчик нажатия по фигуре - откроет более подробное окно с панелью навигации (увеличение, сдвиг и т.д.)"""
 
         self.res = res_obj
@@ -20,22 +20,37 @@ class DrawSM_Res:
         self.y_min, self.ymax = ax.get_ylim()
 
     def get_fig(self):
-        cropped_signal = self.res.old_signal.get_cropped_with_padding(
+        # Рисуем исходный сигнал до модификаций
+        old_signal = self.res.signal.get_cropped_with_padding(
             coord_left=self.res.left_coord,
             coord_right=self.res.right_coord,
             padding_percent=self.padding_procents
         )
-        self.drawer.add_signal(signal=cropped_signal, color='black')
+        self.drawer.add_signal(signal=old_signal, color='black', name="исходный сигнал")
 
+        # Проверяем, есть ли вообще SM-результаты
+        if self.res.sm_res_objs:
+            # Рисуем все стадии редктирвоания кроме последнего шага
+            for sm_res in self.res.sm_res_objs[:-1]:
+                cropped_signal = sm_res.result_signal.get_cropped_with_padding(
+                    coord_left=self.res.left_coord,
+                    coord_right=self.res.right_coord,
+                    padding_percent=self.padding_procents
+                )
+                self.drawer.add_signal(signal=cropped_signal, color='black', name=str(sm_res.id))
+
+            # Рисуем результат последнего шага модификации сигнала
+            cropped_new = self.res.sm_res_objs[-1].result_signal.get_cropped_with_padding(
+                coord_left=self.res.left_coord,
+                coord_right=self.res.right_coord,
+                padding_percent=self.padding_procents
+            )
+            self.drawer.add_signal(signal=cropped_new, color='green', name="новый сигнал")
+
+        # Отображаем интервал поиска точки на этом шаге (к которому принадлежит трек)
         self.drawer.add_interval(left=self.res.left_coord, right=self.res.right_coord, color="blue", alpha=0.1)
 
-        cropped_new = self.res.result_signal.get_cropped_with_padding(
-            coord_left=self.res.left_coord,
-            coord_right=self.res.right_coord,
-            padding_percent=self.padding_procents
-        )
-        self.drawer.add_signal(signal=cropped_new, color='green', name="новый сигнал")
-
+        # Заполнив все рисуемые сущности, проводим их отрисовку на холст
         self.drawer.redraw()
 
         return self.fig

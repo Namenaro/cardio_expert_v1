@@ -12,6 +12,8 @@ from CORE.visual_debug.plt_visualisation import Drawer, VerticalLineInfo
 
 class DrawPS_Res:
     def __init__(self, ps_res_obj: PS_Res, padding_procents: float = 20):
+        """ Создает fig и рисует на нем результат запуска PS, упакованный в PS_Res.
+            Обеспечивает обработчик нажатия по фигуре - откроет более подробное окно с панелью навигации (увеличение, сдвиг и т.д.)"""
         self.ps_res = ps_res_obj
         self.fig, ax = plt.subplots(figsize=(10, 4))
         self.drawer = Drawer(ax=ax, is_user_point_needed=True)
