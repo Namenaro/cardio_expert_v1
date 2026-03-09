@@ -3,6 +3,7 @@ from typing import Optional, List
 
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
+from sympy.abc import alpha
 
 from CORE.signal_1d import Signal
 from CORE.visual_debug.plt_visualisation.helpers.drawinfg_entities_dataclasses import SignalInfo, VerticalLineInfo, \
@@ -186,7 +187,7 @@ class SignalRenderer:
         """
         # Рисуем вертикальную линию
         ax.axvline(x=line_info.x, ymin=line_info.y_min, ymax=line_info.y_max, color=line_info.color,
-                   linestyle=line_info.style.value, zorder=3)
+                   linestyle=line_info.style.value, zorder=3, alpha=0.8)
 
         # Добавляем подписи, если они есть
         if line_info.label or line_info.sub_label:
