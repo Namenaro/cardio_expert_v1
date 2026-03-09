@@ -1,3 +1,4 @@
 from CORE.visual_debug.plt_visualisation.drawer import Drawer
+from CORE.visual_debug.plt_visualisation.helpers.drawinfg_entities_dataclasses import LineStyle, VerticalLineInfo
 
 __all__ = ['Drawer', 'LineStyle', 'VerticalLineInfo']

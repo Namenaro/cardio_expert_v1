@@ -40,7 +40,6 @@ class Drawer:
     def add_signal(self, signal: Signal, color='#202020', name: Optional[str] = None):
         """Добавляет сигнал для отрисовки."""
         self.renderer.add_signal(signal, color, name)
-        # self.redraw()
 
     def add_vertical_line(self, x: float, y_min: float, y_max: float,
                           color: str = 'red',
@@ -49,7 +48,6 @@ class Drawer:
                           sub_label: Optional[str] = None):
         """Добавляет одиночную вертикальную линию для отрисовки."""
         self.renderer.add_vertical_line(x, y_min, y_max, color, style, label, sub_label)
-        # self.redraw()
 
     def add_vertical_lines_group(self, lines: List[VerticalLineInfo],
                                  color: str,
@@ -64,7 +62,6 @@ class Drawer:
             label: Метка группы для легенды
         """
         self.renderer.add_vertical_lines_group(lines, color, label)
-        # self.redraw()
 
     def add_interval(self, left: float, right: float,
                      color: str = 'yellow',

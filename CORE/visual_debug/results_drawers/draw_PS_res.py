@@ -2,25 +2,34 @@ import sys
 from math import sin
 
 import matplotlib.pyplot as plt
+from pyparsing import lineStart
 
 from CORE import Signal
 from CORE.visual_debug import PS_Res
-from CORE.visual_debug.plt_visualisation import Drawer
+from CORE.visual_debug.plt_visualisation import Drawer, VerticalLineInfo
+
 
 
 class DrawPS_Res:
-    def __init__(self, ps_res_obj: PS_Res):
+    def __init__(self, ps_res_obj: PS_Res, padding_procents: float = 20):
         self.ps_res = ps_res_obj
         self.fig, ax = plt.subplots(figsize=(10, 4))
         self.drawer = Drawer(ax=ax, is_user_point_needed=True)
+        self.padding_procents = padding_procents
+        self.y_min, self.ymax = ax.get_ylim()
 
     def get_fig(self):
         cropped_signal = self.ps_res.signal.get_cropped_with_padding(
             coord_left=self.ps_res.left_coord,
             coord_right=self.ps_res.right_coord,
-            padding_percent=20
+            padding_percent=self.padding_procents
         )
         self.drawer.add_signal(signal=cropped_signal, color='black', name="исходный сигнал")
+
+        self.drawer.add_interval(left=self.ps_res.left_coord, right=self.ps_res.right_coord, color="blue", alpha=0.1)
+
+        lines = [VerticalLineInfo(x=x, y_max=self.ymax, y_min=self.y_min) for x in self.ps_res.res_coords]
+        self.drawer.add_vertical_lines_group(lines=lines, color="blue", label="найденные точки")
         self.drawer.redraw()
 
         return self.fig
