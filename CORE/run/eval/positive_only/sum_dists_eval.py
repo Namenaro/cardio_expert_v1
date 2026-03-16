@@ -4,7 +4,7 @@ from typing import Optional, Dict, List
 
 from CORE.datasets_wrappers.form_associated.parametrised_dataset import ParametrisedDataset
 from CORE.run import Exemplar
-from CORE.run.eval.eval import BaseEvaluator
+from CORE.run.eval.base_eval import BaseEvaluator
 
 class SumDistsEval(BaseEvaluator):
     """
