@@ -44,7 +44,7 @@ class DrawPS_Res:
         # Если измвестна верная точка для этого шага, то их тоже рисуем
         if self.ground_true_point:
             self.drawer.add_vertical_line(x=self.ground_true_point, y_max=self.ymax, y_min=self.y_min, color="black",
-                                          label="dfdfdf")
+                                          label="true")
 
 
         self.drawer.redraw()
