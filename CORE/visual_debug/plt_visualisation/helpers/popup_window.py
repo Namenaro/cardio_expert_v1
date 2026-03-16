@@ -25,6 +25,10 @@ class PopupWindow:
         self.on_user_point_set = on_user_point_set
         self.on_closing = on_closing
         self.is_user_point_needed = is_user_point_needed
+
+        # Локальная копия пользовательской точки для попапа
+        self.local_user_point = None
+
         self.window = None
         self.fig = None
         self.ax = None
@@ -47,6 +51,9 @@ class PopupWindow:
 
         # Создаем новое окно и фигуру
         self.fig, self.ax = plt.subplots(figsize=(16, 8))
+
+        # Инициализируем локальную точку из renderer при открытии
+        self.local_user_point = self.renderer.user_setted_center
 
         # Отрисовываем содержимое
         self._draw_content()
@@ -135,11 +142,9 @@ class PopupWindow:
 
             # Если нужна подпись рядом с точкой
             if point_info.label and point_info.show_label_near_point:
-                # Смещение подписи
                 label_offset_x = getattr(self.renderer, 'point_label_offset_x', 0.02)
                 label_offset_y = getattr(self.renderer, 'point_label_offset_y', 0.05)
 
-                # Добавляем подпись справа сверху от точки
                 self.ax.text(point_info.x + label_offset_x, point_info.y + label_offset_y,
                              point_info.label,
                              fontsize=8,
@@ -164,9 +169,9 @@ class PopupWindow:
         self.ax.grid(True, 'major', color=self.renderer.major_grid_color, zorder=0)
         self.ax.grid(True, 'minor', color=self.renderer.minor_grid_color, linewidth=0.5, zorder=0)
 
-        # Отрисовываем пользовательскую точку если она установлена и нужна
-        if self.is_user_point_needed and self.renderer.user_setted_center is not None:
-            self.user_line = self.ax.axvline(x=self.renderer.user_setted_center,
+        # Отрисовываем пользовательскую точку если она установлена и нужна (используем локальную копию)
+        if self.is_user_point_needed and self.local_user_point is not None:
+            self.user_line = self.ax.axvline(x=self.local_user_point,
                                              color='black',
                                              linewidth=2,
                                              linestyle='--',
@@ -183,7 +188,9 @@ class PopupWindow:
             self.ax.legend(handles=all_handles)
 
     def _draw_vertical_line(self, ax: plt.Axes, line_info):
-        """Рисует вертикальную линию и её подписи (скопировано из SignalRenderer)."""
+        """Рисует вертикальную линию и её подписи."""
+        import random
+
         # Рисуем вертикальную линию
         ax.axvline(x=line_info.x, ymin=line_info.y_min, ymax=line_info.y_max,
                    color=line_info.color,
@@ -192,50 +199,38 @@ class PopupWindow:
 
         # Добавляем подписи, если они есть
         if line_info.label or line_info.sub_label:
-            self._add_vertical_line_labels(ax, line_info)
+            # Получаем текущие пределы по y
+            y_limits = ax.get_ylim()
+            y_min_total, y_max_total = y_limits
 
-    def _add_vertical_line_labels(self, ax: plt.Axes, line_info):
-        """Добавляет подписи к вертикальной линии (скопировано из SignalRenderer)."""
-        import random
+            # Вычисляем высоту графика
+            y_height = y_max_total - y_min_total
 
-        # Получаем текущие пределы по y
-        y_limits = ax.get_ylim()
-        y_min_total, y_max_total = y_limits
+            # Вычисляем позиции для подписей на основе y_min и y_max линии
+            y_line_min = y_min_total + line_info.y_min * y_height
+            y_line_max = y_min_total + line_info.y_max * y_height
+            y_line_height = y_line_max - y_line_min
 
-        # Вычисляем высоту графика
-        y_height = y_max_total - y_min_total
+            # Смещение подписи вправо
+            label_x_offset = getattr(self.renderer, 'label_x_offset', 0.01)
 
-        # Вычисляем позиции для подписей на основе y_min и y_max линии
-        y_line_min = y_min_total + line_info.y_min * y_height
-        y_line_max = y_min_total + line_info.y_max * y_height
-        y_line_height = y_line_max - y_line_min
+            # Позиция для главной подписи (верхняя половина линии)
+            if line_info.label:
+                y_label_pos = y_line_min + y_line_height * (0.5 + random.uniform(0, 0.5))
+                ax.text(line_info.x + label_x_offset, y_label_pos, line_info.label,
+                        fontsize=9, color=line_info.color,
+                        verticalalignment='center', horizontalalignment='left',
+                        bbox=dict(boxstyle='round,pad=0.2', facecolor='white',
+                                  edgecolor='none', alpha=0.7), zorder=4)
 
-        # Смещение подписи вправо (можно вынести в параметры renderer)
-        label_x_offset = getattr(self.renderer, 'label_x_offset', 0.01)
-
-        # Позиция для главной подписи (верхняя половина линии)
-        if line_info.label:
-            # Случайная позиция в верхней половине линии (от середины до верха)
-            y_label_pos = y_line_min + y_line_height * (0.5 + random.uniform(0, 0.5))
-
-            # Добавляем главную подпись
-            ax.text(line_info.x + label_x_offset, y_label_pos, line_info.label,
-                    fontsize=9, color=line_info.color,
-                    verticalalignment='center', horizontalalignment='left',
-                    bbox=dict(boxstyle='round,pad=0.2', facecolor='white',
-                              edgecolor='none', alpha=0.7), zorder=4)
-
-        # Позиция для дополнительной подписи (нижняя половина линии)
-        if line_info.sub_label:
-            # Случайная позиция в нижней половине линии (от низа до середины)
-            y_sub_label_pos = y_line_min + y_line_height * random.uniform(0, 0.5)
-
-            # Добавляем дополнительную подпись
-            ax.text(line_info.x + label_x_offset, y_sub_label_pos, line_info.sub_label,
-                    fontsize=8, color=line_info.color, style='italic',
-                    verticalalignment='center', horizontalalignment='left',
-                    bbox=dict(boxstyle='round,pad=0.2', facecolor='white',
-                              edgecolor='none', alpha=0.7), zorder=4)
+            # Позиция для дополнительной подписи (нижняя половина линии)
+            if line_info.sub_label:
+                y_sub_label_pos = y_line_min + y_line_height * random.uniform(0, 0.5)
+                ax.text(line_info.x + label_x_offset, y_sub_label_pos, line_info.sub_label,
+                        fontsize=8, color=line_info.color, style='italic',
+                        verticalalignment='center', horizontalalignment='left',
+                        bbox=dict(boxstyle='round,pad=0.2', facecolor='white',
+                                  edgecolor='none', alpha=0.7), zorder=4)
 
     def _update_user_line(self, x: float):
         """Обновляет позицию пользовательской линии без полной перерисовки."""
@@ -249,15 +244,15 @@ class PopupWindow:
             except:
                 pass
 
+        # Обновляем локальную копию
+        self.local_user_point = x
+
         # Создаем новую линию
         self.user_line = self.ax.axvline(x=x,
                                          color='black',
                                          linewidth=2,
                                          linestyle='--',
                                          zorder=4)
-
-        # Обновляем renderer
-        self.renderer.set_user_point(x)
 
         # Перерисовываем только canvas
         self.fig.canvas.draw_idle()
@@ -270,12 +265,13 @@ class PopupWindow:
         # Правая кнопка - установка точки
         if event.button == 3:
             self._update_user_line(event.xdata)
+            # Вызываем колбэк с новой точкой
             self.on_user_point_set(event.xdata)
 
         # Левая кнопка - начало перетаскивания (если кликнули близко к линии)
-        elif event.button == 1 and self.user_line and self.renderer.user_setted_center is not None:
+        elif event.button == 1 and self.user_line and self.local_user_point is not None:
             # Проверяем, кликнули ли рядом с линией (в пределах 0.02 по оси X)
-            if abs(event.xdata - self.renderer.user_setted_center) < 0.02:
+            if abs(event.xdata - self.local_user_point) < 0.02:
                 self.dragging = True
                 self.drag_start_x = event.xdata
 
@@ -286,6 +282,7 @@ class PopupWindow:
 
         # Обновляем позицию линии при перетаскивании
         self._update_user_line(event.xdata)
+        # Вызываем колбэк с новой точкой
         self.on_user_point_set(event.xdata)
 
     def _on_mouse_release(self, event):
@@ -296,7 +293,8 @@ class PopupWindow:
 
     def _on_popup_closing(self):
         """Вызывается при закрытии попап-окна."""
-        # Вызываем колбэк закрытия, если он есть
+        # !!! ВАЖНО: НЕ обновляем renderer.user_setted_center при закрытии !!!
+        # Просто вызываем колбэк закрытия
         if self.on_closing:
             self.on_closing()
         self._cleanup()
@@ -310,10 +308,13 @@ class PopupWindow:
             self.ax = None
             self.canvas = None
             self.user_line = None
+            self.local_user_point = None
 
     def update_content(self):
         """Обновляет содержимое окна."""
         if self.window is not None and self.ax is not None:
+            # Обновляем локальную копию из renderer (на случай, если точка изменилась извне)
+            self.local_user_point = self.renderer.user_setted_center
             self._draw_content()
             self.fig.canvas.draw_idle()
             self.window.lift()  # Поднимаем окно наверх
