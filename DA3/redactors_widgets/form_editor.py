@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
 from DA3.redactors_widgets.base_editor import BaseEditor
 from DA3 import app_signals
 from CORE.db_dataclasses import Form
+from CORE.paths import EXEMPLARS_DATASETS_PATH  # Импортируем константу
 from copy import deepcopy
 
 
@@ -59,6 +60,22 @@ class FormEditor(BaseEditor):
         image_layout.addWidget(self.browse_image_button)
         layout.addLayout(image_layout)
 
+        # Путь к датасету (НОВЫЙ БЛОК)
+        dataset_label = QLabel("Путь к датасету:")
+        dataset_label.setStyleSheet("font-weight: bold;")
+        layout.addWidget(dataset_label)
+
+        dataset_layout = QHBoxLayout()
+        self.dataset_path_edit = QLineEdit()
+        self.dataset_path_edit.setPlaceholderText("Выберите файл датасета")
+        self.dataset_path_edit.setReadOnly(True)
+        dataset_layout.addWidget(self.dataset_path_edit)
+
+        self.browse_dataset_button = QPushButton("Обзор...")
+        self.browse_dataset_button.clicked.connect(self._browse_dataset)
+        dataset_layout.addWidget(self.browse_dataset_button)
+        layout.addLayout(dataset_layout)
+
         layout.addStretch()
         return widget
 
@@ -88,6 +105,20 @@ class FormEditor(BaseEditor):
         if file_path:
             self.image_path_edit.setText(file_path)
 
+    def _browse_dataset(self) -> None:
+        """Открытие диалога выбора файла датасета (НОВАЯ ФУНКЦИЯ)"""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Выберите датасет",
+            EXEMPLARS_DATASETS_PATH,  # Используем константу для начальной папки
+            "Файлы датасетов (*.csv *.json *.xlsx *.txt);;Все файлы (*.*)"  # Можно расширить фильтры
+        )
+
+        if file_path:
+            # Сохраняем только имя файла, без абсолютного пути
+            file_name = file_path.split('/')[-1] if '/' in file_path else file_path.split('\\')[-1]
+            self.dataset_path_edit.setText(file_name)
+
     def _load_data_to_ui(self) -> None:
         """Загрузка данных в интерфейс"""
         # Загружаем данные из оригинального объекта
@@ -96,6 +127,10 @@ class FormEditor(BaseEditor):
 
         if self.original_data.path_to_pic:
             self.image_path_edit.setText(self.original_data.path_to_pic)
+
+        # Загрузка пути к датасету из данных формы
+        if self.original_data.path_to_dataset:
+            self.dataset_path_edit.setText(self.original_data.path_to_dataset)
 
     def _collect_data_from_ui(self) -> Form:
         """Сбор данных из интерфейса"""
@@ -106,6 +141,8 @@ class FormEditor(BaseEditor):
         form_copy.name = self.name_edit.text().strip()
         form_copy.comment = self.comment_edit.toPlainText().strip()
         form_copy.path_to_pic = self.image_path_edit.text().strip()
+        # Добавляем сбор данных о датасете
+        form_copy.path_to_dataset = self.dataset_path_edit.text().strip()
 
         return form_copy
 

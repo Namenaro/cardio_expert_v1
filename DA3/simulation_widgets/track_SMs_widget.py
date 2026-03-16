@@ -2,9 +2,6 @@ import sys
 from math import sin
 
 import matplotlib.pyplot as plt
-from dataclasses import dataclass
-from typing import Dict, List
-
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit, QApplication, QMainWindow
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
