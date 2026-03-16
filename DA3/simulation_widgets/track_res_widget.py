@@ -1,7 +1,5 @@
 import sys
 from math import sin
-from dataclasses import dataclass
-from typing import List
 
 import matplotlib.pyplot as plt
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit, QApplication, QMainWindow
@@ -10,15 +8,6 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from CORE import Signal
 from CORE.visual_debug import TrackRes, PS_Res
 from CORE.visual_debug.results_drawers.draw_track_res import DrawTrackRes
-
-
-@dataclass
-class PS_Res:
-    id: int  # id пазла в базе
-    signal: Signal  # сигнал экземпляра на котором ищем точку
-    left_coord: float  # левая координата, заданная в настройках шага, которому принадлежит этот PS
-    right_coord: float  # правая. Вместе с левой ограничивает интервал, на котором шаг допускает поиск целевой точки
-    res_coords: List[float]  # найденные "особые" (согласно логике пазла) точки
 
 
 class TrackResWidget(QWidget):
