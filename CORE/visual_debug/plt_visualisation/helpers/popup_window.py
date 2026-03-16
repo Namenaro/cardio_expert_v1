@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 from typing import Optional, Callable
-from CORE.visual_debug.plt_visualisation.helpers.base_drawer import BasePlotDrawer
 
 
 class PopupWindow:
@@ -11,7 +10,6 @@ class PopupWindow:
     def __init__(self, renderer, on_closing: Optional[Callable[[], None]] = None):
         self.renderer = renderer
         self.on_closing = on_closing
-        self._drawer = BasePlotDrawer()  # Используем тот же рисовальщик
 
         self.window = None
         self.fig = None
@@ -30,7 +28,7 @@ class PopupWindow:
         from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
         self.fig, self.ax = plt.subplots(figsize=(16, 8))
-        self._draw_content()
+        self.renderer.draw(self.ax)  # Просто вызываем draw у renderer'а
 
         self.window = tk.Tk()
         self.window.title("Увеличенный вид сигнала")
@@ -46,18 +44,6 @@ class PopupWindow:
 
         self.fig.tight_layout()
         self.window.mainloop()
-
-    def _draw_content(self):
-        """Отрисовывает содержимое используя BasePlotDrawer."""
-        self._drawer.draw(
-            ax=self.ax,
-            signals=self.renderer.signals,
-            vertical_lines=self.renderer.vertical_lines,
-            vertical_line_groups=self.renderer.vertical_line_groups,
-            intervals=self.renderer.intervals,
-            points=self.renderer.points,
-            segments=self.renderer.segments
-        )
 
     def _on_closing(self):
         """Обработчик закрытия окна."""
@@ -76,8 +62,7 @@ class PopupWindow:
     def update_content(self):
         """Обновляет содержимое окна."""
         if self.window and self.ax:
-            self._draw_content()
-            self.fig.canvas.draw_idle()
+            self.renderer.draw(self.ax)
             self.window.lift()
 
     def is_alive(self) -> bool:
