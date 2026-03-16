@@ -125,6 +125,17 @@ class Drawer:
         """Перерисовывает основной график."""
         self.renderer.draw(self.ax)
 
+    def add_point(self, x: float, y: float, color: str = 'red', label: Optional[str] = None,
+                  show_label_near_point: bool = False, zorder: int = 5):
+        """Добавляет точку для отрисовки."""
+        self.renderer.add_point(x, y, color, label, show_label_near_point, zorder)
+
+    def add_segment(self, x1: float, y1: float, x2: float, y2: float,
+                    color: str = 'blue', style: LineStyle = LineStyle.SOLID,
+                    label: Optional[str] = None, zorder: int = 4):
+        """Добавляет отрезок для отрисовки."""
+        self.renderer.add_segment(x1, y1, x2, y2, color, style, label, zorder)
+
 
 # Пример использования
 if __name__ == "__main__":

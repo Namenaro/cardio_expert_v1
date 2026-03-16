@@ -8,7 +8,7 @@ from sympy.abc import alpha
 from CORE.signal_1d import Signal
 from CORE.visual_debug.plt_visualisation.helpers.drawinfg_entities_dataclasses import SignalInfo, VerticalLineInfo, \
     VerticalLineGroupInfo, \
-    IntervalInfo, LineStyle
+    IntervalInfo, LineStyle, PointInfo, SegmentInfo
 
 
 class SignalRenderer:
@@ -23,6 +23,8 @@ class SignalRenderer:
         self.vertical_line_groups: List[VerticalLineGroupInfo] = []  # Группы линий
         self.intervals: List[IntervalInfo] = []
         self.user_setted_center: Optional[float] = None
+        self.points: List[PointInfo] = []
+        self.segments: List[SegmentInfo] = []
 
         # Настройки миллиметровки
         self.minor_cell_mv = 0.1
@@ -144,6 +146,41 @@ class SignalRenderer:
             ax.axvline(x=self.user_setted_center, color='black', linewidth=2, linestyle='--',
                        label='Центр пользователя', zorder=4)
 
+        # Рисуем отрезки
+        for segment_info in self.segments:
+            ax.plot([segment_info.x1, segment_info.x2],
+                    [segment_info.y1, segment_info.y2],
+                    color=segment_info.color,
+                    linestyle=segment_info.style.value,
+                    label=segment_info.label,
+                    zorder=segment_info.zorder)
+
+        # Рисуем точки
+        for point_info in self.points:
+            # Рисуем саму точку
+            ax.scatter(point_info.x, point_info.y,
+                       color=point_info.color,
+                       s=50,  # размер точки
+                       zorder=point_info.zorder,
+                       label=point_info.label if point_info.label and not point_info.show_label_near_point else None)
+
+            # Если нужна подпись рядом с точкой
+            if point_info.label and point_info.show_label_near_point:
+                # Смещение подписи (можно вынести в параметры класса)
+                label_offset_x = getattr(self, 'point_label_offset_x', 0.02)
+                label_offset_y = getattr(self, 'point_label_offset_y', 0.05)
+
+                # Добавляем подпись справа сверху от точки
+                ax.text(point_info.x + label_offset_x, point_info.y + label_offset_y,
+                        point_info.label,
+                        fontsize=8,
+                        color=point_info.color,
+                        verticalalignment='bottom',
+                        horizontalalignment='left',
+                        bbox=dict(boxstyle='round,pad=0.2', facecolor='white',
+                                  edgecolor='none', alpha=0.7),
+                        zorder=point_info.zorder + 1)
+
         # Настройка внешнего вида
         ax.set_xlabel('Время, с')
         ax.set_ylabel('Амплитуда, мВ')
@@ -232,3 +269,24 @@ class SignalRenderer:
             ax.text(line_info.x + self.label_x_offset, y_sub_label_pos, line_info.sub_label, fontsize=8,
                     color=line_info.color, style='italic', verticalalignment='center', horizontalalignment='left',
                     bbox=dict(boxstyle='round,pad=0.2', facecolor='white', edgecolor='none', alpha=0.7), zorder=4)
+
+    def add_point(self, x: float, y: float, color: str = 'red', label: Optional[str] = None,
+                  show_label_near_point: bool = False, zorder: int = 5):
+        """
+        Добавляет точку для отрисовки.
+
+        Args:
+            x: координата x
+            y: координата y
+            color: цвет точки
+            label: текст подписи (если None или show_label_near_point=False, подпись не отображается)
+            show_label_near_point: если True, подпись отображается рядом с точкой, а не в легенде
+            zorder: порядок отрисовки
+        """
+        self.points.append(PointInfo(x, y, color, label, show_label_near_point, zorder))
+
+    def add_segment(self, x1: float, y1: float, x2: float, y2: float,
+                    color: str = 'blue', style: LineStyle = LineStyle.SOLID,
+                    label: Optional[str] = None, zorder: int = 4):
+        """Добавляет отрезок для отрисовки."""
+        self.segments.append(SegmentInfo(x1, y1, x2, y2, color, style, label, zorder))

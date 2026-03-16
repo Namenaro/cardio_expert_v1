@@ -50,3 +50,27 @@ class IntervalInfo:
     color: str = 'yellow'
     alpha: Optional[float] = None  # Если None, используется глобальная прозрачность из SignalRenderer
     label: Optional[str] = None
+
+
+@dataclass
+class PointInfo:
+    """Хранит информацию о точке для отрисовки"""
+    x: float
+    y: float
+    color: str
+    label: Optional[str] = None
+    show_label_near_point: bool = False  # Новый флаг
+    zorder: int = 5
+
+
+@dataclass
+class SegmentInfo:
+    """Хранит информацию об отрезке для отрисовки"""
+    x1: float
+    y1: float
+    x2: float
+    y2: float
+    color: str
+    style: LineStyle = LineStyle.SOLID
+    label: Optional[str] = None
+    zorder: int = 4

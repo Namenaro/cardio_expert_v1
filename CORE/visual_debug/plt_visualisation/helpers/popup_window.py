@@ -100,13 +100,13 @@ class PopupWindow:
 
         # Затем одиночные вертикальные линии
         for line_info in self.renderer.vertical_lines:
-            self.renderer._draw_vertical_line(self.ax, line_info)
+            self._draw_vertical_line(self.ax, line_info)
 
         # Затем группы вертикальных линий
         legend_elements = []
         for group_info in self.renderer.vertical_line_groups:
             for line_info in group_info.lines:
-                self.renderer._draw_vertical_line(self.ax, line_info)
+                self._draw_vertical_line(self.ax, line_info)
 
             if group_info.label:
                 from matplotlib.lines import Line2D
@@ -114,6 +114,41 @@ class PopupWindow:
                                               color=group_info.color,
                                               linestyle='-',
                                               label=group_info.label))
+
+        # === НОВЫЙ КОД: Рисуем отрезки ===
+        for segment_info in self.renderer.segments:
+            self.ax.plot([segment_info.x1, segment_info.x2],
+                         [segment_info.y1, segment_info.y2],
+                         color=segment_info.color,
+                         linestyle=segment_info.style.value,
+                         label=segment_info.label,
+                         zorder=segment_info.zorder)
+
+        # Рисуем точки
+        for point_info in self.renderer.points:
+            # Рисуем саму точку
+            self.ax.scatter(point_info.x, point_info.y,
+                            color=point_info.color,
+                            s=50,
+                            zorder=point_info.zorder,
+                            label=point_info.label if point_info.label and not point_info.show_label_near_point else None)
+
+            # Если нужна подпись рядом с точкой
+            if point_info.label and point_info.show_label_near_point:
+                # Смещение подписи
+                label_offset_x = getattr(self.renderer, 'point_label_offset_x', 0.02)
+                label_offset_y = getattr(self.renderer, 'point_label_offset_y', 0.05)
+
+                # Добавляем подпись справа сверху от точки
+                self.ax.text(point_info.x + label_offset_x, point_info.y + label_offset_y,
+                             point_info.label,
+                             fontsize=8,
+                             color=point_info.color,
+                             verticalalignment='bottom',
+                             horizontalalignment='left',
+                             bbox=dict(boxstyle='round,pad=0.2', facecolor='white',
+                                       edgecolor='none', alpha=0.7),
+                             zorder=point_info.zorder + 1)
 
         # Настройка внешнего вида
         self.ax.set_xlabel('Время, с')
@@ -146,6 +181,61 @@ class PopupWindow:
 
         if all_handles:
             self.ax.legend(handles=all_handles)
+
+    def _draw_vertical_line(self, ax: plt.Axes, line_info):
+        """Рисует вертикальную линию и её подписи (скопировано из SignalRenderer)."""
+        # Рисуем вертикальную линию
+        ax.axvline(x=line_info.x, ymin=line_info.y_min, ymax=line_info.y_max,
+                   color=line_info.color,
+                   linestyle=line_info.style.value,
+                   zorder=3, alpha=0.8)
+
+        # Добавляем подписи, если они есть
+        if line_info.label or line_info.sub_label:
+            self._add_vertical_line_labels(ax, line_info)
+
+    def _add_vertical_line_labels(self, ax: plt.Axes, line_info):
+        """Добавляет подписи к вертикальной линии (скопировано из SignalRenderer)."""
+        import random
+
+        # Получаем текущие пределы по y
+        y_limits = ax.get_ylim()
+        y_min_total, y_max_total = y_limits
+
+        # Вычисляем высоту графика
+        y_height = y_max_total - y_min_total
+
+        # Вычисляем позиции для подписей на основе y_min и y_max линии
+        y_line_min = y_min_total + line_info.y_min * y_height
+        y_line_max = y_min_total + line_info.y_max * y_height
+        y_line_height = y_line_max - y_line_min
+
+        # Смещение подписи вправо (можно вынести в параметры renderer)
+        label_x_offset = getattr(self.renderer, 'label_x_offset', 0.01)
+
+        # Позиция для главной подписи (верхняя половина линии)
+        if line_info.label:
+            # Случайная позиция в верхней половине линии (от середины до верха)
+            y_label_pos = y_line_min + y_line_height * (0.5 + random.uniform(0, 0.5))
+
+            # Добавляем главную подпись
+            ax.text(line_info.x + label_x_offset, y_label_pos, line_info.label,
+                    fontsize=9, color=line_info.color,
+                    verticalalignment='center', horizontalalignment='left',
+                    bbox=dict(boxstyle='round,pad=0.2', facecolor='white',
+                              edgecolor='none', alpha=0.7), zorder=4)
+
+        # Позиция для дополнительной подписи (нижняя половина линии)
+        if line_info.sub_label:
+            # Случайная позиция в нижней половине линии (от низа до середины)
+            y_sub_label_pos = y_line_min + y_line_height * random.uniform(0, 0.5)
+
+            # Добавляем дополнительную подпись
+            ax.text(line_info.x + label_x_offset, y_sub_label_pos, line_info.sub_label,
+                    fontsize=8, color=line_info.color, style='italic',
+                    verticalalignment='center', horizontalalignment='left',
+                    bbox=dict(boxstyle='round,pad=0.2', facecolor='white',
+                              edgecolor='none', alpha=0.7), zorder=4)
 
     def _update_user_line(self, x: float):
         """Обновляет позицию пользовательской линии без полной перерисовки."""
