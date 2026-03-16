@@ -4,7 +4,7 @@ from CORE import Signal
 from CORE.db_dataclasses import Form
 from CORE.exeptions import SchemaError
 from CORE.run import Exemplar
-from CORE.run.eval import Evaluator
+from CORE.run.eval import BaseEvaluator
 from CORE.run.exemplars_pool import ExemplarsPool
 from CORE.run.r_steps_creator import RStepsListCreator
 from CORE.run.r_step import RStep
@@ -16,7 +16,7 @@ class RForm:
     Основной класс, экспортируемый библиотекой устновщика форм - запускает устновку формы на одномерном сигнале, и выдает несколько вариантов ее установки
     """
 
-    def __init__(self, form: Form, evaluator: Evaluator, max_pool_size: int = 5):
+    def __init__(self, form: Form, evaluator: BaseEvaluator, max_pool_size: int = 5):
         form = form
         schema = Schema(form)
         sucess = schema.compile()
