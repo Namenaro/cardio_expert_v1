@@ -3,12 +3,10 @@ from typing import Optional, List
 
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
-from sympy.abc import alpha
 
 from CORE.signal_1d import Signal
 from CORE.visual_debug.plt_visualisation.helpers.drawinfg_entities_dataclasses import SignalInfo, VerticalLineInfo, \
-    VerticalLineGroupInfo, \
-    IntervalInfo, LineStyle, PointInfo, SegmentInfo
+    VerticalLineGroupInfo, IntervalInfo, LineStyle, PointInfo, SegmentInfo
 
 
 class SignalRenderer:
@@ -22,7 +20,6 @@ class SignalRenderer:
         self.vertical_lines: List[VerticalLineInfo] = []  # Одиночные линии
         self.vertical_line_groups: List[VerticalLineGroupInfo] = []  # Группы линий
         self.intervals: List[IntervalInfo] = []
-        self.user_setted_center: Optional[float] = None
         self.points: List[PointInfo] = []
         self.segments: List[SegmentInfo] = []
 
@@ -66,9 +63,7 @@ class SignalRenderer:
         for line in lines:
             # Создаем новую линию с цветом группы, но сохраняем остальные параметры
             group_line = VerticalLineInfo(x=line.x, y_min=line.y_min, y_max=line.y_max, color=color,
-                                          # Используем цвет группы
                                           style=line.style, label=line.label,
-                                          # Индивидуальные подписи сохраняются для отображения на графике
                                           sub_label=line.sub_label)
             group_lines.append(group_line)
 
@@ -87,14 +82,6 @@ class SignalRenderer:
             label: Подпись для легенды
         """
         self.intervals.append(IntervalInfo(left, right, color, alpha, label))
-
-    def set_user_point(self, x: float):
-        """Устанавливает пользовательскую точку."""
-        self.user_setted_center = x
-
-    def get_user_point(self) -> Optional[float]:
-        """Возвращает текущую пользовательскую точку."""
-        return self.user_setted_center
 
     def draw(self, ax: plt.Axes):
         """
@@ -140,11 +127,6 @@ class SignalRenderer:
             if group_info.label:
                 from matplotlib.lines import Line2D
                 legend_elements.append(Line2D([0], [0], color=group_info.color, linestyle='-', label=group_info.label))
-
-        # Пользовательская точка (самый передний план)
-        if self.user_setted_center is not None:
-            ax.axvline(x=self.user_setted_center, color='black', linewidth=2, linestyle='--',
-                       label='Центр пользователя', zorder=4)
 
         # Рисуем отрезки
         for segment_info in self.segments:
@@ -198,8 +180,12 @@ class SignalRenderer:
 
         # Добавляем легенду
         # Собираем все существующие легенды из графиков
-        has_labels = (any(s.name for s in self.signals) or any(l.label for l in self.vertical_lines) or any(
-            i.label for i in self.intervals) or self.user_setted_center is not None or legend_elements)
+        has_labels = (any(s.name for s in self.signals) or
+                      any(l.label for l in self.vertical_lines) or
+                      any(i.label for i in self.intervals) or
+                      legend_elements or
+                      any(p.label for p in self.points) or
+                      any(s.label for s in self.segments))
 
         if has_labels:
             # Получаем текущие элементы легенды из графика

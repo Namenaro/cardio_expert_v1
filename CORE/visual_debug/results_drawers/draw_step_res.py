@@ -11,7 +11,7 @@ class DrawStepRes:
         Каждая группа точек (от одного трека) отображается своим цветом."""
         self.res = res_obj
         self.fig, ax = plt.subplots(figsize=(10, 4))
-        self.drawer = Drawer(ax=ax, is_user_point_needed=True)
+        self.drawer = Drawer(ax=ax)
         self.padding_percent = padding_percent
         self.y_min, self.ymax = ax.get_ylim()
 

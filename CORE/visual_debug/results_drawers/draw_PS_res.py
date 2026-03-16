@@ -22,7 +22,7 @@ class DrawPS_Res:
         """
         self.ps_res = ps_res_obj
         self.fig, ax = plt.subplots(figsize=(10, 4))
-        self.drawer = Drawer(ax=ax, is_user_point_needed=True)
+        self.drawer = Drawer(ax=ax)
         self.padding_procents = padding_procents
         self.y_min, self.ymax = ax.get_ylim()
         self.ground_true_point = ground_true_point

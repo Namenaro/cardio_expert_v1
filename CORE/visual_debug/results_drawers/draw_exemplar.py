@@ -17,7 +17,7 @@ class DrawExemplar:
         """
         self.res = res_obj
         self.fig, ax = plt.subplots(figsize=(10, 4))
-        self.drawer = Drawer(ax=ax, is_user_point_needed=True)
+        self.drawer = Drawer(ax=ax)
         self.padding_percent = padding_percent
         self.color = color
         self.y_min, self.ymax = ax.get_ylim()

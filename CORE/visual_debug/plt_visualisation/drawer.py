@@ -8,31 +8,27 @@ from CORE.visual_debug.plt_visualisation.helpers.renderer import SignalRenderer
 
 class Drawer:
     """
-    Основной класс для визуализации 1-d ЭКГ сигналов на миллиметровке, а также линий и интевалов поверх ЭКГ, с подписями.
+    Основной класс для визуализации 1-d ЭКГ сигналов на миллиметровке, а также линий и интервалов поверх ЭКГ, с подписями.
     Управляет основным графиком и всплывающим окном.
 
     :param ax: Объект matplotlib.axes.Axes для отрисовки
-    :param is_user_point_needed: Разрешить установку пользовательской точки. По умолчанию True. Получить установленную пользователем точку можно через get_user_point()
 
     Класс обеспечивает:
         - отрисовку одного или нескольких именованных сигналов на общем графике
         - добавление вертикальных линий с поддержкой основной и дополнительной подписей
         - группировку вертикальных линий с общей записью в легенде
         - выделение участков полупрозрачными интервалами
-        - интерактивную пользовательскую точку (одну) с возможностью перетаскивания. Для ее установки надо кликнуть правой кнопкой мыши в попап-окне
-        - всплывающее окно с панелью навигации (зум, перетасккивание и т.д.). Для выхова попап-окна нужно кликнуть левой кнопкой мыши по основному ax
+        - всплывающее окно с панелью навигации (зум, перетаскивание и т.д.). Для вызова попап-окна нужно кликнуть левой кнопкой мыши по основному ax
     """
 
-    def __init__(self, ax: plt.Axes, is_user_point_needed: bool = True):
+    def __init__(self, ax: plt.Axes):
         """
         Args:
             ax: Объект Axes для отрисовки
-            is_user_point_needed: Флаг, разрешающий установку одной пользовательской точки
         """
         self.ax = ax
         self.renderer = SignalRenderer()
         self.popup: Optional[PopupWindow] = None
-        self.is_user_point_needed = is_user_point_needed
 
         # Подключаем обработчик кликов
         self.ax.figure.canvas.mpl_connect('button_press_event', self._on_click)
@@ -78,22 +74,10 @@ class Drawer:
             label: Подпись для легенды
         """
         self.renderer.add_interval(left, right, color, alpha, label)
-        # self.redraw()
-
-    def get_user_point(self) -> Optional[float]:
-        """Возвращает текущую пользовательскую точку."""
-        return self.renderer.get_user_point() if self.is_user_point_needed else None
-
-    def _set_point_by_user(self, x: float):
-        """Устанавливает пользовательскую точку и обновляет renderer."""
-        if not self.is_user_point_needed:
-            return
-        self.renderer.set_user_point(x)
 
     def _on_popup_closed(self):
         """Вызывается при закрытии попап-окна."""
-
-        # Перерисовываем основной график, чтобы показать актуальную точку
+        # Перерисовываем основной график
         self.redraw()
         # Очищаем ссылку на попап
         self.popup = None
@@ -115,9 +99,7 @@ class Drawer:
             # Создаем новое окно, если старого нет или оно закрыто
             self.popup = PopupWindow(
                 self.renderer,
-                self._set_point_by_user,
-                self._on_popup_closed,
-                self.is_user_point_needed
+                self._on_popup_closed
             )
             self.popup.show()
 
@@ -149,7 +131,7 @@ if __name__ == "__main__":
 
     # Создаем основной график
     fig, ax = plt.subplots(figsize=(10, 4))
-    drawer = Drawer(ax, is_user_point_needed=True)
+    drawer = Drawer(ax)  # Убрали is_user_point_needed
 
     # Добавляем сигнал
     drawer.add_signal(signal, color='blue', name='Тестовый сигнал')

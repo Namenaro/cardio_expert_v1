@@ -15,7 +15,7 @@ class DrawSM_Res:
 
         self.res = res_obj
         self.fig, ax = plt.subplots(figsize=(10, 4))
-        self.drawer = Drawer(ax=ax, is_user_point_needed=True)
+        self.drawer = Drawer(ax=ax)
         self.padding_procents = padding_procents
         self.y_min, self.ymax = ax.get_ylim()
 
