@@ -115,7 +115,7 @@ class PopupWindow:
                                               linestyle='-',
                                               label=group_info.label))
 
-        # === НОВЫЙ КОД: Рисуем отрезки ===
+        # Рисуем отрезки
         for segment_info in self.renderer.segments:
             self.ax.plot([segment_info.x1, segment_info.x2],
                          [segment_info.y1, segment_info.y2],
