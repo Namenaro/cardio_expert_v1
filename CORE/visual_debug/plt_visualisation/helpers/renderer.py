@@ -177,6 +177,10 @@ class SignalRenderer:
         ax.grid(True, 'major', color=self.major_grid_color, zorder=0)
         ax.grid(True, 'minor', color=self.minor_grid_color, linewidth=0.5, zorder=0)
 
+        # 👇 ИСПРАВЛЕНО: используем set_xmargin для отступа справа
+        ax.set_xmargin(0.15)  # 15% отступа справа (и слева тоже)
+
+    # 👇 ИЗМЕНЕНИЕ 2: Изменяем метод добавления легенды
     def _add_legend(self, ax: plt.Axes):
         legend_elements = []
         for group in self.vertical_line_groups:
@@ -188,4 +192,7 @@ class SignalRenderer:
         all_handles = list(current_handles) + legend_elements
 
         if all_handles:
-            ax.legend(handles=all_handles)
+            ax.legend(handles=all_handles,
+                      bbox_to_anchor=(1.05, 1),  # Справа от графика
+                      loc='upper left',  # Якорь легенды
+                      borderaxespad=0.)  # Без отступа от границы
