@@ -35,9 +35,9 @@ class FormService:
 
         cursor.execute('''
                    UPDATE form 
-                   SET name = ?, comment = ?, path_to_pic = ?
+                   SET name = ?, comment = ?, path_to_pic = ?, path_to_dataset = ?
                    WHERE id = ?
-               ''', (form.name, form.comment, form.path_to_pic, form.id))
+               ''', (form.name, form.comment, form.path_to_pic, form.path_to_dataset, form.id))
 
         logging.info(f"Осн. информация о форме {form.id} успешно обновлена")
         return form
