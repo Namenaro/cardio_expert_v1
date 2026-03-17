@@ -16,6 +16,9 @@ class SignalRenderer:
     Хранит контент и умеет рисовать его на любом ax.
     """
 
+    # Константа прозрачности по умолчанию для точек и сегментов
+    DEFAULT_ALPHA = 0.7
+
     def __init__(self):
         # Данные для отрисовки
         self.signals: List[SignalInfo] = []
@@ -36,6 +39,9 @@ class SignalRenderer:
         self.label_x_offset = 0.01
         self.point_label_offset_x = 0.02
         self.point_label_offset_y = 0.05
+
+        # Прозрачность для точек и сегментов (можно переопределить)
+        self.alpha = self.DEFAULT_ALPHA
 
     # === Методы добавления элементов ===
 
@@ -147,13 +153,15 @@ class SignalRenderer:
         for segment in self.segments:
             ax.plot([segment.x1, segment.x2], [segment.y1, segment.y2],
                     color=segment.color, linestyle=segment.style.value,
-                    label=segment.label, zorder=segment.zorder)
+                    label=segment.label, zorder=segment.zorder,
+                    alpha=self.alpha)  # Добавлена прозрачность
 
     def _draw_points(self, ax: plt.Axes):
         for point in self.points:
             ax.scatter(point.x, point.y, color=point.color, s=50,
                        zorder=point.zorder,
-                       label=point.label if point.label and not point.show_label_near_point else None)
+                       label=point.label if point.label and not point.show_label_near_point else None,
+                       alpha=self.alpha)  # Добавлена прозрачность
 
             if point.label and point.show_label_near_point:
                 ax.text(point.x + self.point_label_offset_x,
@@ -177,10 +185,8 @@ class SignalRenderer:
         ax.grid(True, 'major', color=self.major_grid_color, zorder=0)
         ax.grid(True, 'minor', color=self.minor_grid_color, linewidth=0.5, zorder=0)
 
-        # 👇 ИСПРАВЛЕНО: используем set_xmargin для отступа справа
         ax.set_xmargin(0.15)  # 15% отступа справа (и слева тоже)
 
-    # 👇 ИЗМЕНЕНИЕ 2: Изменяем метод добавления легенды
     def _add_legend(self, ax: plt.Axes):
         legend_elements = []
         for group in self.vertical_line_groups:

@@ -4,7 +4,8 @@ from CORE import Signal
 from CORE.db_dataclasses import Form
 from CORE.exeptions import SchemaError
 from CORE.run import Exemplar
-from CORE.run.eval import BaseEvaluator
+from CORE.run.eval.base_eval import BaseEvaluator
+
 from CORE.run.exemplars_pool import ExemplarsPool
 from CORE.run.r_steps_creator import RStepsListCreator
 from CORE.run.r_step import RStep
