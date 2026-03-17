@@ -14,15 +14,16 @@ class DrawExemplarsPool:
     GROUND_TRUTH_COLOR = '#000000'  # Черный
     SIGNAL_COLOR = '#0000FF'  # Синий
 
-    def __init__(self, pool: ExemplarsPool, padding_percent: float = 20):
+    def __init__(self, pool: ExemplarsPool, padding_percent: float = 20, show_legend: bool = True):
         """
         Создаёт fig и рисует на нём пул экземпляров.
 
         :param pool: объект ExemplarsPool для визуализации
         :param padding_percent: отступ от крайних точек в процентах
+        :param show_legend: показывать ли легенду
         """
         self.pool = pool
-        # ВАЖНО: добавляем constrained_layout=True
+        self.show_legend = show_legend
         self.fig, self.ax = plt.subplots(figsize=(10, 4), constrained_layout=True)
         self.drawer = Drawer(ax=self.ax)
         self.padding_percent = padding_percent
@@ -176,15 +177,19 @@ class DrawExemplarsPool:
 
                 self._add_exemplar_to_drawer(exemplar, color, label)
 
-        # Отрисовываем все элементы
-        self.drawer.redraw()
+                # Отрисовываем все элементы
+                self.drawer.redraw()
 
-        # Применяем границы с паддингом
-        x_min, x_max = self._calculate_x_limits()
-        self.ax.set_xlim(x_min, x_max)
-        self.ax.autoscale(enable=False, axis='x')
-        self.ax.autoscale(enable=True, axis='y')
+                # Если легенда не нужна - удаляем её
+                if not self.show_legend:
+                    legend = self.ax.get_legend()
+                    if legend is not None:
+                        legend.remove()
 
-        # НЕ НУЖНО: self.fig.tight_layout() - constrained_layout работает автоматически
+                # Применяем границы с паддингом
+                x_min, x_max = self._calculate_x_limits()
+                self.ax.set_xlim(x_min, x_max)
+                self.ax.autoscale(enable=False, axis='x')
+                self.ax.autoscale(enable=True, axis='y')
 
-        return self.fig
+                return self.fig
