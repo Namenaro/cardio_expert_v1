@@ -22,7 +22,8 @@ class DrawExemplarsPool:
         :param padding_percent: отступ от крайних точек в процентах
         """
         self.pool = pool
-        self.fig, self.ax = plt.subplots(figsize=(10, 4))
+        # ВАЖНО: добавляем constrained_layout=True
+        self.fig, self.ax = plt.subplots(figsize=(10, 4), constrained_layout=True)
         self.drawer = Drawer(ax=self.ax)
         self.padding_percent = padding_percent
 
@@ -183,5 +184,7 @@ class DrawExemplarsPool:
         self.ax.set_xlim(x_min, x_max)
         self.ax.autoscale(enable=False, axis='x')
         self.ax.autoscale(enable=True, axis='y')
+
+        # НЕ НУЖНО: self.fig.tight_layout() - constrained_layout работает автоматически
 
         return self.fig

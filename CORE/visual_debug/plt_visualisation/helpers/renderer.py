@@ -185,8 +185,6 @@ class SignalRenderer:
         ax.grid(True, 'major', color=self.major_grid_color, zorder=0)
         ax.grid(True, 'minor', color=self.minor_grid_color, linewidth=0.5, zorder=0)
 
-        ax.set_xmargin(0.15)  # 15% отступа справа (и слева тоже)
-
     def _add_legend(self, ax: plt.Axes):
         legend_elements = []
         for group in self.vertical_line_groups:
@@ -198,7 +196,20 @@ class SignalRenderer:
         all_handles = list(current_handles) + legend_elements
 
         if all_handles:
+            n_handles = len(all_handles)
+
+            if n_handles <= 3:
+                ncol = 1
+            elif n_handles <= 6:
+                ncol = 2
+            elif n_handles <= 9:
+                ncol = 3
+            else:
+                ncol = 4
+
+            # Увеличиваем отступ снизу, чтобы легенда точно не накладывалась
             ax.legend(handles=all_handles,
-                      bbox_to_anchor=(1.05, 1),  # Справа от графика
-                      loc='upper left',  # Якорь легенды
-                      borderaxespad=0.)  # Без отступа от границы
+                      loc='lower center',
+                      bbox_to_anchor=(0.1, -0.35),
+                      ncol=ncol,
+                      fontsize=9)
