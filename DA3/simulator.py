@@ -1,3 +1,4 @@
+import random
 from typing import Optional
 
 from CORE.datasets_wrappers import LUDB
@@ -11,10 +12,25 @@ from DA3.settings import Settings
 
 class Simulator:
     def __init__(self):
+        self.form: Optional[Form] = None
         self.settings = Settings()
         self.dataset: Optional[ExemplarsDataset] = None
 
         self.ludb = LUDB()  # TODO потом еще птб хл
+
+    def _request_random_center_for_first_point(self, exemplar: Exemplar) -> Optional[float]:
+        if not self.form or not self.form.points:
+            return None
+        first_point_name = self.form.points[0].name
+        real_coord = exemplar.get_point_coord(point_name=first_point_name)
+        left_border = real_coord - self.settings.max_half_padding_from_real_coord_of_first
+        right_border = real_coord + self.settings.max_half_padding_from_real_coord_of_first
+        random_center = random.uniform(left_border, right_border)
+        return random_center
+
+    def reset_form(self, form: Form):
+        self.form = form
+        self.reset_dataset(dataset_name=form.path_to_dataset)
 
     def reset_dataset(self, dataset_name) -> None:
         """ Перезагружает датасет из файла только если нужно (если датасет с таким именем уже загружен, то ничего не делает) """
