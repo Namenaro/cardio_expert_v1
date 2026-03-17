@@ -5,6 +5,8 @@ from CORE.datasets_wrappers.form_associated.parametrised_dataset import Parametr
 from CORE.run import Exemplar
 from CORE.run.eval.base_eval import BaseEvaluator
 
+import numpy as np
+
 
 class EllipticEnvelopeEvaluator(BaseEvaluator):
     """

@@ -28,7 +28,7 @@ class Parametriser:
         """
 
         # Последовательность применения PC важна, поэтому берем порядок их применения, уже расчитанный в схеме
-        for step_num in range(len(form)):
+        for step_num in range(len(form.steps)):
             baze_pazzles_pc: List[BasePazzle] = self.schema.get_PCs_by_step_num(step_num)
             r_pcs = [R_PC(base_pazzle=pc, form_points=form.points, form_params=form.parameters) for pc in
                      baze_pazzles_pc]

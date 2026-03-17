@@ -68,7 +68,6 @@ class RStepsListCreator:
                       r_tracks=r_tracks,
                       target_point_name=step.target_point.name,
                       num_in_form=step.num_in_form,
-                      center=None,  # это можно получить только в рантайме
                       rPC_objects=rPC_objects,
                       rHC_objects=rHC_objects
                       )
