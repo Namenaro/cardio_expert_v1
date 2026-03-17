@@ -1,15 +1,12 @@
-import matplotlib.pyplot as plt
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit
 from PySide6.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-import numpy as np
-from typing import Optional, List, Tuple
+import matplotlib.pyplot as plt
+from typing import Optional
 
-from CORE.signal_1d import Signal
 from CORE.run import Exemplar
-from CORE.visual_debug.plt_visualisation import Drawer, LineStyle
 from CORE.run.exemplars_pool import ExemplarsPool
+from CORE.visual_debug.results_drawers.draw_exemplars_pool import DrawExemplarsPool
 
 
 class FormResWidget(QWidget):
@@ -24,142 +21,92 @@ class FormResWidget(QWidget):
         super().__init__(parent)
 
         self.padding_percent = padding_percent
+        self.current_pool: Optional[ExemplarsPool] = None
+        self.current_ground_truth: Optional[Exemplar] = None
+        self.draw_exemplars_pool: Optional[DrawExemplarsPool] = None
 
-        # Создаем layout
-        layout = QVBoxLayout()
-        self.setLayout(layout)
+        self.init_ui()
 
-        # Создаем текстовое поле для оценки лучшего экземпляра
-        self.best_score_label = QLabel("Лучшая оценка: —")
-        self.best_score_label.setAlignment(Qt.AlignCenter)
-        self.best_score_label.setStyleSheet("font-size: 14px; font-weight: bold; padding: 5px;")
-        layout.addWidget(self.best_score_label)
+    def init_ui(self):
+        """Инициализирует пользовательский интерфейс."""
+        # Основной layout
+        layout = QVBoxLayout(self)
 
-        # Создаем фигуру для matplotlib
-        self.figure, self.ax = plt.subplots(figsize=(8, 4), dpi=100)
+        # Текстовое поле для информации о лучшем экземпляре
+        self.info_label = QLabel("Информация о пуле:")
+        self.info_label.setAlignment(Qt.AlignCenter)
+        self.info_label.setStyleSheet("font-size: 14px; font-weight: bold; padding: 5px;")
+        layout.addWidget(self.info_label)
+
+        # Текстовое поле для подробной информации
+        self.info_text_edit = QTextEdit()
+        self.info_text_edit.setMaximumHeight(150)
+        self.info_text_edit.setReadOnly(True)
+        layout.addWidget(self.info_text_edit)
+
+        # Канвас для визуализации
+        self.figure, self.ax = plt.subplots(figsize=(10, 4))
         self.canvas = FigureCanvas(self.figure)
         layout.addWidget(self.canvas)
 
-        # Создаем Drawer для кликабельности
-        self.drawer = Drawer(self.ax)
+    def _update_info_text(self):
+        """Обновляет текстовое поле с информацией о пуле."""
+        if not self.current_pool:
+            self.info_text_edit.clear()
+            self.info_label.setText("Информация о пуле:")
+            return
 
-        # Сохраняем текущий пул
-        self.current_pool: Optional[ExemplarsPool] = None
+        self.info_text_edit.clear()
+
+        # Общая информация
+        self.info_text_edit.append(f"Всего экземпляров в пуле: {self.current_pool.size}")
+
+        if self.current_ground_truth:
+            self.info_text_edit.append("Ground Truth: присутствует")
+
+        # Информация о лучшем экземпляре
+        if self.current_pool.exemplars_sorted:
+            best = self.current_pool.exemplars_sorted[0]
+            self.info_text_edit.append("\n=== Лучший экземпляр ===")
+
+            if best.evaluation_result is not None:
+                self.info_text_edit.append(f"Оценка: {best.evaluation_result:.3f}")
+                color = self._get_color_from_score(best.evaluation_result)
+                self.info_label.setText(f"Лучшая оценка: {best.evaluation_result:.3f}")
+                self.info_label.setStyleSheet(
+                    f"font-size: 14px; font-weight: bold; padding: 5px; color: {color};"
+                )
+            else:
+                self.info_label.setText("Лучшая оценка: —")
+                self.info_label.setStyleSheet("font-size: 14px; font-weight: bold; padding: 5px;")
+
+            # Точки лучшего экземпляра
+            self.info_text_edit.append("Точки:")
+            sorted_points = sorted(best._points.items(), key=lambda item: item[1][0])
+            for point_name, (coord, track_id) in sorted_points:
+                y = best.get_signal().get_amplplitude_in_moment(coord)
+                y_str = f"{y:.3f}" if y is not None else "вне сигнала"
+                self.info_text_edit.append(f"  {point_name}: x={coord:.3f}с, y={y_str}мВ")
+
+            # Параметры лучшего экземпляра
+            params = best.get_param_names()
+            if params:
+                self.info_text_edit.append("Параметры:")
+                for param in params:
+                    value = best.get_parameter_value(param)
+                    self.info_text_edit.append(f"  {param}: {value}")
 
     def _get_color_from_score(self, score: Optional[float]) -> str:
         """Возвращает цвет на основе оценки."""
         if score is None:
-            return '#808080'  # Серый для None
+            return '#808080'
 
+        import numpy as np
         normalized = np.clip(score, 0, 1)
         red = int(255 * (1 - normalized))
         green = int(255 * normalized)
         blue = 0
         return f'#{red:02x}{green:02x}{blue:02x}'
-
-    def _get_all_points_from_pool(self, pool: ExemplarsPool, ground_truth: Optional[Exemplar] = None) -> List[
-        Tuple[float, float, str, Optional[Exemplar]]]:
-        """
-        Собирает все точки из всех экземпляров пула и ground_truth.
-
-        Returns:
-            List of tuples (x, y, point_name, exemplar)
-        """
-        all_points = []
-
-        # Точки из пула
-        for exemplar in pool.exemplars_sorted:
-            signal = exemplar.get_signal()
-            for point_name in exemplar._points.keys():
-                x = exemplar.get_point_coord(point_name)
-                if x is not None:
-                    y = signal.get_amplplitude_in_moment(x)
-                    if y is not None:
-                        all_points.append((x, y, point_name, exemplar))
-
-        # Точки из ground_truth
-        if ground_truth is not None:
-            signal = ground_truth.get_signal()
-            for point_name in ground_truth._points.keys():
-                x = ground_truth.get_point_coord(point_name)
-                if x is not None:
-                    y = signal.get_amplplitude_in_moment(x)
-                    if y is not None:
-                        all_points.append((x, y, point_name, ground_truth))
-
-        return all_points
-
-    def _calculate_x_limits(self, pool: ExemplarsPool, ground_truth: Optional[Exemplar] = None) -> Tuple[float, float]:
-        """
-        Рассчитывает границы отображения по оси X с учетом паддинга.
-
-        Returns:
-            Tuple (x_min, x_max) - границы для отображения
-        """
-        all_points = self._get_all_points_from_pool(pool, ground_truth)
-
-        if not all_points:
-            # Если нет точек, показываем весь сигнал
-            signal = pool.signal
-            return signal.time[0], signal.time[-1]
-
-        # Находим самую левую и самую правую точки
-        x_coords = [p[0] for p in all_points]
-        x_min = min(x_coords)
-        x_max = max(x_coords)
-
-        # Рассчитываем паддинг
-        interval_length = x_max - x_min
-        padding = interval_length * (self.padding_percent / 100)
-
-        # Добавляем паддинг слева и справа
-        x_min_padded = x_min - padding
-        x_max_padded = x_max + padding
-
-        # Проверяем, не выходим ли за пределы сигнала
-        signal = pool.signal
-        x_min_padded = max(x_min_padded, signal.time[0])
-        x_max_padded = min(x_max_padded, signal.time[-1])
-
-        return x_min_padded, x_max_padded
-
-    def _add_exemplar_to_drawer(self, exemplar: Exemplar, color: str, label: str, is_ground_truth: bool = False):
-        """Добавляет экземпляр в drawer для отрисовки."""
-        # Получаем точки экземпляра
-        points = []
-        signal = exemplar.get_signal()
-
-        for point_name in exemplar._points.keys():
-            x = exemplar.get_point_coord(point_name)
-            if x is not None:
-                y = signal.get_amplplitude_in_moment(x)
-                if y is not None:
-                    points.append((x, y, point_name))
-
-        # Сортируем точки по x
-        if points:
-            points.sort(key=lambda p: p[0])
-
-            # Рисуем ломаную линию через все точки
-            for i in range(len(points) - 1):
-                self.drawer.add_segment(
-                    x1=points[i][0], y1=points[i][1],
-                    x2=points[i + 1][0], y2=points[i + 1][1],
-                    color=color, style=LineStyle.SOLID,
-                    label=label if i == 0 else None,  # Метка только для первого сегмента
-                    zorder=4 if is_ground_truth else 3  # Ground truth выше обычных экземпляров
-                )
-
-            # Добавляем точки маркерами
-
-            for x, y, point_name in points:
-                self.drawer.add_point(
-                    x=x, y=y,
-                    color=color,
-                    label=point_name,
-                    show_label_near_point=True,
-                    zorder=5 if is_ground_truth else 4
-                )
 
     def reset_data(self, pool: ExemplarsPool, ground_truth: Optional[Exemplar] = None):
         """
@@ -170,78 +117,41 @@ class FormResWidget(QWidget):
             ground_truth: Эталонный экземпляр (рисуется черным), если есть
         """
         self.current_pool = pool
+        self.current_ground_truth = ground_truth
 
-        # Очищаем drawer
-        self.drawer.renderer.signals.clear()
-        self.drawer.renderer.vertical_lines.clear()
-        self.drawer.renderer.vertical_line_groups.clear()
-        self.drawer.renderer.intervals.clear()
-        self.drawer.renderer.points.clear()
-        self.drawer.renderer.segments.clear()
+        # Создаем визуализатор
+        self.draw_exemplars_pool = DrawExemplarsPool(
+            pool=pool,
+            padding_percent=self.padding_percent
+        )
 
-        # Добавляем сигнал из пула
-        self.drawer.add_signal(pool.signal, color='blue', name='Сигнал ЭКГ')
+        # Устанавливаем ground truth
+        self.draw_exemplars_pool.set_ground_truth(ground_truth)
 
-        # Добавляем ground truth если есть (черным цветом)
-        if ground_truth is not None:
-            self._add_exemplar_to_drawer(
-                exemplar=ground_truth,
-                color='#000000',  # Черный
-                label='Ground Truth',
-                is_ground_truth=True
-            )
+        # Получаем фигуру
+        updated_fig = self.draw_exemplars_pool.get_fig()
 
-        # Добавляем все экземпляры из пула
-        if pool.exemplars_sorted:
-            for i, exemplar in enumerate(pool.exemplars_sorted):
-                color = self._get_color_from_score(exemplar.evaluation_result)
+        # Заменяем текущую фигуру на обновлённую
+        self.canvas.figure = updated_fig
 
-                if exemplar.evaluation_result is not None:
-                    label = f'Экземпляр {i + 1} (оценка: {exemplar.evaluation_result:.2f})'
-                else:
-                    label = f'Экземпляр {i + 1} (без оценки)'
+        # Обновляем информацию
+        self._update_info_text()
 
-                self._add_exemplar_to_drawer(exemplar, color, label)
-
-            # Обновляем текстовое поле с оценкой лучшего экземпляра
-            best_exemplar = pool.exemplars_sorted[0]
-            best_score = best_exemplar.evaluation_result
-            if best_score is not None:
-                self.best_score_label.setText(f"Лучшая оценка: {best_score:.3f}")
-                color = self._get_color_from_score(best_score)
-                self.best_score_label.setStyleSheet(
-                    f"font-size: 14px; font-weight: bold; padding: 5px; color: {color};"
-                )
-            else:
-                self.best_score_label.setText("Лучшая оценка: —")
-                self.best_score_label.setStyleSheet(
-                    "font-size: 14px; font-weight: bold; padding: 5px;"
-                )
-        else:
-            self.best_score_label.setText("Нет экземпляров")
-
-        # Перерисовываем
-        self.drawer.redraw()
-
-        # Устанавливаем границы по X с учетом паддинга
-        x_min, x_max = self._calculate_x_limits(pool, ground_truth)
-        self.ax.set_xlim(x_min, x_max)
-
+        # Перерисовываем канвас
         self.canvas.draw()
 
     def clear(self):
         """Очищает виджет."""
         self.current_pool = None
-        self.drawer.renderer.signals.clear()
-        self.drawer.renderer.vertical_lines.clear()
-        self.drawer.renderer.vertical_line_groups.clear()
-        self.drawer.renderer.intervals.clear()
-        self.drawer.renderer.points.clear()
-        self.drawer.renderer.segments.clear()
-        self.drawer.redraw()
+        self.current_ground_truth = None
+        self.draw_exemplars_pool = None
+
+        self.figure.clear()
         self.canvas.draw()
-        self.best_score_label.setText("Лучшая оценка: —")
-        self.best_score_label.setStyleSheet("font-size: 14px; font-weight: bold; padding: 5px;")
+
+        self.info_label.setText("Информация о пуле:")
+        self.info_label.setStyleSheet("font-size: 14px; font-weight: bold; padding: 5px;")
+        self.info_text_edit.clear()
 
 
 if __name__ == "__main__":
@@ -252,6 +162,8 @@ if __name__ == "__main__":
 
     from CORE.signal_1d import Signal
     from CORE.run import Exemplar
+    from CORE.run.exemplars_pool import ExemplarsPool
+
 
 
     class MainWindow(QMainWindow):
