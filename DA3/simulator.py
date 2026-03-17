@@ -1,17 +1,17 @@
-from typing import Optional, List
+from typing import Optional
 
-from CORE import Signal
 from CORE.datasets_wrappers import LUDB
 from CORE.datasets_wrappers.form_associated.exemplars_dataset import ExemplarsDataset
-from CORE.db_dataclasses import BasePazzle, Track, Form
+from CORE.db_dataclasses import Form
 from CORE.run import Exemplar
 from CORE.run.exemplars_pool import ExemplarsPool
 from CORE.visual_debug import TrackRes, StepRes
+from DA3.settings import Settings
 
 
 class Simulator:
-    def __init__(self, half_padding_from_first_point: float):
-        self.half_padding_from_first_point = half_padding_from_first_point
+    def __init__(self):
+        self.settings = Settings()
         self.dataset: Optional[ExemplarsDataset] = None
 
         self.ludb = LUDB()  # TODO потом еще птб хл
