@@ -1,6 +1,6 @@
 import sys
 from math import sin
-from typing import Optional
+from typing import Optional, List
 
 import matplotlib.pyplot as plt
 
@@ -13,48 +13,74 @@ class DrawPS_Res:
     """ Создает fig и рисует на нем результат запуска PS, упакованный в PS_Res.
                 Обеспечивает обработчик нажатия по фигуре - откроет более подробное окно с панелью навигации (увеличение, сдвиг и т.д.)"""
 
-    def __init__(self, ps_res_obj: PS_Res, padding_procents: float = 20, ground_true_point: Optional = None):
+    def __init__(self, ps_res_obj: PS_Res, padding_procents: float = 20, ground_true_point: Optional[float] = None):
         """
 
         :param ps_res_obj: объект с результатом отработки PS на фрагменте сигнала
-        :param padding_procents: процент длины инстервала, который мы отстпаем влево и вправо от краних интервала, чтобы показать чуть больше, чем только интервал поиска этой точки
+        :param padding_procents: процент длины интервала, который мы отступаем влево и вправо от краев интервала, чтобы показать чуть больше, чем только интервал поиска этой точки
         :param ground_true_point: правильная точка из датасета для этого шага
         """
         self.ps_res = ps_res_obj
-        self.fig, ax = plt.subplots(figsize=(10, 4))
-        self.drawer = Drawer(ax=ax)
+        self.fig, self.ax = plt.subplots(figsize=(10, 4))
+        self.drawer = Drawer(ax=self.ax)
         self.padding_procents = padding_procents
-        self.y_min, self.ymax = ax.get_ylim()
         self.ground_true_point = ground_true_point
 
+        # Сохраняем пределы по Y после создания, но до отрисовки
+        self.y_min, self.y_max = self.ax.get_ylim()
+
     def get_fig(self):
-        cropped_signal = self.ps_res.signal.get_cropped_with_padding(
-            coord_left=self.ps_res.left_coord,
-            coord_right=self.ps_res.right_coord,
-            padding_percent=self.padding_procents
+        # Рассчитываем границы с паддингом
+        interval_length = self.ps_res.right_coord - self.ps_res.left_coord
+        padding = interval_length * (self.padding_procents / 100)
+
+        left_with_padding = self.ps_res.left_coord - padding
+        right_with_padding = self.ps_res.right_coord + padding
+
+        # ВАЖНО: НЕ обрезаем сигнал, берем весь сигнал
+        self.drawer.add_signal(signal=self.ps_res.signal, color='black', name="исходный сигнал")
+
+        # Добавляем интервал поиска
+        self.drawer.add_interval(
+            left=self.ps_res.left_coord,
+            right=self.ps_res.right_coord,
+            color="blue",
+            alpha=0.1,
+            label="интервал поиска"
         )
-        self.drawer.add_signal(signal=cropped_signal, color='black', name="исходный сигнал")
 
-        self.drawer.add_interval(left=self.ps_res.left_coord, right=self.ps_res.right_coord, color="blue", alpha=0.1)
+        # Добавляем точки, найденные нашим PS
+        if self.ps_res.res_coords:
+            lines = [VerticalLineInfo(x=x, y_max=self.y_max, y_min=self.y_min) for x in self.ps_res.res_coords]
+            self.drawer.add_vertical_lines_group(lines=lines, color="green", label="найденные точки")
 
-        # Добавим точки, найденные нашим PS
-        lines = [VerticalLineInfo(x=x, y_max=self.ymax, y_min=self.y_min) for x in self.ps_res.res_coords]
-        self.drawer.add_vertical_lines_group(lines=lines, color="green", label="найденные точки")
+        # Если известна верная точка для этого шага, то тоже рисуем
+        if self.ground_true_point is not None:
+            self.drawer.add_vertical_line(
+                x=self.ground_true_point,
+                y_max=self.y_max,
+                y_min=self.y_min,
+                color="black",
+                label="true точка"
+            )
 
-        # Если измвестна верная точка для этого шага, то их тоже рисуем
-        if self.ground_true_point:
-            self.drawer.add_vertical_line(x=self.ground_true_point, y_max=self.ymax, y_min=self.y_min, color="black",
-                                          label="true")
-
-
+        # Отрисовываем все элементы
         self.drawer.redraw()
+
+        # Устанавливаем границы по X с учетом паддинга
+        self.ax.set_xlim(left_with_padding, right_with_padding)
+
+        # Отключаем автоматическое масштабирование по X
+        self.ax.autoscale(enable=False, axis='x')
+
+        # Автоматическое масштабирование по Y оставляем включенным
+        self.ax.autoscale(enable=True, axis='y')
 
         return self.fig
 
 
 if __name__ == "__main__":
     from PySide6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QWidget)
-
     from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
 
@@ -88,7 +114,7 @@ if __name__ == "__main__":
             )
 
             # Создание визуализатора
-            draw_ps_res = DrawPS_Res(ps_res_obj=test_ps_res, ground_true_point=10.1)
+            draw_ps_res = DrawPS_Res(ps_res_obj=test_ps_res, ground_true_point=10.1, padding_procents=20)
             fig = draw_ps_res.get_fig()
 
             # Встраивание matplotlib figure в PySide

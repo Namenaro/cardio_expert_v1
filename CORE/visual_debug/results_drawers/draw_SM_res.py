@@ -14,36 +14,51 @@ class DrawSM_Res:
          Обеспечивает обработчик нажатия по фигуре - откроет более подробное окно с панелью навигации (увеличение, сдвиг и т.д.)"""
 
         self.res = res_obj
-        self.fig, ax = plt.subplots(figsize=(10, 4))
-        self.drawer = Drawer(ax=ax)
+        self.fig, self.ax = plt.subplots(figsize=(10, 4))
+        self.drawer = Drawer(ax=self.ax)
         self.padding_procents = padding_procents
-        self.y_min, self.ymax = ax.get_ylim()
 
     def get_fig(self):
-        cropped_signal = self.res.old_signal.get_cropped_with_padding(
-            coord_left=self.res.left_coord,
-            coord_right=self.res.right_coord,
-            padding_percent=self.padding_procents
+        # Рассчитываем границы с паддингом
+        interval_length = self.res.right_coord - self.res.left_coord
+        padding = interval_length * (self.padding_procents / 100)
+
+        left_with_padding = self.res.left_coord - padding
+        right_with_padding = self.res.right_coord + padding
+
+        # ВАЖНО: НЕ обрезаем сигнал, берем весь сигнал
+        # Просто потом установим границы отображения
+        self.drawer.add_signal(signal=self.res.old_signal, color='black', name='исходный сигнал')
+
+        # Добавляем интервал (рисуется на всю высоту графика)
+        self.drawer.add_interval(
+            left=self.res.left_coord,
+            right=self.res.right_coord,
+            color="blue",
+            alpha=0.1,
+            label="интервал обработки"
         )
-        self.drawer.add_signal(signal=cropped_signal, color='black')
 
-        self.drawer.add_interval(left=self.res.left_coord, right=self.res.right_coord, color="blue", alpha=0.1)
+        # Добавляем новый сигнал (тоже весь)
+        self.drawer.add_signal(signal=self.res.result_signal, color='green', name="новый сигнал")
 
-        cropped_new = self.res.result_signal.get_cropped_with_padding(
-            coord_left=self.res.left_coord,
-            coord_right=self.res.right_coord,
-            padding_percent=self.padding_procents
-        )
-        self.drawer.add_signal(signal=cropped_new, color='green', name="новый сигнал")
-
+        # Отрисовываем все элементы
         self.drawer.redraw()
+
+        # Устанавливаем границы по X с учетом паддинга
+        self.ax.set_xlim(left_with_padding, right_with_padding)
+
+        # Отключаем автоматическое масштабирование по X
+        self.ax.autoscale(enable=False, axis='x')
+
+        # Автоматическое масштабирование по Y оставляем включенным
+        self.ax.autoscale(enable=True, axis='y')
 
         return self.fig
 
 
 if __name__ == "__main__":
     from PySide6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QWidget)
-
     from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
 
@@ -53,11 +68,8 @@ if __name__ == "__main__":
             self.setWindowTitle("Визуализация сигнала")
             self.setGeometry(100, 100, 800, 600)
 
-            # Центральный виджет
             central_widget = QWidget()
             self.setCentralWidget(central_widget)
-
-            # Layout
             layout = QVBoxLayout(central_widget)
 
             # Создание тестового сигнала
@@ -67,30 +79,22 @@ if __name__ == "__main__":
             new_raw = [-2 * sin(i) for i in range(80)]
             new_signal = Signal(signal_mv=new_raw, frequency=2)
 
-            print(f"Длительность сигнала: {test_signal.get_duration():.2f} секунд")
-            print("Сигнал (первые 10 точек):", test_signal.signal_mv[:10])
-            print("Время (первые 10 точек):", test_signal.time[:10])
-
-            # Создание тестового PS_Res
+            # Создание тестового SM_Res
             test_res = SM_Res(
                 id=1,
                 old_signal=test_signal,
                 left_coord=10.0,
                 right_coord=14.0,
                 result_signal=new_signal
-
             )
 
             # Создание визуализатора
-            draw_ps_res = DrawSM_Res(res_obj=test_res)
+            draw_ps_res = DrawSM_Res(res_obj=test_res, padding_procents=20)
             fig = draw_ps_res.get_fig()
 
             # Встраивание matplotlib figure в PySide
             self.canvas = FigureCanvas(fig)
-
-            # Динамическое добавление атрибута ради того, чтобы обработчики кликов из drawer жили столько, сколько canvas
             self.canvas.drawer = draw_ps_res.drawer
-
             layout.addWidget(self.canvas)
 
 
