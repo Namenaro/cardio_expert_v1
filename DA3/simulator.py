@@ -1,3 +1,4 @@
+from CORE.datasets_wrappers.form_associated.parametrised_dataset import ParametrisedDataset
 from CORE.db_dataclasses import Form
 import random
 import os
@@ -8,9 +9,9 @@ from CORE.datasets_wrappers.form_associated.exemplars_dataset import ExemplarsDa
 from CORE.db_dataclasses import Form
 from CORE.run import Exemplar
 from CORE.run.exemplars_pool import ExemplarsPool
+from CORE.run.r_form import RForm
 from CORE.visual_debug import TrackRes, StepRes
 from DA3.settings import Settings
-from CORE.paths import EXEMPLARS_DATASETS_PATH
 from CORE.logger import get_logger
 
 logger = get_logger(__name__)
@@ -18,7 +19,7 @@ logger = get_logger(__name__)
 
 class Simulator:
     def __init__(self):
-        self.form: Optional[Form] = None
+        self.rform: Optional[RForm] = None
         self.settings = Settings()
         self.dataset: Optional[ExemplarsDataset] = None
         self._current_idx: int = -1
@@ -27,9 +28,9 @@ class Simulator:
         self.ludb = LUDB()
 
     def _request_random_center_for_first_point(self, exemplar: Exemplar) -> Optional[float]:
-        if not self.form or not self.form.points:
+        if not self.rform or not self.rform.form.points:
             return None
-        first_point_name = self.form.points[0].name
+        first_point_name = self.rform.form.points[0].name
         real_coord = exemplar.get_point_coord(point_name=first_point_name)
         if real_coord is None:
             logger.warning(f"Точка {first_point_name} не найдена в exemplar")
@@ -39,9 +40,20 @@ class Simulator:
         return random.uniform(left_border, right_border)
 
     def reset_form(self, form: Form):
-        self.form = form
         self.reset_dataset(dataset_name=form.path_to_dataset)
-        # НЕ обнуляем _exemplar_ids здесь, так как reset_dataset уже их установил
+
+        parametrised_for_evaluator = ParametrisedDataset(form=form, raw_exemplars=self.dataset)
+        evaluator_class = self.settings.evaluator_class
+
+        # Пытаемся создать с параметром, если не получается - создаем без
+        try:
+            evaluator = evaluator_class(positive_dataset=parametrised_for_evaluator)
+        except TypeError:
+            # Если класс не принимает такой параметр, создаем без него
+            evaluator = evaluator_class()
+        self.rform = RForm(form, evaluator=evaluator)
+
+
 
     def reset_dataset(self, dataset_name: str) -> None:
         """dataset_name - имя файла датасета (без пути)"""

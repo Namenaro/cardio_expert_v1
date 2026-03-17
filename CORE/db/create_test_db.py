@@ -30,20 +30,22 @@ def get_test_form(db_manager:DBManager):
     form = Form(name="test_form",
                      comment="комментарий",
                      path_to_pic="\путь к картинке",
-                     path_to_dataset="\путь к датасету")
+                path_to_dataset="qrs.json")
 
     # Точки формы
     point1 = Point(name='p1', comment='коммент1')
     point2 = Point(name='p2', comment='коммент2')
+    point3 = Point(name='p3', comment='коммент2')
+    point4 = Point(name='p4', comment='коммент2')
+    point5 = Point(name='p5', comment='коммент2')
 
     # Параметры формы
     param1 = Parameter(name='param1', comment='комментарий к параметру 1')
-    param2 = Parameter(name='param2', comment='комментарий к параметру 2 это длинный... очень длинный... комментарий о параметре номер два этой формы')
+
 
     # Добавим все связанные с формой объекты в форму
-    form.points = [point1, point2]
-    form.parameters = [param1, param2]
-
+    form.points = [point1, point2, point3, point4, point5]
+    form.parameters = [param1]
 
     with db_manager.get_connection() as conn:
         servise.add_form(conn=conn, form=form)

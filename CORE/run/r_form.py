@@ -18,7 +18,7 @@ class RForm:
     """
 
     def __init__(self, form: Form, evaluator: BaseEvaluator, max_pool_size: int = 5):
-        form = form
+        self.form = form
         schema = Schema(form)
         sucess = schema.compile()
         if not sucess:
