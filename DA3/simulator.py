@@ -1,5 +1,7 @@
+from CORE.db_dataclasses import Form
 import random
-from typing import Optional
+import os
+from typing import Optional, List
 
 from CORE.datasets_wrappers import LUDB
 from CORE.datasets_wrappers.form_associated.exemplars_dataset import ExemplarsDataset
@@ -8,6 +10,10 @@ from CORE.run import Exemplar
 from CORE.run.exemplars_pool import ExemplarsPool
 from CORE.visual_debug import TrackRes, StepRes
 from DA3.settings import Settings
+from CORE.paths import EXEMPLARS_DATASETS_PATH
+from CORE.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class Simulator:
@@ -15,33 +21,56 @@ class Simulator:
         self.form: Optional[Form] = None
         self.settings = Settings()
         self.dataset: Optional[ExemplarsDataset] = None
+        self._current_idx: int = -1
+        self._exemplar_ids: List[str] = []
 
-        self.ludb = LUDB()  # TODO потом еще птб хл
+        self.ludb = LUDB()
 
     def _request_random_center_for_first_point(self, exemplar: Exemplar) -> Optional[float]:
         if not self.form or not self.form.points:
             return None
         first_point_name = self.form.points[0].name
         real_coord = exemplar.get_point_coord(point_name=first_point_name)
+        if real_coord is None:
+            logger.warning(f"Точка {first_point_name} не найдена в exemplar")
+            return None
         left_border = real_coord - self.settings.max_half_padding_from_real_coord_of_first
         right_border = real_coord + self.settings.max_half_padding_from_real_coord_of_first
-        random_center = random.uniform(left_border, right_border)
-        return random_center
+        return random.uniform(left_border, right_border)
 
     def reset_form(self, form: Form):
         self.form = form
         self.reset_dataset(dataset_name=form.path_to_dataset)
+        # НЕ обнуляем _exemplar_ids здесь, так как reset_dataset уже их установил
 
-    def reset_dataset(self, dataset_name) -> None:
-        """ Перезагружает датасет из файла только если нужно (если датасет с таким именем уже загружен, то ничего не делает) """
+    def reset_dataset(self, dataset_name: str) -> None:
+        """dataset_name - имя файла датасета (без пути)"""
         if self.dataset is None or self.dataset.form_dataset_name != dataset_name:
+            logger.info(f"Загрузка датасета: {dataset_name}")
             self.dataset = ExemplarsDataset(form_dataset_name=dataset_name, outer_dataset=self.ludb)
+            self._exemplar_ids = self.dataset.get_all_ids()
+            self._current_idx = -1
+            logger.info(f"Загружено {len(self._exemplar_ids)} записей")
 
-    def request_next_exemplar(self) -> Optional[Exemplar]:
-        pass
+    def next(self) -> Optional[Exemplar]:
+        """Переключиться на следующий экземпляр и вернуть его"""
+        if not self.dataset or not self._exemplar_ids:
+            return None
 
-    def request_prev_exemplar(self) -> Optional[Exemplar]:
-        pass
+        next_idx = self._current_idx + 1
+        if next_idx >= len(self._exemplar_ids):
+            return None
+
+        self._current_idx = next_idx
+        return self.dataset.get_exemplar_by_id(self._exemplar_ids[self._current_idx])
+
+    def prev(self) -> Optional[Exemplar]:
+        """Переключиться на предыдущий экземпляр и вернуть его"""
+        if not self.dataset or not self._exemplar_ids or self._current_idx <= 0:
+            return None
+
+        self._current_idx -= 1
+        return self.dataset.get_exemplar_by_id(self._exemplar_ids[self._current_idx])
 
     def run_track(self, exemplar: Exemplar, track_id: int, form: Form) -> TrackRes:
         pass
@@ -51,3 +80,51 @@ class Simulator:
 
     def run_form(self, exemplar: Exemplar, form: Form) -> ExemplarsPool:
         pass
+
+
+if __name__ == "__main__":
+    from CORE.paths import EXEMPLARS_DATASETS_PATH
+    import os
+
+    # Проверим, какие файлы есть в директории
+    print(f"Путь к датасетам: {EXEMPLARS_DATASETS_PATH}")
+    if os.path.exists(EXEMPLARS_DATASETS_PATH):
+        files = os.listdir(EXEMPLARS_DATASETS_PATH)
+        print(f"Файлы в директории: {files}")
+
+    # Используем существующий файл qrs.json
+    test_form = Form(path_to_dataset="qrs.json")
+
+    sim = Simulator()
+    sim.reset_form(test_form)
+
+    print(f"\nЗагружен датасет qrs.json. Всего записей: {len(sim._exemplar_ids)}")
+
+    if sim._exemplar_ids:
+        print(f"Первые 5 ID записей: {sim._exemplar_ids[:5]}")
+
+        # Проходим вперед по всем записям
+        print("\nПроход вперед:")
+        count = 0
+        while True:
+            ex = sim.next()
+            if not ex:
+                break
+            print(f"  {count + 1}: {sim._exemplar_ids[sim._current_idx]}")
+            count += 1
+
+        print(f"\nВсего пройдено вперед: {count}")
+
+        # Проходим назад по всем записям
+        print("\nПроход назад:")
+        count = 0
+        while True:
+            ex = sim.prev()
+            if not ex:
+                break
+            print(f"  {count + 1}: {sim._exemplar_ids[sim._current_idx]}")
+            count += 1
+
+        print(f"\nВсего пройдено назад: {count}")
+    else:
+        print("Датасет qrs.json пуст!")
