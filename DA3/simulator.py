@@ -1,4 +1,6 @@
 from CORE.datasets_wrappers.form_associated.parametrised_dataset import ParametrisedDataset
+from CORE.db.db_manager import DBManager
+from CORE.db.forms_services import FormService
 from CORE.db_dataclasses import Form
 import random
 import os
@@ -95,7 +97,7 @@ class Simulator:
 
 
 if __name__ == "__main__":
-    from CORE.paths import EXEMPLARS_DATASETS_PATH
+    from CORE.paths import EXEMPLARS_DATASETS_PATH, DB_PATH
     import os
 
     # Проверим, какие файлы есть в директории
@@ -104,8 +106,12 @@ if __name__ == "__main__":
         files = os.listdir(EXEMPLARS_DATASETS_PATH)
         print(f"Файлы в директории: {files}")
 
-    # Используем существующий файл qrs.json
-    test_form = Form(path_to_dataset="qrs.json")
+    # Загрузим тестовую форму
+    db_manager = DBManager(DB_PATH)
+
+    form_service = FormService()
+    with db_manager.get_connection() as conn:
+        test_form = form_service.get_form_by_id(form_id=1, conn=conn)
 
     sim = Simulator()
     sim.reset_form(test_form)
