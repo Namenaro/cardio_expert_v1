@@ -130,9 +130,16 @@ class Simulator:
 
         # Для первого шага устанавливаем центр
         if step_id == 0:
+            # Пытаемся получить центр через существующий метод
             center = self._request_random_center_for_first_point(ex)
+
+            # Если не получилось (нет точек в экземпляре), используем середину сигнала
             if center is None:
-                return "Нет центра для первого шага"
+                signal = ex.get_signal()
+                # Берем середину сигнала в качестве центра
+                center = signal.get_duration() / 2
+                logger.info(f"Используем центр по умолчанию: {center:.3f} (середина сигнала)")
+
             r_step.set_step_as_first(center)
 
         try:
@@ -267,12 +274,21 @@ if __name__ == "__main__":
         print("В форме нет шагов!")
     else:
         first_step_id = form.steps[0].num_in_form
-        print(
-            f"Запуск шага {first_step_id} (цель: {form.steps[0].target_point.name if form.steps[0].target_point else 'не указана'})...")
+        target_point_name = form.steps[0].target_point.name if form.steps[0].target_point else 'не указана'
+        print(f"Запуск шага {first_step_id} (цель: {target_point_name})...")
         print(f"  Треков в шаге: {len(form.steps[0].tracks)}")
 
-        # Запускаем шаг
-        step_result = sim.run_step(first_ex, first_step_id)
+        # СОЗДАЕМ НОВЫЙ ЧИСТЫЙ ЭКЗЕМПЛЯР БЕЗ ТОЧЕК
+        # Получаем сырой сигнал из существующего экземпляра
+        raw_signal = first_ex.get_signal()
+
+        # Создаем новый экземпляр только с сигналом, без точек
+        from CORE.run import Exemplar
+
+        clean_ex = Exemplar(signal=raw_signal)
+
+        # Запускаем шаг на чистом экземпляре
+        step_result = sim.run_step(clean_ex, first_step_id)
 
         if isinstance(step_result, str):
             print(f"Ошибка шага: {step_result}")
@@ -288,6 +304,8 @@ if __name__ == "__main__":
                 points = track_res.to_uniq_coords()
                 all_points.extend(points)
                 print(f"    Трек {i + 1} (ID:{track_res.id}): {len(points)} точек")
+                if points:
+                    print(f"      Координаты: {[f'{p:.3f}' for p in points]}")
 
             print(f"  Всего уникальных точек: {len(set(all_points))}")
             if all_points:
@@ -306,8 +324,8 @@ if __name__ == "__main__":
                     layout = QVBoxLayout(central_widget)
 
                     # Информация
-                    info_text = f"Шаг {first_step_id} | Цель: {form.steps[0].target_point.name if form.steps[0].target_point else 'не указана'}\n"
-                    info_text += f"Сигнал: {len(first_ex.signal)} отсчетов, {first_ex.signal.frequency} Гц\n"
+                    info_text = f"Шаг {first_step_id} | Цель: {target_point_name}\n"
+                    info_text += f"Сигнал: {len(raw_signal)} отсчетов, {raw_signal.frequency} Гц\n"
                     info_text += f"Интервал поиска: [{step_result.left_coord:.3f}, {step_result.right_coord:.3f}]"
 
                     info_label = QLabel(info_text)
@@ -326,5 +344,3 @@ if __name__ == "__main__":
             step_window = StepWindow()
             step_window.show()
             step_app.exec()
-
-    print("\n✅ Все тесты завершены!")
