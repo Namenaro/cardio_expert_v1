@@ -119,7 +119,8 @@ class Signal:
         return self.time[-1] - self.time[0]
 
     def __len__(self):
-        return self.get_duration()
+        """Возвращает количество отсчетов в сигнале"""
+        return len(self.signal_mv)
 
 
 

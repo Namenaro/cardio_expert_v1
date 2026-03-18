@@ -80,7 +80,7 @@ class R_PC:
             args = parser.get_constructor_arguments()
             return cls(**args)
         except Exception as e:
-            raise RunPazzleError.class_creation_failed(self.base_pazzle.id, str(e))
+            raise RunPazzleError.class_creation_failed(self.base_pazzle.id, str(e)) from e
 
     def _collect_input_points(self, parser: PazzleParser, exemplar: Exemplar) -> Tuple[Dict[str, float], List[str]]:
         """

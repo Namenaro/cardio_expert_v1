@@ -1,20 +1,19 @@
+import random
+from typing import Optional, List, Union
+
+from CORE.datasets_wrappers import LUDB
+from CORE.datasets_wrappers.form_associated.exemplars_dataset import ExemplarsDataset
 from CORE.datasets_wrappers.form_associated.parametrised_dataset import ParametrisedDataset
 from CORE.db.db_manager import DBManager
 from CORE.db.forms_services import FormService
 from CORE.db_dataclasses import Form
-import random
-import os
-from typing import Optional, List
-
-from CORE.datasets_wrappers import LUDB
-from CORE.datasets_wrappers.form_associated.exemplars_dataset import ExemplarsDataset
-from CORE.db_dataclasses import Form
+from CORE.logger import get_logger
 from CORE.run import Exemplar
 from CORE.run.exemplars_pool import ExemplarsPool
 from CORE.run.r_form import RForm
 from CORE.visual_debug import TrackRes, StepRes
 from DA3.settings import Settings
-from CORE.logger import get_logger
+from DA3.simulator_utils import find_track, make_interval, get_coords, exec_track
 
 logger = get_logger(__name__)
 
@@ -26,73 +25,81 @@ class Simulator:
         self.dataset: Optional[ExemplarsDataset] = None
         self._current_idx: int = -1
         self._exemplar_ids: List[str] = []
-
         self.ludb = LUDB()
 
     def _request_random_center_for_first_point(self, exemplar: Exemplar) -> Optional[float]:
         if not self.rform or not self.rform.form.points:
             return None
-        first_point_name = self.rform.form.points[0].name
-        real_coord = exemplar.get_point_coord(point_name=first_point_name)
-        if real_coord is None:
-            logger.warning(f"Точка {first_point_name} не найдена в exemplar")
+        first = self.rform.form.points[0].name
+        coord = exemplar.get_point_coord(point_name=first)
+        if coord is None:
+            logger.warning(f"Точка {first} не найдена")
             return None
-        left_border = real_coord - self.settings.max_half_padding_from_real_coord_of_first
-        right_border = real_coord + self.settings.max_half_padding_from_real_coord_of_first
-        return random.uniform(left_border, right_border)
+        delta = self.settings.max_half_padding_from_real_coord_of_first
+        return random.uniform(coord - delta, coord + delta)
 
     def reset_form(self, form: Form):
-        self.reset_dataset(dataset_name=form.path_to_dataset)
-
-        parametrised_for_evaluator = ParametrisedDataset(form=form, raw_exemplars=self.dataset)
-        evaluator_class = self.settings.evaluator_class
-
-        # Пытаемся создать с параметром, если не получается - создаем без
+        self.reset_dataset(name=form.path_to_dataset)
+        dataset = ParametrisedDataset(form=form, raw_exemplars=self.dataset)
         try:
-            evaluator = evaluator_class(positive_dataset=parametrised_for_evaluator)
+            evaluator = self.settings.evaluator_class(positive_dataset=dataset)
         except TypeError:
-            # Если класс не принимает такой параметр, создаем без него
-            evaluator = evaluator_class()
+            evaluator = self.settings.evaluator_class()
         self.rform = RForm(form, evaluator=evaluator)
 
-
-
-    def reset_dataset(self, dataset_name: str) -> None:
-        """dataset_name - имя файла датасета (без пути)"""
-        if self.dataset is None or self.dataset.form_dataset_name != dataset_name:
-            logger.info(f"Загрузка датасета: {dataset_name}")
-            self.dataset = ExemplarsDataset(form_dataset_name=dataset_name, outer_dataset=self.ludb)
+    def reset_dataset(self, name: str) -> None:
+        if self.dataset is None or self.dataset.form_dataset_name != name:
+            logger.info(f"Загрузка датасета: {name}")
+            self.dataset = ExemplarsDataset(form_dataset_name=name, outer_dataset=self.ludb)
             self._exemplar_ids = self.dataset.get_all_ids()
             self._current_idx = -1
             logger.info(f"Загружено {len(self._exemplar_ids)} записей")
 
     def next(self) -> Optional[Exemplar]:
-        """Переключиться на следующий экземпляр и вернуть его"""
-        if not self.dataset or not self._exemplar_ids:
+        if not self.dataset or self._current_idx + 1 >= len(self._exemplar_ids):
             return None
-
-        next_idx = self._current_idx + 1
-        if next_idx >= len(self._exemplar_ids):
-            return None
-
-        self._current_idx = next_idx
+        self._current_idx += 1
         return self.dataset.get_exemplar_by_id(self._exemplar_ids[self._current_idx])
 
     def prev(self) -> Optional[Exemplar]:
-        """Переключиться на предыдущий экземпляр и вернуть его"""
-        if not self.dataset or not self._exemplar_ids or self._current_idx <= 0:
+        if not self.dataset or self._current_idx <= 0:
             return None
-
         self._current_idx -= 1
         return self.dataset.get_exemplar_by_id(self._exemplar_ids[self._current_idx])
 
-    def run_track(self, exemplar: Exemplar, track_id: int, form: Form) -> TrackRes:
+    def run_track(self, ex: Exemplar, track_id: int, form: Form, center: Optional[float] = None) -> Union[
+        str, TrackRes]:
+        if not self.rform:
+            return "Форма не инициализирована"
+
+        track_step = find_track(form, track_id)
+        if not track_step:
+            return f"Трек {track_id} не найден"
+
+        track, step = track_step
+
+        interval = make_interval(step)
+        if isinstance(interval, str):
+            return interval
+
+        if step.num_in_form == 0:
+            center = center or self._request_random_center_for_first_point(ex)
+            if center is None:
+                return "Нет центра для первого шага"
+
+        coords = get_coords(interval, ex, center)
+        if isinstance(coords, str):
+            return coords
+
+        left, right = coords
+        signal = ex.get_signal()
+
+        return exec_track(track, signal, left, right, track_id)
+
+    def run_step(self, ex: Exemplar, step_id: int, form: Form) -> StepRes:
         pass
 
-    def run_step(self, exemplar: Exemplar, step_id: int, form: Form) -> StepRes:
-        pass
-
-    def run_form(self, exemplar: Exemplar, form: Form) -> ExemplarsPool:
+    def run_form(self, ex: Exemplar, form: Form) -> ExemplarsPool:
         pass
 
 
@@ -100,49 +107,35 @@ if __name__ == "__main__":
     from CORE.paths import EXEMPLARS_DATASETS_PATH, DB_PATH
     import os
 
-    # Проверим, какие файлы есть в директории
-    print(f"Путь к датасетам: {EXEMPLARS_DATASETS_PATH}")
+    print(f"Датасеты: {EXEMPLARS_DATASETS_PATH}")
     if os.path.exists(EXEMPLARS_DATASETS_PATH):
-        files = os.listdir(EXEMPLARS_DATASETS_PATH)
-        print(f"Файлы в директории: {files}")
+        print(f"Файлы: {os.listdir(EXEMPLARS_DATASETS_PATH)}")
 
-    # Загрузим тестовую форму
-    db_manager = DBManager(DB_PATH)
+    db = DBManager(DB_PATH)
+    forms = FormService()
 
-    form_service = FormService()
-    with db_manager.get_connection() as conn:
-        test_form = form_service.get_form_by_id(form_id=1, conn=conn)
+    with db.get_connection() as conn:
+        form = forms.get_form_by_id(form_id=1, conn=conn)
+
+    print(f"\nФорма: {form.name}, шагов: {len(form.steps)}")
 
     sim = Simulator()
-    sim.reset_form(test_form)
-
-    print(f"\nЗагружен датасет qrs.json. Всего записей: {len(sim._exemplar_ids)}")
+    sim.reset_form(form)
 
     if sim._exemplar_ids:
-        print(f"Первые 5 ID записей: {sim._exemplar_ids[:5]}")
+        ex = sim.next()
+        if ex and form.steps and form.steps[0].tracks:
+            tid = form.steps[0].tracks[0].id
+            print(f"\nЗапуск трека {tid}:")
 
-        # Проходим вперед по всем записям
-        print("\nПроход вперед:")
-        count = 0
-        while True:
-            ex = sim.next()
-            if not ex:
-                break
-            print(f"  {count + 1}: {sim._exemplar_ids[sim._current_idx]}")
-            count += 1
+            # Тестируем только один раз, например с center=None
+            print(f"\n  без центра:")
+            res = sim.run_track(ex, tid, form, None)
 
-        print(f"\nВсего пройдено вперед: {count}")
-
-        # Проходим назад по всем записям
-        print("\nПроход назад:")
-        count = 0
-        while True:
-            ex = sim.prev()
-            if not ex:
-                break
-            print(f"  {count + 1}: {sim._exemplar_ids[sim._current_idx]}")
-            count += 1
-
-        print(f"\nВсего пройдено назад: {count}")
-    else:
-        print("Датасет qrs.json пуст!")
+            if isinstance(res, str):
+                print(f"    → {res}")
+            else:
+                pts = res.to_uniq_coords()
+                print(f"    → SM:{len(res.sm_res_objs)} PS:{len(res.ps_res_objs)} точек:{len(pts)}")
+                if pts:
+                    print(f"      {[f'{p:.3f}' for p in pts[:3]]}")

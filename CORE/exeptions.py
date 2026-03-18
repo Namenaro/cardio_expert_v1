@@ -48,9 +48,7 @@ class PazzleOutOfSignal(CoreError):
         super().__init__(message)
         self.class_name = class_name
         self.message = message
-
-        # Автоматическое логирование при создании исключения
-        logger.warning(f"PazzleOutOfSignalr в классе: {class_name}")
+        # Убрали автоматическое логирование
 
 
 class RunPazzleError(CoreError):
@@ -68,9 +66,7 @@ class RunPazzleError(CoreError):
         self.absent_params = absent_params or []
         self.class_name = class_name
         self.error = error
-
-        # Автоматическое логирование при создании исключения
-        logger.exception(f"RunPazzleError: {message}\t код ошибки: {self.code}")
+        # Убрали автоматическое логирование
 
     @classmethod
     def selected_point_out_of_interval(cls, left_t: float, right_t: float,
@@ -156,14 +152,12 @@ class RunPazzleError(CoreError):
 
 
 class RunTrackError(CoreError):
-    def __init__(self, message: str, track_id: int, code, error: str):
+    def __init__(self, message: str, track_id: int, code, error: str = ""):
         super().__init__(message)
         self.code = code  # уникальный код ошибки
         self.track_id = track_id
-        self.error: str = ""
-
-        # Автоматическое логирование при создании исключения
-        logger.exception(f"RunTrackError: {message}\t код ошибки {self.code}")
+        self.error = error
+        # Убрали автоматическое логирование
 
     @classmethod
     def emty_signal(cls, track_id: int) -> 'RunTrackError':
@@ -185,22 +179,22 @@ class RunTrackError(CoreError):
 
     @classmethod
     def internal_problem_in_pazzle(cls, track_id: int, error: str):
-        return cls(track_id=track_id,
-                   error=error,
-                   code=ErrorCode.PAZZLE_PROBLEM_IN_TRACK,
-                   message=f"При выполнении трека {track_id} возникла внутренняя ошибка пазла\t {error}")
-
+        return cls(
+            track_id=track_id,
+            error=error,
+            code=ErrorCode.PAZZLE_PROBLEM_IN_TRACK,
+            message=f"При выполнении трека {track_id} возникла внутренняя ошибка пазла\t {error}"
+        )
 
 
 class RunStepError(CoreError):
     def __init__(self, message: str, code, num_in_form: int, error=""):
+        super().__init__(message)
         self.error = error
         self.num_in_form = num_in_form
         self.code = code
         self.message = message
-
-        # Автоматическое логирование при создании исключения
-        logger.exception(f"{self.__class__.__name__}: {message}")
+        # Убрали автоматическое логирование
 
     @classmethod
     def empty_tracks_list(cls, num_in_form: int):
@@ -221,13 +215,12 @@ class RunStepError(CoreError):
 
 class FormError(CoreError):
     def __init__(self, message: str, code, form_id: int, error=""):
+        super().__init__(message)
         self.error = error
         self.form_id = form_id
         self.code = code
         self.message = message
-
-        # Автоматическое логирование при создании исключения
-        logger.exception(f"{self.__class__.__name__}: {message}")
+        # Убрали автоматическое логирование
 
     @classmethod
     def invalid_interval_deserialised(cls, form_id: int, step_num: int, error: str):

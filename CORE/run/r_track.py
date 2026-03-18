@@ -91,7 +91,7 @@ class RTrack:
                 )
 
         except RunPazzleError as e:
-            raise RunTrackError.internal_problem_in_pazzle(track_id=self.id, error=str(e))
+            raise RunTrackError.internal_problem_in_pazzle(track_id=self.id, error=str(e)) from e
         except PazzleOutOfSignal:
             # не имеет смысла выполнять этот трек, т.к. один из его SM вылез за пределы доступного сигнала.
             # Но это не обязательно аварийная ситуация - поэтому надо переделать наверх, шагу

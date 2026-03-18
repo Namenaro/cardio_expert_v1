@@ -87,4 +87,5 @@ class R_PS:
             raise
         except Exception as e:
             class_name = self.base_pazzle.class_ref.name
-            raise RunPazzleError.execution_error(self.base_pazzle.id, class_name, str(e))
+            # Добавляем from e для сохранения цепочки исключений
+            raise RunPazzleError.execution_error(self.base_pazzle.id, class_name, str(e)) from e
