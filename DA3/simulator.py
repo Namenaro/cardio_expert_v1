@@ -68,11 +68,22 @@ class Simulator:
         self._current_idx -= 1
         return self.dataset.get_exemplar_by_id(self._exemplar_ids[self._current_idx])
 
-    def run_track(self, ex: Exemplar, track_id: int, form: Form, center: Optional[float] = None) -> Union[
-        str, TrackRes]:
+    def run_track(self, ex: Exemplar, track_id: int, center: Optional[float] = None) -> Union[str, TrackRes]:
+        """
+        Запускает указанный трек на сигнале экземпляра.
+
+        Args:
+            ex: экземпляр с сигналом и уже установленными точками
+            track_id: идентификатор трека для запуска
+            center: опциональный центр для первого шага
+
+        Returns:
+            Union[str, TrackRes]: результат выполнения трека или сообщение об ошибке
+        """
         if not self.rform:
             return "Форма не инициализирована"
 
+        form = self.rform.form
         track_step = find_track(form, track_id)
         if not track_step:
             return f"Трек {track_id} не найден"
@@ -97,19 +108,66 @@ class Simulator:
 
         return exec_track(track, signal, left, right, track_id)
 
-    def run_step(self, ex: Exemplar, step_id: int, form: Form) -> StepRes:
-        pass
+    def run_step(self, ex: Exemplar, step_id: int) -> Union[str, StepRes]:
+        """
+        Запускает указанный шаг формы на сигнале экземпляра.
 
-    def run_form(self, ex: Exemplar, form: Form) -> ExemplarsPool:
+        Args:
+            ex: экземпляр с сигналом и уже установленными точками
+            step_id: номер шага в форме (num_in_form)
+
+        Returns:
+            Union[str, StepRes]: результат выполнения шага или сообщение об ошибке
+        """
+        if not self.rform:
+            return "Форма не инициализирована"
+
+        # Получаем шаг из rform
+        if step_id >= len(self.rform.rsteps):
+            return f"Шаг {step_id} не найден. Всего шагов: {len(self.rform.rsteps)}"
+
+        r_step = self.rform.rsteps[step_id]
+
+        # Для первого шага устанавливаем центр
+        if step_id == 0:
+            center = self._request_random_center_for_first_point(ex)
+            if center is None:
+                return "Нет центра для первого шага"
+            r_step.set_step_as_first(center)
+
+        try:
+            # Запускаем шаг
+            step_res, exemplars = r_step.run(ex)
+
+            # Сохраняем созданные экземпляры
+            self._last_step_exemplars = exemplars
+
+            logger.info(f"Шаг {step_id} выполнен. Создано экземпляров: {len(exemplars)}")
+            return step_res
+
+        except Exception as e:
+            logger.exception(f"Ошибка при выполнении шага {step_id}: {e}")
+            import traceback
+            traceback.print_exc()
+            return f"Ошибка шага {step_id}: {e}"
+
+    def run_form(self, ex: Exemplar, center: Optional[float]) -> ExemplarsPool:
         pass
 
 
 if __name__ == "__main__":
     from CORE.paths import EXEMPLARS_DATASETS_PATH, DB_PATH
-    from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QHBoxLayout, QComboBox, \
-        QLabel
+    from PySide6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QWidget,
+                                   QPushButton, QHBoxLayout, QComboBox, QSplitter,
+                                   QLabel, QMessageBox)
+    from PySide6.QtCore import Qt
     import sys
     import os
+
+    # Импортируем виджеты
+    from DA3.simulation_widgets.track_res_widget import TrackResWidget
+    from DA3.simulation_widgets.track_SMs_widget import Track_SMs_ResWidget
+    from DA3.simulation_widgets.step_res_widget import StepResWidget
 
     print(f"Датасеты: {EXEMPLARS_DATASETS_PATH}")
     if os.path.exists(EXEMPLARS_DATASETS_PATH):
@@ -138,89 +196,135 @@ if __name__ == "__main__":
         print("Не удалось получить экземпляр!")
         sys.exit(1)
 
-    # Находим первый трек в первом шаге
+    # ===== ТЕСТИРОВАНИЕ ТРЕКА =====
+    print("\n" + "=" * 50)
+    print("ТЕСТИРОВАНИЕ ТРЕКА")
+    print("=" * 50)
+
     if not (form.steps and form.steps[0].tracks):
         print("В форме нет треков!")
-        sys.exit(1)
+    else:
+        first_track_id = form.steps[0].tracks[0].id
+        print(f"Запуск трека {first_track_id}...")
 
-    first_track_id = form.steps[0].tracks[0].id
-    print(f"\nЗапуск трека {first_track_id}...")
+        # Запускаем трек
+        track_result = sim.run_track(first_ex, first_track_id, center=None)
 
-    # Запускаем трек
-    result = sim.run_track(first_ex, first_track_id, form, center=None)
-
-    if isinstance(result, str):
-        print(f"Ошибка: {result}")
-        sys.exit(1)
-
-    print(f"✅ Трек выполнен успешно!")
-    print(f"  SM объектов: {len(result.sm_res_objs)}")
-    print(f"  PS объектов: {len(result.ps_res_objs)}")
-    print(f"  Найдено точек: {len(result.to_uniq_coords())}")
-    if result.to_uniq_coords():
-        print(f"  Координаты: {[f'{p:.3f}' for p in result.to_uniq_coords()]}")
+        if isinstance(track_result, str):
+            print(f"Ошибка трека: {track_result}")
+        else:
+            print(f"✅ Трек выполнен успешно!")
+            print(f"  SM объектов: {len(track_result.sm_res_objs)}")
+            print(f"  PS объектов: {len(track_result.ps_res_objs)}")
+            print(f"  Найдено точек: {len(track_result.to_uniq_coords())}")
+            if track_result.to_uniq_coords():
+                print(f"  Координаты: {[f'{p:.3f}' for p in track_result.to_uniq_coords()]}")
 
 
-    # Запускаем визуализацию
-    class MainWindow(QMainWindow):
-        def __init__(self):
-            super().__init__()
-            self.setWindowTitle(f"Визуализация трека {first_track_id} - Форма: {form.name}")
-            self.setGeometry(100, 100, 900, 700)
+            # Запускаем визуализацию трека
+            class TrackWindow(QMainWindow):
+                def __init__(self):
+                    super().__init__()
+                    self.setWindowTitle(f"Визуализация трека {first_track_id} - Форма: {form.name}")
+                    self.setGeometry(100, 100, 1600, 800)
 
-            # Центральный виджет
-            central_widget = QWidget()
-            self.setCentralWidget(central_widget)
+                    central_widget = QWidget()
+                    self.setCentralWidget(central_widget)
+                    layout = QVBoxLayout(central_widget)
 
-            # Основной layout
-            main_layout = QVBoxLayout(central_widget)
+                    # Информация
+                    info_label = QLabel(f"Сигнал: {len(first_ex.signal)} отсчетов, {first_ex.signal.frequency} Гц")
+                    layout.addWidget(info_label)
 
-            # Панель управления
-            control_layout = QHBoxLayout()
+                    # Сплиттер для двух виджетов
+                    splitter = QSplitter(Qt.Horizontal)
 
-            # Кнопка для перезапуска
-            self.run_btn = QPushButton("Запустить трек")
-            self.run_btn.clicked.connect(self.run_track)
-            control_layout.addWidget(self.run_btn)
+                    self.ps_widget = TrackResWidget()
+                    self.sm_widget = Track_SMs_ResWidget()
 
-            # Выбор трека (если их несколько)
-            self.track_combo = QComboBox()
-            for i, track in enumerate(form.steps[0].tracks):
-                self.track_combo.addItem(f"Трек {i + 1} (ID:{track.id})", track.id)
-            control_layout.addWidget(QLabel("Выберите трек:"))
-            control_layout.addWidget(self.track_combo)
+                    splitter.addWidget(self.ps_widget)
+                    splitter.addWidget(self.sm_widget)
+                    splitter.setSizes([800, 800])
 
-            control_layout.addStretch()
-            main_layout.addLayout(control_layout)
+                    layout.addWidget(splitter)
 
-            # Информация об экземпляре
-            info_text = f"Сигнал: {len(first_ex.signal)} отсчетов, {first_ex.signal.frequency} Гц"
-            self.info_label = QLabel(info_text)
-            main_layout.addWidget(self.info_label)
-
-            # Виджет для визуализации
-            self.track_widget = TrackResWidget()
-            main_layout.addWidget(self.track_widget)
-
-            # Сразу показываем результат
-            self.track_widget.reset_data(result)
-
-        def run_track(self):
-            """Перезапускает выбранный трек"""
-            track_id = self.track_combo.currentData()
-            print(f"Запуск трека {track_id}...")
-
-            result = sim.run_track(first_ex, track_id, form, center=None)
-
-            if isinstance(result, str):
-                self.info_label.setText(f"Ошибка: {result}")
-            else:
-                self.info_label.setText(f"✅ Успешно! Найдено точек: {len(result.to_uniq_coords())}")
-                self.track_widget.reset_data(result)
+                    # Показываем результаты
+                    self.ps_widget.reset_data(track_result)
+                    self.sm_widget.reset_data(track_result)
 
 
-    # Запускаем приложение
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
+            track_app = QApplication.instance() or QApplication(sys.argv)
+            track_window = TrackWindow()
+            track_window.show()
+            track_app.exec()
+
+    # ===== ТЕСТИРОВАНИЕ ШАГА =====
+    print("\n" + "=" * 50)
+    print("ТЕСТИРОВАНИЕ ШАГА")
+    print("=" * 50)
+
+    if not form.steps:
+        print("В форме нет шагов!")
+    else:
+        first_step_id = form.steps[0].num_in_form
+        print(
+            f"Запуск шага {first_step_id} (цель: {form.steps[0].target_point.name if form.steps[0].target_point else 'не указана'})...")
+        print(f"  Треков в шаге: {len(form.steps[0].tracks)}")
+
+        # Запускаем шаг
+        step_result = sim.run_step(first_ex, first_step_id)
+
+        if isinstance(step_result, str):
+            print(f"Ошибка шага: {step_result}")
+        else:
+            print(f"✅ Шаг выполнен успешно!")
+            print(f"  ID шага: {step_result.id}")
+            print(f"  Интервал: [{step_result.left_coord:.3f}, {step_result.right_coord:.3f}]")
+            print(f"  Результатов треков: {len(step_result.tracks_results)}")
+
+            # Собираем все точки из всех треков
+            all_points = []
+            for i, track_res in enumerate(step_result.tracks_results):
+                points = track_res.to_uniq_coords()
+                all_points.extend(points)
+                print(f"    Трек {i + 1} (ID:{track_res.id}): {len(points)} точек")
+
+            print(f"  Всего уникальных точек: {len(set(all_points))}")
+            if all_points:
+                print(f"  Примеры координат: {[f'{p:.3f}' for p in sorted(set(all_points))[:5]]}")
+
+
+            # Запускаем визуализацию шага
+            class StepWindow(QMainWindow):
+                def __init__(self):
+                    super().__init__()
+                    self.setWindowTitle(f"Визуализация шага {first_step_id} - Форма: {form.name}")
+                    self.setGeometry(100, 100, 1000, 700)
+
+                    central_widget = QWidget()
+                    self.setCentralWidget(central_widget)
+                    layout = QVBoxLayout(central_widget)
+
+                    # Информация
+                    info_text = f"Шаг {first_step_id} | Цель: {form.steps[0].target_point.name if form.steps[0].target_point else 'не указана'}\n"
+                    info_text += f"Сигнал: {len(first_ex.signal)} отсчетов, {first_ex.signal.frequency} Гц\n"
+                    info_text += f"Интервал поиска: [{step_result.left_coord:.3f}, {step_result.right_coord:.3f}]"
+
+                    info_label = QLabel(info_text)
+                    info_label.setWordWrap(True)
+                    layout.addWidget(info_label)
+
+                    # Виджет шага
+                    self.step_widget = StepResWidget()
+                    layout.addWidget(self.step_widget)
+
+                    # Показываем результаты
+                    self.step_widget.reset_data(step_result)
+
+
+            step_app = QApplication.instance() or QApplication(sys.argv)
+            step_window = StepWindow()
+            step_window.show()
+            step_app.exec()
+
+    print("\n✅ Все тесты завершены!")

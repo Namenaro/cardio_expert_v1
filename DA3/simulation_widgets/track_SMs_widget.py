@@ -10,7 +10,7 @@ from CORE.visual_debug import SM_Res, TrackRes
 from CORE.visual_debug.results_drawers.draw_track_res_SM import DrawTrackRes_SM
 
 
-class TrackResWidget(QWidget):
+class Track_SMs_ResWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.init_ui()
@@ -100,7 +100,7 @@ if __name__ == "__main__":
                 sm_res_objs=sm_res_list
             )
             # Создание виджета TrackResWidget
-            self.track_res_widget = TrackResWidget()
+            self.track_res_widget = Track_SMs_ResWidget()
 
             # Заполняем виджет данными из тестового TrackRes
             self.track_res_widget.reset_data(test_track_res)
