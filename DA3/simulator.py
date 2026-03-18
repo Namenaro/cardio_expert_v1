@@ -13,6 +13,7 @@ from CORE.run.exemplars_pool import ExemplarsPool
 from CORE.run.r_form import RForm
 from CORE.visual_debug import TrackRes, StepRes
 from DA3.settings import Settings
+from DA3.simulation_widgets.track_res_widget import TrackResWidget
 from DA3.simulator_utils import find_track, make_interval, get_coords, exec_track
 
 logger = get_logger(__name__)
@@ -105,12 +106,16 @@ class Simulator:
 
 if __name__ == "__main__":
     from CORE.paths import EXEMPLARS_DATASETS_PATH, DB_PATH
+    from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QHBoxLayout, QComboBox, \
+        QLabel
+    import sys
     import os
 
     print(f"Датасеты: {EXEMPLARS_DATASETS_PATH}")
     if os.path.exists(EXEMPLARS_DATASETS_PATH):
         print(f"Файлы: {os.listdir(EXEMPLARS_DATASETS_PATH)}")
 
+    # Загружаем форму
     db = DBManager(DB_PATH)
     forms = FormService()
 
@@ -119,23 +124,103 @@ if __name__ == "__main__":
 
     print(f"\nФорма: {form.name}, шагов: {len(form.steps)}")
 
+    # Создаем симулятор
     sim = Simulator()
     sim.reset_form(form)
 
-    if sim._exemplar_ids:
-        ex = sim.next()
-        if ex and form.steps and form.steps[0].tracks:
-            tid = form.steps[0].tracks[0].id
-            print(f"\nЗапуск трека {tid}:")
+    if not sim._exemplar_ids:
+        print("Датасет пуст!")
+        sys.exit(1)
 
-            # Тестируем только один раз, например с center=None
-            print(f"\n  без центра:")
-            res = sim.run_track(ex, tid, form, None)
+    # Получаем первый экземпляр
+    first_ex = sim.next()
+    if not first_ex:
+        print("Не удалось получить экземпляр!")
+        sys.exit(1)
 
-            if isinstance(res, str):
-                print(f"    → {res}")
+    # Находим первый трек в первом шаге
+    if not (form.steps and form.steps[0].tracks):
+        print("В форме нет треков!")
+        sys.exit(1)
+
+    first_track_id = form.steps[0].tracks[0].id
+    print(f"\nЗапуск трека {first_track_id}...")
+
+    # Запускаем трек
+    result = sim.run_track(first_ex, first_track_id, form, center=None)
+
+    if isinstance(result, str):
+        print(f"Ошибка: {result}")
+        sys.exit(1)
+
+    print(f"✅ Трек выполнен успешно!")
+    print(f"  SM объектов: {len(result.sm_res_objs)}")
+    print(f"  PS объектов: {len(result.ps_res_objs)}")
+    print(f"  Найдено точек: {len(result.to_uniq_coords())}")
+    if result.to_uniq_coords():
+        print(f"  Координаты: {[f'{p:.3f}' for p in result.to_uniq_coords()]}")
+
+
+    # Запускаем визуализацию
+    class MainWindow(QMainWindow):
+        def __init__(self):
+            super().__init__()
+            self.setWindowTitle(f"Визуализация трека {first_track_id} - Форма: {form.name}")
+            self.setGeometry(100, 100, 900, 700)
+
+            # Центральный виджет
+            central_widget = QWidget()
+            self.setCentralWidget(central_widget)
+
+            # Основной layout
+            main_layout = QVBoxLayout(central_widget)
+
+            # Панель управления
+            control_layout = QHBoxLayout()
+
+            # Кнопка для перезапуска
+            self.run_btn = QPushButton("Запустить трек")
+            self.run_btn.clicked.connect(self.run_track)
+            control_layout.addWidget(self.run_btn)
+
+            # Выбор трека (если их несколько)
+            self.track_combo = QComboBox()
+            for i, track in enumerate(form.steps[0].tracks):
+                self.track_combo.addItem(f"Трек {i + 1} (ID:{track.id})", track.id)
+            control_layout.addWidget(QLabel("Выберите трек:"))
+            control_layout.addWidget(self.track_combo)
+
+            control_layout.addStretch()
+            main_layout.addLayout(control_layout)
+
+            # Информация об экземпляре
+            info_text = f"Сигнал: {len(first_ex.signal)} отсчетов, {first_ex.signal.frequency} Гц"
+            self.info_label = QLabel(info_text)
+            main_layout.addWidget(self.info_label)
+
+            # Виджет для визуализации
+            self.track_widget = TrackResWidget()
+            main_layout.addWidget(self.track_widget)
+
+            # Сразу показываем результат
+            self.track_widget.reset_data(result)
+
+        def run_track(self):
+            """Перезапускает выбранный трек"""
+            track_id = self.track_combo.currentData()
+            print(f"Запуск трека {track_id}...")
+
+            result = sim.run_track(first_ex, track_id, form, center=None)
+
+            if isinstance(result, str):
+                self.info_label.setText(f"Ошибка: {result}")
             else:
-                pts = res.to_uniq_coords()
-                print(f"    → SM:{len(res.sm_res_objs)} PS:{len(res.ps_res_objs)} точек:{len(pts)}")
-                if pts:
-                    print(f"      {[f'{p:.3f}' for p in pts[:3]]}")
+                self.info_label.setText(f"✅ Успешно! Найдено точек: {len(result.to_uniq_coords())}")
+                self.track_widget.reset_data(result)
+
+
+    # Запускаем приложение
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
