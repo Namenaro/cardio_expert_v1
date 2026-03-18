@@ -11,6 +11,8 @@ from CORE.run.r_hc import R_HC
 from CORE.run.r_pc import R_PC
 from CORE.run.r_track import RTrack
 from CORE.run.step_interval import Interval
+from CORE.visual_debug.results_datcalsses.track_res import TrackRes
+from CORE.visual_debug.results_datcalsses.step_res import StepRes
 
 logger = get_logger(__name__)
 
@@ -49,28 +51,40 @@ class RStep:
         """ В скольки процентах треков произошел выход за пределы предоставленного сигнала"""
         return self.out_of_signal_tracks / len(self.r_tracks)
 
-    def run(self, exemplar: Exemplar) -> List[Exemplar]:
+    def run(self, exemplar: Exemplar) -> Tuple[StepRes, List[Exemplar]]:
         """
-        Создает на основе переданного "родительского" экземпляра список экзепляров, каждый из которыз на точку длиннее родительского.
+        Создает на основе переданного "родительского" экземпляра список экзепляров, каждый из которых на точку длиннее родительского.
         Родительский экзепляр не меняется. Дочерние экземпляры имеют гарантированно разные точки (т.е. дочерние экземпляры прорежены по последней точке)
+
+        Возвращает кортеж (StepRes, List[Exemplar]), где:
+        - StepRes содержит полную информацию о запуске шага
+        - List[Exemplar] содержит созданные экземпляры (для обратной совместимости)
 
         :param exemplar: Экземляр формы (в котором выполнены все шаги, предыдущие к данному)
         :raises RunStepError, RunTrackError, RunPazzleError
-        :return: Список экземпляров, в каждом из которых на одну точку больше, чем в "родительском"
+        :return: Кортеж (StepRes, List[Exemplar])
         """
         if len(self.r_tracks) == 0:
             raise RunStepError.empty_tracks_list(self.num_in_form)
         if not self.target_point_name:
             raise RunStepError.invalid_target_point(self.num_in_form)
 
-        # 1. Получением координаты инфтервала поиска точек на сигнале экземпляра
+        # 1. Получение координат интервала поиска точек на сигнале экземпляра
         left_t, right_t = self.interval.get_interval_coords(center=self.center, exemplar=exemplar)
 
-        # 2. Запускаем по очереди все треки, получаем пары  вида track_id:одна_из_результирующих_точек
-        filtered_pairs = self._run_all_tracks(exemplar.signal, left_t=left_t, right_t=right_t)
+        # 2. Запускаем по очереди все треки и собираем результаты
+        tracks_results, filtered_pairs = self._run_all_tracks(exemplar.signal, left_t=left_t, right_t=right_t)
 
         if len(filtered_pairs) == 0:
-            return []  # возможны две причины такого исхода: искомых точек дейтсвительно нет или длины сигнала недостаточно для анализа
+            # Создаем StepRes с пустыми результатами
+            step_res = StepRes(
+                id=self.num_in_form,  # или другой идентификатор, если есть
+                signal=exemplar.signal,
+                left_coord=left_t,
+                right_coord=right_t,
+                tracks_results=tracks_results
+            )
+            return step_res, []  # возможны две причины такого исхода: искомых точек действительно нет или длины сигнала недостаточно для анализа
 
         # 3. На основе списка точек-кандидатов (уже профильтрованных от дублей) создаем дочерние экземпляры
         exemplars = self._init_exemplars(exemplar, filtered_pairs)
@@ -83,38 +97,65 @@ class RStep:
         except PazzleOutOfSignal:
             logger.info(
                 "PazzleOutOfSignal: параметризация прервана из-за нехватки сигнала одному или нескольким PC шага")
-            return []
+            # Создаем StepRes с результатами треков, но без экземпляров
+            step_res = StepRes(
+                id=self.num_in_form,
+                signal=exemplar.signal,
+                left_coord=left_t,
+                right_coord=right_t,
+                tracks_results=tracks_results
+            )
+            return step_res, []
 
-        # 5. Удялаяем те, которые нарушили жесткие условия на параметры
+        # 5. Удаляем те, которые нарушили жесткие условия на параметры
         exemplars = [ex for ex in exemplars if parametriser.fit_conditions(ex, self.rHC_objects)]
 
-        return exemplars
+        # 6. Создаем StepRes с результатами
+        step_res = StepRes(
+            id=self.num_in_form,
+            signal=exemplar.signal,
+            left_coord=left_t,
+            right_coord=right_t,
+            tracks_results=tracks_results
+        )
 
-    def _run_all_tracks(self, signal: Signal, left_t: float, right_t: float) -> List[Tuple[int, float]]:
+        return step_res, exemplars
+
+    def _run_all_tracks(self, signal: Signal, left_t: float, right_t: float) -> Tuple[
+        List[TrackRes], List[Tuple[int, float]]]:
         """
-            Собирает пары (track_id, point) из всех треков, удаляя точки,
-            которые находятся ближе друг к другу чем EPSILON_FOR_DUBLES.
+        Запускает все треки и собирает:
+        - список TrackRes для каждого трека
+        - отфильтрованные пары (track_id, point) для создания экземпляров
 
-
-            :return: Список кортежей (track_id: int, point: float)
-            """
+        :return: Кортеж (tracks_results, filtered_pairs)
+        """
+        tracks_results = []
         all_pairs = []
 
-        # Шаг 1: собираем все пары (id, point)
+        # Шаг 1: запускаем все треки и собираем результаты
         for track in self.r_tracks:
             try:
-                selected_points = track.run(signal, left_t=left_t, right_t=right_t)
-                for point in selected_points:
+                track_res = track.run(signal, left_t=left_t, right_t=right_t)
+                tracks_results.append(track_res)
+
+                # Собираем пары для фильтрации (используем уникальные координаты трека)
+                for point in track_res.to_uniq_coords():
                     all_pairs.append((track.id, point))
+
             except PazzleOutOfSignal:
-                # Некоторые треки могли требовать больший врагмент сигнала для
-                # анализа, чем предодставляет данный экземпляр.
+                # Некоторые треки могли требовать больший фрагмент сигнала для
+                # анализа, чем предоставляет данный экземпляр.
                 # Такая проблема в одном из треков не является железным показанием к свертыванию шага.
                 self.out_of_signal_tracks += 1
+                # Для треков, вылетевших с PazzleOutOfSignal, не создаем TrackRes
 
-        # Шаг 2: фильтруем близкие точки
+        # Шаг 2: фильтруем близкие точки среди пар
         # Сортируем по значению точки (для удобства сравнения соседних)
         all_pairs.sort(key=lambda pair: pair[1])
+
+        if not all_pairs:
+            return tracks_results, []
 
         filtered_pairs = [all_pairs[0]]  # начинаем с первой пары
 
@@ -126,13 +167,13 @@ class RStep:
             if abs(current_point - last_kept_point) >= EPSILON_FOR_DUBLES:
                 filtered_pairs.append(current_pair)
 
-        return filtered_pairs
+        return tracks_results, filtered_pairs
 
     def _init_exemplars(self, parent_exemplar: Exemplar, filtered_pairs: List[Tuple[int, float]]):
         """
         Создать потомков экземпляра, которые на одну точку больше, чем у предка
         :param parent_exemplar: родительский экземпляр, не меняется в коде
-        :param filtered_pairs: списов пар вида (id трека , коррдината точки от этого трека)
+        :param filtered_pairs: список пар вида (id трека , координата точки от этого трека)
         :return:
         """
         exemplars: List[Exemplar] = []

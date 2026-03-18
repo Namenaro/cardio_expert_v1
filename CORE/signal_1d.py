@@ -118,6 +118,9 @@ class Signal:
             return 0.0
         return self.time[-1] - self.time[0]
 
+    def __len__(self):
+        return self.get_duration()
+
 
 
 

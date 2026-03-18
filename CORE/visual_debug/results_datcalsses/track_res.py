@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Dict, List
 
 from CORE import Signal
+from CORE.run.utils import delete_similar_points
 from CORE.visual_debug.results_datcalsses.PS_res import PS_Res
 from CORE.visual_debug.results_datcalsses.SM_res import SM_Res
 
@@ -31,3 +32,12 @@ class TrackRes:
         for ps_obj in self.ps_res_objs:
             result.extend(ps_obj.res_coords)
         return result
+
+    def to_uniq_coords(self) -> List[float]:
+        """
+        Возвращает список уникальных координат, найденных всеми PS в этом треке.
+        Дубли удаляются с помощью delete_similar_points.
+        """
+        all_coords = self.get_all_ps_coords_flat()
+        delete_similar_points(all_coords)  # модифицируем список на месте
+        return all_coords  # возвращаем тот же список
