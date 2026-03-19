@@ -1,6 +1,7 @@
 import random
 from typing import Optional, List, Union
 
+from CORE import Signal
 from CORE.datasets_wrappers import LUDB
 from CORE.datasets_wrappers.form_associated.exemplars_dataset import ExemplarsDataset
 from CORE.datasets_wrappers.form_associated.parametrised_dataset import ParametrisedDataset
@@ -158,8 +159,30 @@ class Simulator:
             traceback.print_exc()
             return f"Ошибка шага {step_id}: {e}"
 
-    def run_form(self, ex: Exemplar, center: Optional[float]) -> ExemplarsPool:
-        pass
+    def run_form(self, big_signal: Signal, seminal_point: float) -> Union[str, ExemplarsPool]:
+        """
+        Запускает полный цикл распознавания формы на сигнале.
+
+        Args:
+            big_signal: сигнал, на котором будет выполняться распознавание
+            seminal_point: координата во времени (секунды), куда ориентировочно помещается первая точка
+
+        Returns:
+            Union[str, ExemplarsPool]: пул итоговых экземпляров или сообщение об ошибке
+        """
+        if not self.rform:
+            return "Форма не инициализирована"
+
+        try:
+            result_pool = self.rform.run(big_signal, seminal_point)
+            logger.info(f"Форма выполнена успешно. Создано экземпляров: {len(result_pool)}")
+            return result_pool
+
+        except Exception as e:
+            logger.exception(f"Ошибка при выполнении формы: {e}")
+            import traceback
+            traceback.print_exc()
+            return f"Ошибка выполнения формы: {e}"
 
 
 if __name__ == "__main__":
@@ -175,6 +198,7 @@ if __name__ == "__main__":
     from DA3.simulation_widgets.track_res_widget import TrackResWidget
     from DA3.simulation_widgets.track_SMs_widget import Track_SMs_ResWidget
     from DA3.simulation_widgets.step_res_widget import StepResWidget
+    from DA3.simulation_widgets.form_res_widget import FormResWidget  # <-- НОВЫЙ ИМПОРТ
 
     print(f"Датасеты: {EXEMPLARS_DATASETS_PATH}")
     if os.path.exists(EXEMPLARS_DATASETS_PATH):
@@ -344,3 +368,69 @@ if __name__ == "__main__":
             step_window = StepWindow()
             step_window.show()
             step_app.exec()
+
+    # ===== ТЕСТИРОВАНИЕ ФОРМЫ =====
+    print("\n" + "=" * 50)
+    print("ТЕСТИРОВАНИЕ ФОРМЫ")
+    print("=" * 50)
+
+    # Получаем сигнал из первого экземпляра
+    signal = first_ex.get_signal()
+
+    # Определяем семинальную точку (середина сигнала)
+    seminal_point = signal.get_duration() / 2
+    print(f"Запуск формы с семинальной точкой: {seminal_point:.3f}...")
+
+    # Запускаем форму
+    form_result = sim.run_form(signal, seminal_point)
+
+    if isinstance(form_result, str):
+        print(f"Ошибка формы: {form_result}")
+    else:
+        print(f"✅ Форма выполнена успешно!")
+        print(f"  Создано экземпляров: {len(form_result)}")
+
+        # Выводим информацию о лучших экземплярах
+        if form_result.exemplars_sorted:
+            print(f"\nТоп-3 лучших экземпляра:")
+            for i, ex in enumerate(form_result.exemplars_sorted[:3]):
+                print(f"  {i + 1}. Оценка: {ex.evaluation_result:.3f}")
+                print(
+                    f"     Точки: {sorted([(name, coord) for name, (coord, _) in ex._points.items()], key=lambda x: x[1])}")
+
+
+        # Запускаем визуализацию формы
+        class FormWindow(QMainWindow):
+            def __init__(self):
+                super().__init__()
+                self.setWindowTitle(f"Визуализация формы {form.name}")
+                self.setGeometry(100, 100, 1200, 800)
+
+                central_widget = QWidget()
+                self.setCentralWidget(central_widget)
+                layout = QVBoxLayout(central_widget)
+
+                # Информация
+                info_text = f"Форма: {form.name}\n"
+                info_text += f"Сигнал: {len(signal)} отсчетов, {signal.frequency} Гц\n"
+                info_text += f"Семинальная точка: {seminal_point:.3f}\n"
+                info_text += f"Всего экземпляров в пуле: {len(form_result)}"
+
+                info_label = QLabel(info_text)
+                info_label.setWordWrap(True)
+                layout.addWidget(info_label)
+
+                # Виджет формы
+                self.form_widget = FormResWidget(padding_percent=20)
+                layout.addWidget(self.form_widget)
+
+                # Показываем результаты (без ground truth, так как его нет)
+                self.form_widget.reset_data(form_result, ground_truth=None)
+
+
+        form_app = QApplication.instance() or QApplication(sys.argv)
+        form_window = FormWindow()
+        form_window.show()
+        form_app.exec()
+
+    print("\n✅ Все тесты завершены!")

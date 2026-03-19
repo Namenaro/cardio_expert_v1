@@ -43,6 +43,7 @@ class RForm:
         :return: набор экземпляров
         """
         initial_exemplar = Exemplar(signal=big_signal)
+        initial_exemplar.evaluation_result = 0.0
         exemplars_pool = ExemplarsPool(signal=big_signal, max_size=self.max_pool_size)
         exemplars_pool.add_exemplar(initial_exemplar)
 

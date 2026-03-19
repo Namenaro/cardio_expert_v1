@@ -49,6 +49,9 @@ class ExemplarsPool:
         """Возвращает количество экземпляров в пуле."""
         return len(self.exemplars_sorted)
 
+    def __len__(self):
+        return len(self.exemplars_sorted)
+
     def get_top_n_exemplars_sorted(self, n: int) -> List[Exemplar]:
         """
         Возвращает топ‑n экземпляров, отсортированных по evaluation_result (по убыванию).
