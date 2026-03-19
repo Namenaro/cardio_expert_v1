@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Optional, Tuple
 
 from CORE.run import Exemplar
@@ -86,13 +85,9 @@ class Interval:
                 left_coordinate = center - self.left_padding
                 center_used = True
             else:
-                raise ValueError(
-                    "Невозможно определить левую координату: нет опорной точки и center не задан"
-                )
+                raise ValueError("Невозможно определить левую координату: нет опорной точки и center не задан")
         else:
-            raise ValueError(
-                "Левая граница не определена (не заданы ни имя точки, ни отступ)"
-            )
+            raise ValueError("Левая граница не определена (не заданы ни имя точки, ни отступ)")
 
         # Вычисление правой координаты
         if self.right_point_name is not None:
@@ -109,19 +104,13 @@ class Interval:
                 right_coordinate = center + self.right_padding
                 center_used = True
             else:
-                raise ValueError(
-                    "Невозможно определить правую координату: нет опорной точки и center не задан"
-                )
+                raise ValueError("Невозможно определить правую координату: нет опорной точки и center не задан")
         else:
-            raise ValueError(
-                "Правая граница не определена (не заданы ни имя точки, ни отступ)"
-            )
+            raise ValueError("Правая граница не определена (не заданы ни имя точки, ни отступ)")
 
         # Проверка: если center передан, но не использован — ошибка
         if center is not None and not center_used:
-            raise ValueError(
-                "Параметр center был передан, но не использован при вычислениях"
-            )
+            raise ValueError("Параметр center был передан, но не использован при вычислениях")
 
         return left_coordinate, right_coordinate
 

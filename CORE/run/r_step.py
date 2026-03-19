@@ -1,22 +1,19 @@
 from copy import deepcopy
 from typing import Optional, List, Tuple
-from itertools import chain
 
 from CORE import Signal
 from CORE.constants import EPSILON_FOR_DUBLES
-from CORE.exeptions import RunStepError, PazzleOutOfSignal, RunTrackError, RunPazzleError
+from CORE.datasets_wrappers.form_associated.parametriser import Parametriser
+from CORE.exeptions import RunStepError, PazzleOutOfSignal
 from CORE.logger import get_logger
 from CORE.run import Exemplar
-from CORE.datasets_wrappers.form_associated.parametriser import Parametriser
 from CORE.run.r_hc import R_HC
 from CORE.run.r_pc import R_PC
 from CORE.run.r_track import RTrack
-from CORE.run.step_interval import Interval
 from CORE.run.schema import Schema
-from CORE.visual_debug.results_datcalsses.track_res import TrackRes
+from CORE.run.step_interval import Interval
 from CORE.visual_debug.results_datcalsses.step_res import StepRes
-from CORE.visual_debug.results_datcalsses.SM_res import SM_Res
-from CORE.visual_debug.results_datcalsses.PS_res import PS_Res
+from CORE.visual_debug.results_datcalsses.track_res import TrackRes
 
 logger = get_logger(__name__)
 
@@ -29,13 +26,9 @@ class RStep:
     При этом, поскольку на данную точку множсетво кандидатов,
      то результатом наращивания станут несколько экземпляров"""
 
-    def __init__(self, interval: Interval,
-                 r_tracks: List[RTrack],
-                 target_point_name: str,
-                 num_in_form: int,
+    def __init__(self, interval: Interval, r_tracks: List[RTrack], target_point_name: str, num_in_form: int,
                  schema: Schema,  # добавляем schema
-                 rHC_objects: Optional[List[R_HC]] = None,
-                 rPC_objects: Optional[List[R_PC]] = None):
+                 rHC_objects: Optional[List[R_HC]] = None, rPC_objects: Optional[List[R_PC]] = None):
 
         self.num_in_form: int = num_in_form
         self.center: Optional[float] = None
@@ -87,13 +80,8 @@ class RStep:
 
         if len(filtered_pairs) == 0:
             # Создаем StepRes с пустыми результатами
-            step_res = StepRes(
-                id=self.num_in_form,
-                signal=exemplar.signal,
-                left_coord=left_t,
-                right_coord=right_t,
-                tracks_results=tracks_results
-            )
+            step_res = StepRes(id=self.num_in_form, signal=exemplar.signal, left_coord=left_t, right_coord=right_t,
+                               tracks_results=tracks_results)
             return step_res, []
 
         # 3. На основе списка точек-кандидатов (уже профильтрованных от дублей) создаем дочерние экземпляры
@@ -107,26 +95,16 @@ class RStep:
             logger.info(
                 "PazzleOutOfSignal: параметризация прервана из-за нехватки сигнала одному или нескольким PC шага")
             # Создаем StepRes с результатами треков, но без экземпляров
-            step_res = StepRes(
-                id=self.num_in_form,
-                signal=exemplar.signal,
-                left_coord=left_t,
-                right_coord=right_t,
-                tracks_results=tracks_results
-            )
+            step_res = StepRes(id=self.num_in_form, signal=exemplar.signal, left_coord=left_t, right_coord=right_t,
+                               tracks_results=tracks_results)
             return step_res, []
 
         # 5. Удаляем те, которые нарушили жесткие условия на параметры
         exemplars = [ex for ex in exemplars if self.parametriser.fit_conditions(ex, self.rHC_objects)]
 
         # 6. Создаем StepRes с результатами
-        step_res = StepRes(
-            id=self.num_in_form,
-            signal=exemplar.signal,
-            left_coord=left_t,
-            right_coord=right_t,
-            tracks_results=tracks_results
-        )
+        step_res = StepRes(id=self.num_in_form, signal=exemplar.signal, left_coord=left_t, right_coord=right_t,
+                           tracks_results=tracks_results)
 
         return step_res, exemplars
 
@@ -156,8 +134,7 @@ class RStep:
                 # Некоторые треки могли требовать больший фрагмент сигнала для
                 # анализа, чем предоставляет данный экземпляр.
                 # Такая проблема в одном из треков не является железным показанием к свертыванию шага.
-                self.out_of_signal_tracks += 1
-                # Для треков, вылетевших с PazzleOutOfSignal, не создаем TrackRes
+                self.out_of_signal_tracks += 1  # Для треков, вылетевших с PazzleOutOfSignal, не создаем TrackRes
 
         # Шаг 2: фильтруем близкие точки среди пар
         # Сортируем по значению точки (для удобства сравнения соседних)

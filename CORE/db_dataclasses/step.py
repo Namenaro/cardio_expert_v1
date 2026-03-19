@@ -1,8 +1,9 @@
-from CORE.db_dataclasses.track import Track
-from CORE.db_dataclasses.point import Point
-
-from typing import Optional, List, Set
 from dataclasses import dataclass, field
+from typing import Optional, List
+
+from CORE.db_dataclasses.point import Point
+from CORE.db_dataclasses.track import Track
+
 
 @dataclass
 class Step:
@@ -19,13 +20,8 @@ class Step:
 
     # Границы интервала, в котором надо поставить целевую точку
     right_point: Optional[Point] = field(default=None)  # Может быть NULL
-    left_point: Optional[Point] = field(default=None)   # Может быть NULL
+    left_point: Optional[Point] = field(default=None)  # Может быть NULL
     left_padding_t: Optional[float] = None
     right_padding_t: Optional[float] = None
 
     comment: str = ""
-
-
-
-
-

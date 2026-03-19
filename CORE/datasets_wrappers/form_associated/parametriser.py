@@ -1,12 +1,12 @@
-from typing import List, Optional, Union
+from typing import List, Optional
 
-from CORE.db_dataclasses import Form, BasePazzle
-from CORE.exeptions import SchemaError, PazzleOutOfSignal
+from CORE.db_dataclasses import Form
+from CORE.exeptions import SchemaError
+from CORE.logger import get_logger
 from CORE.run import Exemplar
 from CORE.run.r_hc import R_HC
 from CORE.run.r_pc import R_PC
 from CORE.run.schema import Schema
-from CORE.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -38,13 +38,12 @@ class Parametriser:
     def _create_r_pcs_for_step(self, step_num: int) -> List[R_PC]:
         """Создает R_PC объекты для указанного шага по схеме"""
         base_pazzles = self.schema.get_PCs_by_step_num(step_num)
-        return [R_PC(base_pazzle=pc, form_points=self.form.points, form_params=self.form.parameters)
-                for pc in base_pazzles]
+        return [R_PC(base_pazzle=pc, form_points=self.form.points, form_params=self.form.parameters) for pc in
+                base_pazzles]
 
     def _create_r_hcs(self) -> List[R_HC]:
         """Создает R_HC объекты из HC_PC_objects формы"""
-        return [R_HC(pazzle, form_params=self.form.parameters)
-                for pazzle in self.form.HC_PC_objects if pazzle.is_HC()]
+        return [R_HC(pazzle, form_params=self.form.parameters) for pazzle in self.form.HC_PC_objects if pazzle.is_HC()]
 
     def _apply_r_pcs(self, exemplar: Exemplar, r_pcs: List[R_PC]) -> None:
         """Применяет список R_PC к экземпляру"""

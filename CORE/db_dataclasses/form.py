@@ -1,12 +1,10 @@
-
-from CORE.db_dataclasses.step import Step
-from CORE.db_dataclasses.point import Point
-from CORE.db_dataclasses.parameter import Parameter
+from dataclasses import dataclass, field
+from typing import List, Optional
 
 from CORE.db_dataclasses.base_pazzle import BasePazzle
-
-from typing import List, Optional, Tuple
-from dataclasses import dataclass, field
+from CORE.db_dataclasses.parameter import Parameter
+from CORE.db_dataclasses.point import Point
+from CORE.db_dataclasses.step import Step
 
 """ Основной класс фреймфорка"""
 

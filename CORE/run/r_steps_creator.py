@@ -1,9 +1,7 @@
 from typing import List
 
-from CORE import Signal
-from CORE.db_dataclasses import Form, Step, Point, BasePazzle
+from CORE.db_dataclasses import Form, Step
 from CORE.exeptions import FormError
-from CORE.run import Exemplar
 from CORE.run.r_hc import R_HC
 from CORE.run.r_pc import R_PC
 from CORE.run.r_step import RStep
@@ -53,25 +51,17 @@ class RStepsListCreator:
 
         # 3. Извлекаем PC согласно схеме
         PC_objects_for_step = self.schema.get_PCs_by_step_num(step_num=step.num_in_form)
-        rPC_objects = [R_PC(pc_pazzle, form_points=self.form.points,
-                            form_params=self.form.parameters)
-                       for pc_pazzle in PC_objects_for_step]
+        rPC_objects = [R_PC(pc_pazzle, form_points=self.form.points, form_params=self.form.parameters) for pc_pazzle in
+                       PC_objects_for_step]
 
         # 4. Извлекаем HC согласно схеме
         HC_objects_for_step = self.schema.get_HCs_by_step_num(step_num=step.num_in_form)
-        rHC_objects = [R_HC(hc_pazzle, form_params=self.form.parameters)
-                       for hc_pazzle in HC_objects_for_step]
+        rHC_objects = [R_HC(hc_pazzle, form_params=self.form.parameters) for hc_pazzle in HC_objects_for_step]
 
         # 5. Собираем все это в запускаемый объект шага, передавая schema
-        rstep = RStep(
-            interval=interval,
-            r_tracks=r_tracks,
-            target_point_name=step.target_point.name,
-            num_in_form=step.num_in_form,
-            schema=self.schema,  # передаем schema в RStep
-            rPC_objects=rPC_objects,
-            rHC_objects=rHC_objects
-        )
+        rstep = RStep(interval=interval, r_tracks=r_tracks, target_point_name=step.target_point.name,
+                      num_in_form=step.num_in_form, schema=self.schema,  # передаем schema в RStep
+                      rPC_objects=rPC_objects, rHC_objects=rHC_objects)
         return rstep
 
     def _get_interval_for_step(self, step: Step) -> Interval:
@@ -96,6 +86,4 @@ class RStepsListCreator:
 
             return interval
         except Exception as e:
-            raise FormError.invalid_interval_deserialised(form_id=self.form.id,
-                                                          step_num=step.num_in_form,
-                                                          error=str(e))
+            raise FormError.invalid_interval_deserialised(form_id=self.form.id, step_num=step.num_in_form, error=str(e))

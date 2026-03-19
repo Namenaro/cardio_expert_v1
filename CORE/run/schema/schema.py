@@ -1,10 +1,7 @@
-from enum import Enum
+from typing import List
 
-from CORE.db_dataclasses import Form, Step, Point, BasePazzle, Parameter
-from typing import List, Dict, Tuple
-
+from CORE.db_dataclasses import Form, BasePazzle
 from CORE.exeptions import SchemaError
-from CORE.run.run_pazzle import PazzleParser
 from CORE.run.schema.context import Context
 from CORE.run.schema.schemed_HC import HC_Wrapper
 from CORE.run.schema.schemed_PC import PC_Wrapper
@@ -28,6 +25,7 @@ class Schema:
     для показа пользователю в GUI
 
     """
+
     def __init__(self, form: Form):
         self.form = form
         self.context = Context()
@@ -56,7 +54,6 @@ class Schema:
             # для данного шага подбираем PC и HC
             self._find_PCs_for_step(step)
             self._find_HCs_for_step(step)
-
 
         if len(self.wHCs):
             ids = [whc.hc.id for whc in self.wHCs]
@@ -121,16 +118,12 @@ class Schema:
                 self.context.add_HC(pazzle_id=hc.hc.id)
                 del self.wHCs[i]
 
-
     def _init_HC_PC(self):
         try:
-            self.wHCs = [HC_Wrapper(obj, form_params=self.form.parameters)
-                         for obj in self.form.HC_PC_objects
-                         if obj.is_HC()
-                         ]
-            self.wPCs = [PC_Wrapper(obj, form_params=self.form.parameters, form_points=self.form.points)
-                         for obj in self.form.HC_PC_objects
-                         if obj.is_PC()]
+            self.wHCs = [HC_Wrapper(obj, form_params=self.form.parameters) for obj in self.form.HC_PC_objects if
+                         obj.is_HC()]
+            self.wPCs = [PC_Wrapper(obj, form_params=self.form.parameters, form_points=self.form.points) for obj in
+                         self.form.HC_PC_objects if obj.is_PC()]
         except Exception as e:
             message = f"Ошибка парсинга HC|PC объектов формы {self.form.id}, " + str(e)
             self.context.add_error(message)
@@ -139,7 +132,6 @@ class Schema:
     def get_PCs_by_step_num(self, step_num) -> List[BasePazzle]:
         pcs = [wpc.pc for wpc in self.steps_sorted[step_num].wPCs]
         return pcs
-
 
     def get_HCs_by_step_num(self, step_num) -> List[BasePazzle]:
         hcs = [whc.hc for whc in self.steps_sorted[step_num].wHCs]
