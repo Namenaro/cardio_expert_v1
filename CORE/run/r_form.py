@@ -19,14 +19,15 @@ class RForm:
 
     def __init__(self, form: Form, evaluator: BaseEvaluator, max_pool_size: int = 5):
         self.form = form
-        schema = Schema(form)
-        sucess = schema.compile()
+        self.schema = Schema(form)  # сохраняем схему
+        sucess = self.schema.compile()
         if not sucess:
             raise SchemaError
 
         self.max_pool_size = max_pool_size
         self.evaluator = evaluator
-        self.rsteps: List[RStep] = RStepsListCreator().from_db_form(form, schema)
+
+        self.rsteps: List[RStep] = RStepsListCreator().from_db_form(form, self.schema)
 
     def run(self, big_signal: Signal, seminal_point: float) -> ExemplarsPool:
         """

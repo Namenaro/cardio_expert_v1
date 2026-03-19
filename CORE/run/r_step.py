@@ -1,9 +1,10 @@
 from copy import deepcopy
 from typing import Optional, List, Tuple
+from itertools import chain
 
 from CORE import Signal
 from CORE.constants import EPSILON_FOR_DUBLES
-from CORE.exeptions import RunStepError, PazzleOutOfSignal
+from CORE.exeptions import RunStepError, PazzleOutOfSignal, RunTrackError, RunPazzleError
 from CORE.logger import get_logger
 from CORE.run import Exemplar
 from CORE.datasets_wrappers.form_associated.parametriser import Parametriser
@@ -11,8 +12,11 @@ from CORE.run.r_hc import R_HC
 from CORE.run.r_pc import R_PC
 from CORE.run.r_track import RTrack
 from CORE.run.step_interval import Interval
+from CORE.run.schema import Schema
 from CORE.visual_debug.results_datcalsses.track_res import TrackRes
 from CORE.visual_debug.results_datcalsses.step_res import StepRes
+from CORE.visual_debug.results_datcalsses.SM_res import SM_Res
+from CORE.visual_debug.results_datcalsses.PS_res import PS_Res
 
 logger = get_logger(__name__)
 
@@ -29,6 +33,7 @@ class RStep:
                  r_tracks: List[RTrack],
                  target_point_name: str,
                  num_in_form: int,
+                 schema: Schema,  # добавляем schema
                  rHC_objects: Optional[List[R_HC]] = None,
                  rPC_objects: Optional[List[R_PC]] = None):
 
@@ -44,11 +49,16 @@ class RStep:
         self.r_tracks: List[RTrack] = r_tracks
         self.out_of_signal_tracks = 0
 
+        # Создаем параметризатор из схемы
+        self.parametriser = Parametriser(schema=schema)
+
     def set_step_as_first(self, center: float):
         self.center = center
 
     def get_out_of_signals_procent(self):
         """ В скольки процентах треков произошел выход за пределы предоставленного сигнала"""
+        if len(self.r_tracks) == 0:
+            return 0.0
         return self.out_of_signal_tracks / len(self.r_tracks)
 
     def run(self, exemplar: Exemplar) -> Tuple[StepRes, List[Exemplar]]:
@@ -78,22 +88,21 @@ class RStep:
         if len(filtered_pairs) == 0:
             # Создаем StepRes с пустыми результатами
             step_res = StepRes(
-                id=self.num_in_form,  # или другой идентификатор, если есть
+                id=self.num_in_form,
                 signal=exemplar.signal,
                 left_coord=left_t,
                 right_coord=right_t,
                 tracks_results=tracks_results
             )
-            return step_res, []  # возможны две причины такого исхода: искомых точек действительно нет или длины сигнала недостаточно для анализа
+            return step_res, []
 
         # 3. На основе списка точек-кандидатов (уже профильтрованных от дублей) создаем дочерние экземпляры
         exemplars = self._init_exemplars(exemplar, filtered_pairs)
 
         # 4. Параметризуем полученные экземпляры
-        parametriser = Parametriser()
         try:
-            for exemplar in exemplars:
-                parametriser.parametrise(exemplar, r_pcs=self.rPC_objects)
+            for ex in exemplars:
+                self.parametriser.parametrise(ex, self.rPC_objects)
         except PazzleOutOfSignal:
             logger.info(
                 "PazzleOutOfSignal: параметризация прервана из-за нехватки сигнала одному или нескольким PC шага")
@@ -108,7 +117,7 @@ class RStep:
             return step_res, []
 
         # 5. Удаляем те, которые нарушили жесткие условия на параметры
-        exemplars = [ex for ex in exemplars if parametriser.fit_conditions(ex, self.rHC_objects)]
+        exemplars = [ex for ex in exemplars if self.parametriser.fit_conditions(ex, self.rHC_objects)]
 
         # 6. Создаем StepRes с результатами
         step_res = StepRes(
