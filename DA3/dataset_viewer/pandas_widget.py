@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QTableView, QVBoxLayout,
     QWidget, QHeaderView, QStyleFactory, QMenu
 )
-from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, QPoint
+from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, QPoint, QSortFilterProxyModel
 from PySide6.QtGui import QColor, QBrush, QFont, QPalette, QAction
 from PySide6.QtGui import QGuiApplication
 
@@ -99,6 +99,58 @@ class PandasModel(QAbstractTableModel):
             return "NaN" if pd.isna(value) else str(value)
         return ""
 
+    def get_raw_value(self, row: int, col: int):
+        """Возвращает сырое значение для сортировки"""
+        if 0 <= row < len(self._data) and 0 <= col < len(self._data.columns):
+            return self._data.iloc[row, col]
+        return None
+
+
+class PandasSortFilterProxyModel(QSortFilterProxyModel):
+    """Прокси-модель для сортировки с правильной обработкой NaN"""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._source_model = None
+
+    def setSourceModel(self, source_model):
+        """Устанавливает исходную модель"""
+        super().setSourceModel(source_model)
+        self._source_model = source_model
+
+    def lessThan(self, left: QModelIndex, right: QModelIndex) -> bool:
+        """Переопределяем метод сравнения для сортировки"""
+        if not self._source_model:
+            return super().lessThan(left, right)
+
+        # Получаем сырые значения из исходной модели
+        left_value = self._source_model.get_raw_value(left.row(), left.column())
+        right_value = self._source_model.get_raw_value(right.row(), right.column())
+
+        # Проверяем на NaN - NaN всегда считаем больше (чтобы они были вверху)
+        left_is_na = pd.isna(left_value)
+        right_is_na = pd.isna(right_value)
+
+        # Если оба NaN - они равны
+        if left_is_na and right_is_na:
+            return False
+
+        # Если левый NaN, а правый нет - левый больше (идет выше)
+        if left_is_na and not right_is_na:
+            return False
+
+        # Если правый NaN, а левый нет - левый меньше (правый выше)
+        if not left_is_na and right_is_na:
+            return True
+
+        # Если оба не NaN, сравниваем как обычно
+        try:
+            # Пытаемся сравнивать как числа
+            return float(left_value) < float(right_value)
+        except (ValueError, TypeError):
+            # Если не числа, сравниваем как строки
+            return str(left_value).lower() < str(right_value).lower()
+
 
 class CustomTableView(QTableView):
     """Кастомная таблица с контекстным меню для копирования"""
@@ -107,6 +159,7 @@ class CustomTableView(QTableView):
         super().__init__(parent)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.show_context_menu)
+        self.setSortingEnabled(True)  # Включаем сортировку
 
     def show_context_menu(self, position: QPoint):
         """Показывает контекстное меню при правом клике"""
@@ -133,11 +186,7 @@ class CustomTableView(QTableView):
             return
 
         # Получаем значение из модели
-        model = self.model()
-        if hasattr(model, 'get_value_at'):
-            value = model.get_value_at(index.row(), index.column())
-        else:
-            value = index.data(Qt.DisplayRole)
+        value = index.data(Qt.DisplayRole)
 
         # Копируем в буфер обмена
         clipboard = QGuiApplication.clipboard()
@@ -152,23 +201,31 @@ class DataFrameWidget(QWidget):
 
         self._data = data if data is not None else pd.DataFrame()
 
+        # Создаем исходную модель
+        self.source_model = PandasModel(self._data)
+
+        # Создаем прокси-модель для сортировки
+        self.proxy_model = PandasSortFilterProxyModel()
+        self.proxy_model.setSourceModel(self.source_model)
+
         # Создаем кастомную таблицу с контекстным меню
         self.table_view = CustomTableView()
         self.table_view.setAlternatingRowColors(True)  # Чередование цветов строк
         self.table_view.setSelectionBehavior(QTableView.SelectItems)  # Выделение отдельных ячеек
         self.table_view.setSelectionMode(QTableView.ExtendedSelection)  # Множественный выбор
-        self.table_view.setSortingEnabled(True)  # Включить сортировку по клику на заголовок
+
+        # Устанавливаем прокси-модель в представление
+        self.table_view.setModel(self.proxy_model)
+
+        # Настройка сортировки
+        self.table_view.setSortingEnabled(True)
+        self.table_view.sortByColumn(-1, Qt.AscendingOrder)  # Изначально сортировка не применена
 
         # Настройка растягивания колонок
         self.table_view.horizontalHeader().setStretchLastSection(True)
         self.table_view.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
         self.table_view.verticalHeader().setVisible(True)
         self.table_view.verticalHeader().setDefaultSectionSize(30)  # Высота строк
-
-        # Устанавливаем модель
-        if not self._data.empty:
-            self.model = PandasModel(self._data)
-            self.table_view.setModel(self.model)
 
         # Layout
         layout = QVBoxLayout()
@@ -256,11 +313,10 @@ class DataFrameWidget(QWidget):
     def set_data(self, data: pd.DataFrame):
         """Обновляет данные в виджете"""
         self._data = data
-        if hasattr(self, 'model'):
-            self.model.update_data(data)
-        else:
-            self.model = PandasModel(data)
-            self.table_view.setModel(self.model)
+        self.source_model.update_data(data)
+
+        # Сбрасываем сортировку после обновления данных
+        self.table_view.sortByColumn(-1, Qt.AscendingOrder)
 
         # Настройка ширины колонок
         self.resize_columns_to_content()
@@ -270,7 +326,7 @@ class DataFrameWidget(QWidget):
         self.table_view.resizeColumnsToContents()
 
         # Ограничиваем максимальную ширину
-        for i in range(self.model.columnCount()):
+        for i in range(self.source_model.columnCount()):
             current_width = self.table_view.columnWidth(i)
             if current_width > 300:
                 self.table_view.setColumnWidth(i, 300)
