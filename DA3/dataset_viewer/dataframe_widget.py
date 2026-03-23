@@ -1,23 +1,10 @@
-import sys
 import pandas as pd
-import numpy as np
-from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QTableView, QVBoxLayout,
-    QWidget, QHeaderView, QStyleFactory, QMenu
-)
 from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, QPoint, QSortFilterProxyModel
-from PySide6.QtGui import QColor, QBrush, QFont, QPalette, QAction
+from PySide6.QtGui import QColor, QBrush, QFont, QAction
 from PySide6.QtGui import QGuiApplication
+from PySide6.QtWidgets import (QTableView, QVBoxLayout, QWidget, QHeaderView, QMenu)
 
-# Импорты для работы с вашей базой данных
-from CORE.db.db_manager import DBManager
-from CORE.db.forms_services import FormService
-from CORE.datasets_wrappers.form_associated.exemplars_dataset import ExemplarsDataset
-from CORE.datasets_wrappers.form_associated.parametrised_dataset import ParametrisedDataset
-from CORE.db_dataclasses import Form
-from CORE.paths import DB_PATH
 from CORE.logger import get_logger
-from CORE.datasets_wrappers import LUDB
 
 logger = get_logger(__name__)
 
@@ -348,5 +335,3 @@ class DataFrameWidget(QWidget):
     def get_data(self) -> pd.DataFrame:
         """Возвращает текущие данные"""
         return self._data
-
-

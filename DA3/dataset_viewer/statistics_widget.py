@@ -1,30 +1,18 @@
-import sys
-import pandas as pd
-import numpy as np
-from PySide6.QtGui import QColor, QPalette
-from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QStyleFactory, QWidget,
-    QVBoxLayout, QHBoxLayout, QScrollArea, QLabel,
-    QFrame, QSizePolicy
-)
-from PySide6.QtCore import Qt
-
 import matplotlib
 import matplotlib.pyplot as plt
+import pandas as pd
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QWidget,
+    QVBoxLayout, QScrollArea, QLabel,
+    QFrame
+)
 
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-from CORE.datasets_wrappers import LUDB
-from CORE.datasets_wrappers.form_associated.exemplars_dataset import ExemplarsDataset
-from CORE.datasets_wrappers.form_associated.parametrised_dataset import ParametrisedDataset
-from CORE.db.db_manager import DBManager
-from CORE.db.forms_services import FormService
-from CORE.db_dataclasses import Form
 from CORE.logger import get_logger
-from CORE.paths import DB_PATH
-from DA3.dataset_viewer.dataframe_widget import DataFrameWidget
 
 logger = get_logger(__name__)
 

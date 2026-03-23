@@ -1,23 +1,16 @@
 import sys
+
+import matplotlib
 import pandas as pd
-import numpy as np
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QStyleFactory, QWidget,
-    QVBoxLayout, QHBoxLayout, QScrollArea, QLabel,
-    QFrame, QSizePolicy
+    QHBoxLayout
 )
-from PySide6.QtCore import Qt
-
-
-import matplotlib
-import matplotlib.pyplot as plt
 
 from DA3.dataset_viewer.statistics_widget import StatisticsPanel
 
 matplotlib.use('Qt5Agg')
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
 
 from CORE.datasets_wrappers import LUDB
 from CORE.datasets_wrappers.form_associated.exemplars_dataset import ExemplarsDataset
