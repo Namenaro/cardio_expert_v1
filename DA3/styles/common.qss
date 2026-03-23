@@ -1,0 +1,104 @@
+/* common.qss - Minimal Flat Theme with muted colors */
+
+* {
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+}
+
+
+/* Общие стили для полей */
+QLabel[class="fieldLabel"] {
+    font-weight: 600;
+    color: #495057;
+    font-size: 13px;
+    padding-right: 10px;
+}
+
+QLabel[class="valueLabel"] {
+    color: #212529;
+    font-size: 13px;
+    background-color: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+}
+
+/* Общие стили для кнопок - приглушенные */
+QPushButton[class="primaryButton"] {
+    background-color: #ffffff;
+    color: #4e73df;
+    border: 1px solid #4e73df;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 13px;
+    padding: 8px 12px;
+}
+
+QPushButton[class="primaryButton"]:hover {
+    background-color: #4e73df;
+    color: white;
+}
+
+QPushButton[class="primaryButton"]:pressed {
+    background-color: #2e59d9;
+    color: white;
+}
+
+QPushButton[class="primaryButton"]:disabled {
+    background-color: #f8f9fa;
+    color: #adb5bd;
+    border-color: #dee2e6;
+}
+
+QPushButton[class="dangerButton"] {
+    background-color: #ffffff;
+    color: #e74a3b;
+    border: 1px solid #e74a3b;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 13px;
+    padding: 8px 12px;
+}
+
+QPushButton[class="dangerButton"]:hover {
+    background-color: #e74a3b;
+    color: white;
+}
+
+QPushButton[class="dangerButton"]:pressed {
+    background-color: #d52a1a;
+    color: white;
+}
+
+QPushButton[class="dangerButton"]:disabled {
+    background-color: #f8f9fa;
+    color: #adb5bd;
+    border-color: #dee2e6;
+}
+
+/* Стили для ScrollArea */
+QScrollArea {
+    border: none;
+    background-color: transparent;
+}
+
+QScrollBar:vertical {
+    background-color: #f8f9fc;
+    width: 8px;
+    border-radius: 4px;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #d1d3e2;
+    border-radius: 4px;
+    min-height: 30px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: #b7b9cc;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    border: none;
+    background: none;
+    height: 0px;
+}

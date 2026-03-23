@@ -1,0 +1,82 @@
+/* form_info_widget.qss - Minimal Flat Theme */
+
+/* Заголовок - без дополнительных отступов */
+#mainTitle {
+    font-size: 14px;
+    font-weight: bold;
+    color: #2c3e50;
+    background-color: #f8f9fa;
+    padding: 6px;
+    border-radius: 4px;
+    margin: 0;
+}
+
+/* Карточка - без дополнительных отступов */
+#infoCard {
+    background-color: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+}
+
+/* Фрейм изображения - сохраняем исходный размер */
+#imageFrame {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+}
+
+#imageFrame:hover {
+    border-color: #4e73df;
+}
+
+/* Плейсхолдер */
+#placeholderLabel {
+    color: #6c757d;
+    font-size: 11px;
+    padding: 4px;
+}
+
+/* Кнопки - сохраняем исходную высоту */
+#editButton {
+    background-color: #4e73df;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+#editButton:hover {
+    background-color: #2e59d9;
+}
+
+#editButton:pressed {
+    background-color: #224abe;
+}
+
+#editButton:disabled {
+    background-color: #d1d3e2;
+    color: #858796;
+}
+
+#deleteButton {
+    background-color: #e74a3b;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+#deleteButton:hover {
+    background-color: #d52a1a;
+}
+
+#deleteButton:pressed {
+    background-color: #be2617;
+}
+
+#deleteButton:disabled {
+    background-color: #d1d3e2;
+    color: #858796;
+}

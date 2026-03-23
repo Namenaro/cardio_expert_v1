@@ -6,7 +6,7 @@ from PySide6.QtGui import QFont
 
 from DA3 import app_signals
 from CORE.db_dataclasses import BasePazzle, Parameter, ObjectInputParamValue
-from DA3.utils import get_affected_form_parameters
+from DA3.utils.utils import get_affected_form_parameters
 
 class HCCard(QFrame):
     """Карточка для отображения HC объекта"""

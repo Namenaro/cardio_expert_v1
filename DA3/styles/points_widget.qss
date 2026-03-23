@@ -1,0 +1,112 @@
+/* points_widget.qss - Compact Flat стили для виджета точек */
+
+/* Заголовок */
+#mainTitle {
+    font-size: 14px;
+    font-weight: bold;
+    color: #2c3e50;
+    background-color: #f8f9fa;
+    padding: 4px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+}
+
+/* Область прокрутки */
+QScrollArea {
+    border: none;
+    background-color: transparent;
+}
+
+/* Контейнер для точек */
+#pointsContainer {
+    background-color: transparent;
+}
+
+/* Фрейм точки - компактный */
+#pointFrame {
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin: 1px 0;
+}
+
+#pointFrame:hover {
+    border-color: #adb5bd;
+    background-color: #f8f9fa;
+}
+
+/* ID точки */
+#idLabel {
+    color: #6c757d;
+    font-size: 10px;
+    font-style: italic;
+    background-color: transparent;
+}
+
+/* Название точки */
+#pointNameLabel {
+    font-weight: bold;
+    font-size: 12px;
+    color: #2c3e50;
+    margin: 0;
+}
+
+/* Кнопки внутри фрейма точки */
+#editPointButton, #deletePointButton {
+    min-width: 80px;
+    padding: 4px 8px;
+    font-size: 11px;
+    border: 1px solid;
+    background-color: #ffffff;
+}
+
+#editPointButton {
+    color: #4e73df;
+    border-color: #4e73df;
+    border-radius: 3px;
+}
+
+#editPointButton:hover {
+    background-color: #4e73df;
+    color: white;
+}
+
+#editPointButton:pressed {
+    background-color: #2e59d9;
+}
+
+#deletePointButton {
+    color: #e74a3b;
+    border-color: #e74a3b;
+    border-radius: 3px;
+}
+
+#deletePointButton:hover {
+    background-color: #e74a3b;
+    color: white;
+}
+
+#deletePointButton:pressed {
+    background-color: #d52a1a;
+}
+
+/* Кнопка добавления - компактная */
+#addButton {
+    background-color: #ffffff;
+    color: #4e73df;
+    border: 1px solid #4e73df;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 12px;
+    padding: 6px;
+    min-height: 32px;
+}
+
+#addButton:hover {
+    background-color: #4e73df;
+    color: white;
+}
+
+#addButton:pressed {
+    background-color: #2e59d9;
+}

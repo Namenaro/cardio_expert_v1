@@ -7,51 +7,54 @@ from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QFont
 from CORE.db_dataclasses import Parameter
 from DA3 import app_signals
+from DA3.base_widget import BaseWidget
 
 
-class ParametersWidget(QWidget):
+class ParametersWidget(BaseWidget):
     """Виджет для работы с параметрами формы"""
 
     def __init__(self):
         super().__init__()
         self._parameters: List[Parameter] = []
         self.setup_ui()
+        self.apply_styles("common.qss", "parameters_widget.qss")
 
     def setup_ui(self):
-        # Основной layout
+        # Основной layout - уменьшенные отступы
         main_layout = QVBoxLayout(self)
-        main_layout.setSpacing(5)
-        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setSpacing(6)
+        main_layout.setContentsMargins(8, 8, 8, 8)
 
         # Заголовок
         title_label = QLabel("Параметры формы")
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_label.setStyleSheet("font-weight: bold; font-size: 14px; margin-bottom: 10px;")
+        title_label.setObjectName("mainTitle")
         main_layout.addWidget(title_label)
 
-        # Область прокрутки для списка параметров
+        # Область прокрутки
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll_area.setStyleSheet("border: none;")
 
         # Контейнер для списка параметров
         self.parameters_container = QWidget()
+        self.parameters_container.setObjectName("parametersContainer")
         self.parameters_layout = QVBoxLayout(self.parameters_container)
-        self.parameters_layout.setSpacing(5)
-        self.parameters_layout.setContentsMargins(5, 5, 5, 5)
+        self.parameters_layout.setSpacing(4)
+        self.parameters_layout.setContentsMargins(4, 4, 4, 4)
         self.parameters_layout.addStretch()
 
         scroll_area.setWidget(self.parameters_container)
         main_layout.addWidget(scroll_area)
 
-        # Кнопка добавления нового параметра
+        # Кнопка добавления
         self.add_button = QPushButton("Добавить параметр")
+        self.add_button.setObjectName("addButton")
         self.add_button.clicked.connect(self.on_add_parameter_clicked)
-        self.add_button.setMinimumHeight(40)
-        main_layout.addWidget(self.add_button)
+        self.add_button.setMinimumHeight(32)
 
-        self.setStyleSheet("background-color: #ffe6e6;")  # Другой цвет для отличия
+        main_layout.addWidget(self.add_button)
 
     def reset_parameters(self, parameters: List[Parameter]) -> None:
         """Установить новый список параметров"""
@@ -74,53 +77,54 @@ class ParametersWidget(QWidget):
         """Создать и добавить виджет для одного параметра"""
         # Фрейм для параметра
         parameter_frame = QFrame()
-        parameter_frame.setFrameShape(QFrame.Shape.Box)
-        parameter_frame.setLineWidth(1)
+        parameter_frame.setObjectName("parameterFrame")
+        parameter_frame.setFrameShape(QFrame.Shape.NoFrame)
         parameter_frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        parameter_frame.setMinimumHeight(70)  # Минимальная высота для отображения всей информации
 
-        # Layout для фрейма
+        # Layout для фрейма - уменьшенные отступы
         frame_layout = QVBoxLayout(parameter_frame)
-        frame_layout.setContentsMargins(10, 10, 10, 10)
+        frame_layout.setContentsMargins(10, 8, 10, 8)
+        frame_layout.setSpacing(4)
 
         # === ВЕРХНЯЯ ЧАСТЬ: ID и кнопки ===
         top_layout = QHBoxLayout()
-        top_layout.setContentsMargins(0, 0, 0, 5)
+        top_layout.setContentsMargins(0, 0, 0, 0)
+        top_layout.setSpacing(8)
 
-        # ID параметра (нередактируемый)
-        id_label = QLabel(f"ID{parameter.id if parameter.id is not None else '?'}")
-        id_label.setFont(QFont("Arial", 8))
-        id_label.setStyleSheet("color: #666666; font-style: italic;")
+        # ID параметра
+        id_text = f"ID{parameter.id if parameter.id is not None else '?'}"
+        id_label = QLabel(id_text)
+        id_label.setObjectName("idLabel")
         top_layout.addWidget(id_label)
 
-        # Пустое пространство
         top_layout.addStretch()
 
         # Кнопка редактирования
         edit_button = QPushButton("Редактировать")
+        edit_button.setObjectName("editParameterButton")
         edit_button.clicked.connect(lambda checked, p=parameter: self.on_edit_parameter_clicked(p))
         top_layout.addWidget(edit_button)
 
         # Кнопка удаления
         delete_button = QPushButton("Удалить")
+        delete_button.setObjectName("deleteParameterButton")
         delete_button.clicked.connect(lambda checked, p=parameter: self.on_delete_parameter_clicked(p))
         top_layout.addWidget(delete_button)
 
         frame_layout.addLayout(top_layout)
 
-        # === СРЕДНЯЯ ЧАСТЬ: Название параметра ===
-        name_label = QLabel(parameter.name if parameter.name else "<Название не указано>")
-        name_label.setFont(QFont("Arial", 10, QFont.Weight.Bold))
+        # === НАЗВАНИЕ ПАРАМЕТРА ===
+        name_text = parameter.name if parameter.name else "<Название не указано>"
+        name_label = QLabel(name_text)
+        name_label.setObjectName("nameLabel")
         name_label.setWordWrap(True)
         frame_layout.addWidget(name_label)
 
-        # === НИЖНЯЯ ЧАСТЬ: Комментарий ===
+        # === КОММЕНТАРИЙ (если есть) ===
         if parameter.comment:
             comment_label = QLabel(parameter.comment)
-            comment_label.setFont(QFont("Arial", 9))
-            comment_label.setStyleSheet("color: #444444; font-style: italic;")
+            comment_label.setObjectName("commentLabel")
             comment_label.setWordWrap(True)
-            comment_label.setMaximumHeight(40)  # Ограничиваем высоту комментария
             frame_layout.addWidget(comment_label)
 
         # Добавляем фрейм
@@ -147,12 +151,10 @@ class ParametersWidget(QWidget):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            # Испускаем сигнал с объектом Parameter
             app_signals.parameter.db_delete_parameter.emit(parameter)
 
     @Slot()
     def on_add_parameter_clicked(self) -> None:
         """Обработчик нажатия кнопки добавления нового параметра"""
-        # Создаем новый параметр и отправляем в редактор
         new_parameter = Parameter()
         app_signals.parameter.request_parameter_redactor.emit(new_parameter)
