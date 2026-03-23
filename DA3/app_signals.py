@@ -91,6 +91,7 @@ class AppSignals:
 
     class _MenuSignals(_SignalCategory):
         request_compile = Signal()
+        request_show_dataset = Signal()
 
     # Экземпляры категорий сигналов
     form = _Form()

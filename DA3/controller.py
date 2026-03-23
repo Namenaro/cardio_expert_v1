@@ -5,8 +5,11 @@ from DA3.model import Model
 from DA3.main_form import MainForm
 from DA3.run_widgets.compilator_widget import CompilerWindow
 from DA3.dialogs.start_dialog import select_form_from_dialog
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, Qt
 from PySide6.QtWidgets import QMessageBox
+
+from DA3.dataset_viewer.form_dataset_window import FormDatasetWindow
+from CORE.datasets_wrappers import LUDB
 
 from DA3.specialized_controllers import *
 
@@ -75,6 +78,7 @@ class Controller(QObject):
         self.logger.info("Сигналы инициализированы в специализированных контроллерах")
 
         app_signals.menu_signals.request_compile.connect(self.run_compilator)
+        app_signals.menu_signals.request_show_dataset.connect(self.run_show_dataset)
 
     # ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
 
@@ -183,3 +187,47 @@ class Controller(QObject):
 
         compiler_window = CompilerWindow(success=success, report=report, parent=self.main_window)
         compiler_window.exec()
+
+    def run_show_dataset(self):
+        """
+        Запускает просмотрщик датасета для текущей формы
+
+        Открывает новое окно с таблицей параметров формы и гистограммами числовых колонок.
+        """
+        self.logger.info("Запускается просмотрщик датасета")
+
+        # Проверяем, что форма загружена
+        if self.current_form is None:
+            error_msg = "Форма не выбрана. Пожалуйста, сначала выберите или создайте форму."
+            self.logger.warning(error_msg)
+            self._show_error(error_msg)
+            return
+
+        # Проверяем, что у формы указан путь к датасету
+        if not self.current_form.path_to_dataset:
+            error_msg = f"У формы '{self.current_form.name}' не указан путь к датасету.\n"
+            error_msg += "Пожалуйста, укажите путь к датасету в настройках формы."
+            self.logger.warning(error_msg)
+            self._show_error(error_msg)
+            return
+
+        try:
+            # Создаем экземпляр LUDB
+            ludb = LUDB()
+
+            # Создаем окно просмотрщика с указанием родителя (главное окно)
+            viewer_window = FormDatasetWindow(form=self.current_form, ludb=ludb, parent=self.main_window)
+
+            # Настройка окна
+            viewer_window.setAttribute(Qt.WA_DeleteOnClose)  # Окно удалится при закрытии
+            viewer_window.setWindowModality(Qt.NonModal)  # Делаем окно независимым
+
+            # Показываем окно
+            viewer_window.show()
+            viewer_window.raise_()  # Поднимаем на передний план
+            viewer_window.activateWindow()  # Активируем окно
+
+        except Exception as e:
+            self.logger.exception(f"Неожиданная ошибка при открытии просмотрщика датасета: {e}")
+            self._show_error(f"Не удалось открыть просмотрщик датасета.\n"
+                             f"Ошибка: {str(e)}")

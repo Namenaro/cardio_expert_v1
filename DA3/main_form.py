@@ -127,6 +127,11 @@ class MainForm(QMainWindow):
         test_action = test_menu.addAction("Запустить тесты")
         test_action.triggered.connect(self.on_test)
 
+        # Меню «Датасет»
+        dataset_menu = menu_bar.addMenu("Датасет")
+        dataset_action = dataset_menu.addAction("Показать датасет формы")
+        dataset_action.triggered.connect(self.on_dataset)
+
     @Slot()
     def on_compile(self):
         """Запросить запуск компилятора формы"""
@@ -136,3 +141,8 @@ class MainForm(QMainWindow):
     def on_test(self):
         """Заглушка для действия «Тест»"""
         print("Запускаются тесты...")
+
+    @Slot()
+    def on_dataset(self):
+        """Запросить запуск компилятора формы"""
+        app_signals.menu_signals.request_show_dataset.emit()
