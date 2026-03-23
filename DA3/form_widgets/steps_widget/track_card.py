@@ -11,12 +11,12 @@ from DA3.app_signals import ParamsInitTrackEditor
 
 
 class TrackCard(QFrame):
-    # Начальный стиль виджета
+    # Начальный стиль виджета - строгий, нейтральный
     _DEFAULT_STYLE = """
         TrackCard {
-            background-color: #fef7e8;
-            border: 1px solid #ffd699;
-            border-radius: 8px;
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
             margin: 4px 0;
         }
     """
@@ -38,31 +38,31 @@ class TrackCard(QFrame):
     def setup_ui(self):
         # Основной макет
         layout = QVBoxLayout(self)
-        layout.setSpacing(8)
-        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(6)
+        layout.setContentsMargins(10, 8, 10, 8)
         self.setLayout(layout)
 
         # Форма для отображения данных
         form_layout = QFormLayout()
-        form_layout.setSpacing(8)
+        form_layout.setSpacing(6)
         layout.addLayout(form_layout)
 
         # ID
         self.id_label = QLabel()
         if self.track.id is not None:
             self.id_label.setNum(self.track.id)
-        self.id_label.setObjectName("idLabel")  # Добавляем метку для CSS
+        self.id_label.setObjectName("idLabel")
         form_layout.addRow("ID:", self.id_label)
 
         # Длина списка SMs
         self.sms_count_label = QLabel()
         self.sms_count_label.setNum(len(self.track.SMs))
-        form_layout.addRow("Количество SM:", self.sms_count_label)
+        form_layout.addRow("SM:", self.sms_count_label)
 
         # Длина списка PSs
         self.pss_count_label = QLabel()
         self.pss_count_label.setNum(len(self.track.PSs))
-        form_layout.addRow("Количество PS:", self.pss_count_label)
+        form_layout.addRow("PS:", self.pss_count_label)
 
     @Slot(QEvent)
     def enterEvent(self, event: QEvent):
@@ -101,9 +101,9 @@ class TrackCard(QFrame):
         if self._is_hovered:
             self.setStyleSheet("""
                 TrackCard {
-                    background-color: #fff5e6;
-                    border: 1px solid #ffb347;
-                    border-radius: 8px;
+                    background-color: #f8fafc;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 6px;
                     margin: 4px 0;
                 }
             """)
@@ -115,7 +115,6 @@ class TrackCard(QFrame):
 if __name__ == "__main__":
     import sys
 
-    # Создаем mock-данные для тестирования
     pazzle1 = BasePazzle()
     pazzle2 = BasePazzle()
     pazzle3 = BasePazzle()

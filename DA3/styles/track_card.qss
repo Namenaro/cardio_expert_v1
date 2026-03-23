@@ -1,64 +1,65 @@
-/* track_card.qss - Стиль для карточки трека */
+/* track_card.qss - Строгий стиль для карточки трека */
 
 TrackCard {
-    background-color: #fef7e8;
-    border: 1px solid #ffd699;
-    border-radius: 8px;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
     margin: 4px 0;
 }
 
 TrackCard:hover {
-    background-color: #fff5e6;
-    border: 1px solid #ffb347;
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
 }
 
-/* Стили для QFormLayout внутри TrackCard */
+/* Стили для QFormLayout */
 TrackCard QFormLayout {
-    spacing: 8px;
-    margin: 8px;
+    spacing: 6px;
+    margin: 0;
 }
 
-/* Стили для меток полей (левая колонка) */
+/* Метки полей (левая колонка) - светлосерые */
 TrackCard QFormLayout QLabel {
-    color: #b87a2c;
+    color: #94a3b8;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 500;
+    min-width: 90px;
 }
 
-/* Стили для значений полей (правая колонка) */
+/* Значения полей (правая колонка) */
 TrackCard QFormLayout QLabel + QLabel {
-    color: #5a3e1b;
-    font-size: 12px;
+    color: #1e293b;
+    font-size: 11px;
     font-weight: 500;
-    background-color: #ffffff;
+    background-color: #f1f5f9;
     padding: 4px 8px;
     border-radius: 4px;
-    border: 1px solid #ffe0b5;
+    border: 1px solid #e2e8f0;
 }
 
 /* Специальный стиль для ID */
 #idLabel {
-    color: #e67e22;
-    font-weight: bold;
-    background-color: #fff0e0;
-    border-color: #ffd699;
+    color: #475569;
+    font-weight: 600;
+    background-color: #eef2ff;
+    border-color: #cbd5e1;
 }
 
 /* Стиль для контекстного меню */
 QMenu {
     background-color: #ffffff;
-    border: 1px solid #ffd699;
+    border: 1px solid #e2e8f0;
     border-radius: 6px;
     padding: 4px;
 }
 
 QMenu::item {
     padding: 6px 24px;
-    color: #5a3e1b;
+    color: #334155;
     border-radius: 4px;
 }
 
 QMenu::item:selected {
-    background-color: #fff0e0;
-    color: #e67e22;
+    background-color: #f1f5f9;
+    color: #0f172a;
 }

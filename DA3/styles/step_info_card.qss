@@ -1,0 +1,87 @@
+/* step_info_card.qss - Компактный стиль */
+
+StepInfoCard {
+    background-color: #f5f7fa;
+    border: 1px solid #e8ecf0;
+    border-radius: 8px;
+}
+
+QScrollArea {
+    border: none;
+    background: transparent;
+}
+
+QFormLayout {
+    spacing: 6px;
+    margin: 8px;
+}
+
+QFormLayout QLabel {
+    color: #5a6c7e;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+QFormLayout QLabel + QLabel {
+    color: #2c3e50;
+    font-size: 11px;
+    background: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+}
+
+#idLabel {
+    color: #7f8c8d;
+    font-size: 9px;
+    font-style: italic;
+    background: transparent;
+    border: none;
+}
+
+QFrame[class="separator"] {
+    background: #e2e8f0;
+    min-height: 1px;
+    margin: 4px 0;
+}
+
+.sectionLabel {
+    color: #4a6a8e;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+#editButton, #deleteButton {
+    min-width: 90px;
+    padding: 5px 12px;
+    font-size: 11px;
+    font-weight: 500;
+    border: none;
+    border-radius: 5px;
+}
+
+#editButton {
+    background: #5a8fbb;
+    color: white;
+}
+
+#editButton:hover {
+    background: #6a9fca;
+}
+
+#editButton:pressed {
+    background: #4a7a9e;
+}
+
+#deleteButton {
+    background: #c27c6e;
+    color: white;
+}
+
+#deleteButton:hover {
+    background: #d28c7e;
+}
+
+#deleteButton:pressed {
+    background: #b26c5e;
+}

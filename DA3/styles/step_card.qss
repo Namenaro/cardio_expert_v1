@@ -26,23 +26,25 @@ QScrollArea {
     padding: 4px;
 }
 
-/* Кнопка добавления трека - в теплых тонах */
+/* Кнопка добавления трека - минималистичная */
 #addTrackButton {
-    background-color: #ffb347;
-    color: white;
-    border: none;
-    border-radius: 20px;
-    font-weight: bold;
-    font-size: 12px;
-    padding: 8px 16px;
-    margin-top: 8px;
-    min-height: 36px;
+    background-color: transparent;
+    color: #6c7a8e;
+    border: 1px solid #dce3ec;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: normal;
+    padding: 4px 10px;
+    margin-top: 6px;
+    min-height: 26px;
 }
 
 #addTrackButton:hover {
-    background-color: #ff9f1a;
+    background-color: #f5f7fa;
+    border-color: #bdc5d0;
+    color: #4a6a8e;
 }
 
 #addTrackButton:pressed {
-    background-color: #e68900;
+    background-color: #e9ecef;
 }
