@@ -1,0 +1,48 @@
+/* step_card.qss - Уникальный стиль для карточки шага */
+
+StepCard {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+        stop: 0 #fef9e6, stop: 1 #fff5e0);
+    border: 1px solid #ffd966;
+    border-radius: 12px;
+}
+
+/* Левая и правая части */
+StepCard > QHBoxLayout {
+    spacing: 15px;
+    margin: 12px;
+}
+
+/* Область прокрутки */
+QScrollArea {
+    border: none;
+    background-color: transparent;
+}
+
+/* Контейнер для треков */
+#tracksContainer {
+    background-color: rgba(255, 245, 220, 0.5);
+    border-radius: 8px;
+    padding: 4px;
+}
+
+/* Кнопка добавления трека - в теплых тонах */
+#addTrackButton {
+    background-color: #ffb347;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 12px;
+    padding: 8px 16px;
+    margin-top: 8px;
+    min-height: 36px;
+}
+
+#addTrackButton:hover {
+    background-color: #ff9f1a;
+}
+
+#addTrackButton:pressed {
+    background-color: #e68900;
+}

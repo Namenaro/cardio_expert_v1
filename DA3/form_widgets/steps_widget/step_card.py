@@ -6,37 +6,48 @@ from CORE.db_dataclasses import *
 
 from typing import List
 from PySide6.QtWidgets import (
-    QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QScrollArea, QFrame, QApplication
+    QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QScrollArea, QFrame
 )
 from PySide6.QtCore import Qt, Slot
+from DA3.base_widget import BaseWidget
 
 
-class StepCard(QWidget):
+class StepCard(BaseWidget):
     def __init__(self, step: Step, parent=None):
         super().__init__(parent)
-        self.step:Step = step
+        self.step: Step = step
         self.track_cards = []
         self.setup_ui()
+        self.apply_styles("step_card.qss")  # Только свой уникальный стиль
 
     def setup_ui(self):
-        # Основной горизонтальный макет (левая и правая части)
+        # Основной горизонтальный макет
         main_layout = QHBoxLayout(self)
-        self.setLayout(main_layout)
+        main_layout.setSpacing(15)
+        main_layout.setContentsMargins(12, 12, 12, 12)
 
         # Левая часть — StepInfoCard
         self.step_info_card = StepInfoCard(self.step)
-        main_layout.addWidget(self.step_info_card, 1)  # Коэффициент растяжения 1
+        main_layout.addWidget(self.step_info_card, 1)
 
-        # Правая часть — колонка с TrackCard и кнопка
+        # Правая часть
         right_layout = QVBoxLayout()
-        main_layout.addLayout(right_layout, 2)  # Коэффициент растяжения 2
+        right_layout.setSpacing(8)
+        main_layout.addLayout(right_layout, 2)
 
-        # Область прокрутки для TrackCard (если треков много)
+        # Область прокрутки для TrackCard
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll_area.setStyleSheet("border: none;")
+
         scroll_content = QFrame()
+        scroll_content.setObjectName("tracksContainer")
         self.tracks_layout = QVBoxLayout(scroll_content)
+        self.tracks_layout.setSpacing(8)
+        self.tracks_layout.setContentsMargins(8, 8, 8, 8)
         self.tracks_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
         scroll_area.setWidget(scroll_content)
         right_layout.addWidget(scroll_area)
 
@@ -46,65 +57,13 @@ class StepCard(QWidget):
             self.track_cards.append(track_card)
             self.tracks_layout.addWidget(track_card)
 
-        # Кнопка "добавить новый трек"
-        self.add_track_button = QPushButton("Добавить новый трек")
+        # Кнопка добавления трека
+        self.add_track_button = QPushButton("+ Добавить трек")
+        self.add_track_button.setObjectName("addTrackButton")
         self.add_track_button.clicked.connect(self.on_add_track_clicked)
-        right_layout.addWidget(self.add_track_button, alignment=Qt.AlignmentFlag.AlignBottom)
+        right_layout.addWidget(self.add_track_button)
 
     @Slot()
     def on_add_track_clicked(self):
-        # Обработчика нажатия кнопки добавления нового трека в шаг
         req_track_params = ParamsInitTrackEditor(track=None, step_id=self.step.id)
         app_signals.track.request_track_redactor.emit(req_track_params)
-
-
-
-# Mock-тестирование
-if __name__ == "__main__":
-    import sys
-    from dataclasses import field
-    from typing import Optional
-
-
-    # Создаем mock-данные для тестирования
-    point1 = Point(name="Целевая точка")
-    point2 = Point(name="Левая точка")
-    point3 = Point(name="Правая точка")
-
-    pazzle1 = BasePazzle()
-    pazzle2 = BasePazzle()
-    pazzle3 = BasePazzle()
-
-    track1 = Track(
-        id=101,
-        SMs=[pazzle1, pazzle2],
-        PSs=[pazzle3]
-    )
-    track2 = Track(
-        id=102,
-        SMs=[pazzle1],
-        PSs=[pazzle2, pazzle3]
-    )
-
-    step = Step(
-        num_in_form=1,
-        target_point=point1,
-        id=1,
-        tracks=[track1, track2],
-        right_point=point3,
-        left_point=point2,
-        left_padding_t=0.5,
-        right_padding_t=1.2,
-        comment="Пример комментария для шага"
-    )
-
-    # Инициализируем приложение
-    app = QApplication(sys.argv)
-
-    # Создаем и показываем виджет
-    widget = StepCard(step)
-    widget.setWindowTitle("StepCard Test")
-    widget.resize(800, 600)
-    widget.show()
-
-    sys.exit(app.exec())

@@ -1,0 +1,61 @@
+/* steps_widget.qss - Flat стили для виджета шагов */
+
+/* Основной виджет */
+StepsWidget {
+    background-color: #ffffff;
+}
+
+/* Стили для QTabWidget */
+QTabWidget::pane {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    background-color: #ffffff;
+    margin-top: -1px;
+}
+
+/* Стили для вкладок */
+QTabBar::tab {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-bottom: none;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    padding: 8px 16px;
+    margin-right: 2px;
+    color: #6c757d;
+    font-size: 12px;
+}
+
+QTabBar::tab:selected {
+    background-color: #ffffff;
+    color: #2c3e50;
+    font-weight: 600;
+    border-bottom: 2px solid #4e73df;
+}
+
+QTabBar::tab:hover:!selected {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+/* Кнопка добавления шага */
+#addStepButton {
+    background-color: #ffffff;
+    color: #4e73df;
+    border: 1px solid #4e73df;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 12px;
+    padding: 6px;
+    margin: 6px;
+    min-height: 32px;
+}
+
+#addStepButton:hover {
+    background-color: #4e73df;
+    color: white;
+}
+
+#addStepButton:pressed {
+    background-color: #2e59d9;
+}

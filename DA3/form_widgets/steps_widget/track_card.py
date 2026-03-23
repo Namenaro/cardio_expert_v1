@@ -1,8 +1,7 @@
 from CORE.db_dataclasses import *
-from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import List
 from PySide6.QtWidgets import (
-    QFrame, QVBoxLayout, QFormLayout, QLabel, QApplication, QWidget, QMenu
+    QFrame, QVBoxLayout, QFormLayout, QLabel, QApplication, QMenu
 )
 from PySide6.QtCore import Qt, QEvent, Slot
 from PySide6.QtGui import QMouseEvent
@@ -15,22 +14,21 @@ class TrackCard(QFrame):
     # Начальный стиль виджета
     _DEFAULT_STYLE = """
         TrackCard {
-            background-color: #f0f0f0;
-            border-radius: 4px;
-            border: 1px solid #dcdcdc;
+            background-color: #fef7e8;
+            border: 1px solid #ffd699;
+            border-radius: 8px;
+            margin: 4px 0;
         }
     """
 
-    def __init__(self, track: Track,
-                 step_id: int,
-                 parent=None):
+    def __init__(self, track: Track, step_id: int, parent=None):
         super().__init__(parent)
 
         self.track = track
         self.step_id = step_id
 
-        self.setMouseTracking(True)  # Включаем отслеживание мыши
-        self._is_hovered = False  # Флаг наведения курсора
+        self.setMouseTracking(True)
+        self._is_hovered = False
 
         # Устанавливаем начальный стиль
         self.setStyleSheet(self._DEFAULT_STYLE)
@@ -40,16 +38,20 @@ class TrackCard(QFrame):
     def setup_ui(self):
         # Основной макет
         layout = QVBoxLayout(self)
+        layout.setSpacing(8)
+        layout.setContentsMargins(8, 8, 8, 8)
         self.setLayout(layout)
 
         # Форма для отображения данных
         form_layout = QFormLayout()
+        form_layout.setSpacing(8)
         layout.addLayout(form_layout)
 
         # ID
         self.id_label = QLabel()
         if self.track.id is not None:
             self.id_label.setNum(self.track.id)
+        self.id_label.setObjectName("idLabel")  # Добавляем метку для CSS
         form_layout.addRow("ID:", self.id_label)
 
         # Длина списка SMs
@@ -62,24 +64,20 @@ class TrackCard(QFrame):
         self.pss_count_label.setNum(len(self.track.PSs))
         form_layout.addRow("Количество PS:", self.pss_count_label)
 
-    # Обработчик события наведения курсора
     @Slot(QEvent)
     def enterEvent(self, event: QEvent):
         self._is_hovered = True
         self._update_style()
         super().enterEvent(event)
 
-
     @Slot(QEvent)
     def leaveEvent(self, event: QEvent):
-        """Обработчик события ухода курсора"""
         self._is_hovered = False
         self._update_style()
         super().leaveEvent(event)
 
     @Slot(QMouseEvent)
     def mousePressEvent(self, event: QMouseEvent):
-        """Обработчик клика по виджету"""
         if event.button() == Qt.MouseButton.LeftButton:
             self.open_track_editor()
         elif event.button() == Qt.MouseButton.RightButton:
@@ -91,27 +89,25 @@ class TrackCard(QFrame):
         app_signals.track.request_track_redactor.emit(req_track_params)
 
     def show_context_menu(self, pos):
-        """Показать контекстное меню в позиции pos."""
         menu = QMenu(self)
         delete_action = menu.addAction("Удалить трек")
         delete_action.triggered.connect(self.delete_track)
         menu.exec(pos)
 
     def delete_track(self):
-        """Эмитировать сигнал удаления трека."""
         app_signals.track.db_delete_track.emit(self.track)
 
     def _update_style(self):
         if self._is_hovered:
             self.setStyleSheet("""
                 TrackCard {
-                    background-color: #e0e0e0;
-                    border-radius: 4px;
-                    border: 1px solid #b0b0b0;
+                    background-color: #fff5e6;
+                    border: 1px solid #ffb347;
+                    border-radius: 8px;
+                    margin: 4px 0;
                 }
             """)
         else:
-            # Используем сохранённый начальный стиль
             self.setStyleSheet(self._DEFAULT_STYLE)
 
 
@@ -127,14 +123,12 @@ if __name__ == "__main__":
 
     track = Track(
         id=201,
-        SMs=[pazzle1, pazzle2, pazzle3],  # 3 элемента
-        PSs=[pazzle4]  # 1 элемент
+        SMs=[pazzle1, pazzle2, pazzle3],
+        PSs=[pazzle4]
     )
 
-    # Инициализируем приложение
     app = QApplication(sys.argv)
 
-    # Создаем и показываем виджет
     widget = TrackCard(track, step_id=0)
     widget.setWindowTitle("TrackCard Test")
     widget.resize(300, 200)
