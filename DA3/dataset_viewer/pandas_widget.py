@@ -3,10 +3,11 @@ import pandas as pd
 import numpy as np
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QTableView, QVBoxLayout,
-    QWidget, QHeaderView, QStyleFactory
+    QWidget, QHeaderView, QStyleFactory, QMenu
 )
-from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex
-from PySide6.QtGui import QColor, QBrush, QFont, QPalette
+from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, QPoint
+from PySide6.QtGui import QColor, QBrush, QFont, QPalette, QAction
+from PySide6.QtGui import QGuiApplication
 
 
 class PandasModel(QAbstractTableModel):
@@ -59,14 +60,13 @@ class PandasModel(QAbstractTableModel):
                     return QBrush(QColor(255, 100, 100))  # Ярко-красный для самой ячейки NaN
                 return QBrush(QColor(255, 200, 200))  # Светло-красный для остальных ячеек в строке
 
-        # Цвет текста для NaN (используем ForegroundRole вместо TextColorRole)
+        # Цвет текста для NaN
         if role == Qt.ForegroundRole:
             if pd.isna(value):
                 return QBrush(QColor(150, 0, 0))  # Темно-красный текст
 
         # Выравнивание текста (числа по правому краю, текст по левому)
         if role == Qt.TextAlignmentRole:
-            # Исправлено: используем .iloc для доступа к dtype по позиции
             column_dtype = self._data.dtypes.iloc[col]
             if pd.api.types.is_numeric_dtype(column_dtype):
                 return Qt.AlignRight | Qt.AlignVCenter
@@ -92,6 +92,57 @@ class PandasModel(QAbstractTableModel):
 
         return None
 
+    def get_value_at(self, row: int, col: int):
+        """Возвращает значение ячейки по индексам"""
+        if 0 <= row < len(self._data) and 0 <= col < len(self._data.columns):
+            value = self._data.iloc[row, col]
+            return "NaN" if pd.isna(value) else str(value)
+        return ""
+
+
+class CustomTableView(QTableView):
+    """Кастомная таблица с контекстным меню для копирования"""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.show_context_menu)
+
+    def show_context_menu(self, position: QPoint):
+        """Показывает контекстное меню при правом клике"""
+        # Получаем индекс ячейки под курсором
+        index = self.indexAt(position)
+
+        if not index.isValid():
+            return
+
+        # Создаем меню
+        menu = QMenu()
+
+        # Действие для копирования
+        copy_action = QAction("Копировать", self)
+        copy_action.triggered.connect(lambda: self.copy_cell_value(index))
+        menu.addAction(copy_action)
+
+        # Показываем меню
+        menu.exec(self.viewport().mapToGlobal(position))
+
+    def copy_cell_value(self, index: QModelIndex):
+        """Копирует значение одной ячейки"""
+        if not index.isValid():
+            return
+
+        # Получаем значение из модели
+        model = self.model()
+        if hasattr(model, 'get_value_at'):
+            value = model.get_value_at(index.row(), index.column())
+        else:
+            value = index.data(Qt.DisplayRole)
+
+        # Копируем в буфер обмена
+        clipboard = QGuiApplication.clipboard()
+        clipboard.setText(str(value))
+
 
 class DataFrameWidget(QWidget):
     """Виджет для отображения DataFrame с красивым оформлением"""
@@ -101,10 +152,10 @@ class DataFrameWidget(QWidget):
 
         self._data = data if data is not None else pd.DataFrame()
 
-        # Создаем таблицу
-        self.table_view = QTableView()
+        # Создаем кастомную таблицу с контекстным меню
+        self.table_view = CustomTableView()
         self.table_view.setAlternatingRowColors(True)  # Чередование цветов строк
-        self.table_view.setSelectionBehavior(QTableView.SelectRows)  # Выделение целых строк
+        self.table_view.setSelectionBehavior(QTableView.SelectItems)  # Выделение отдельных ячеек
         self.table_view.setSelectionMode(QTableView.ExtendedSelection)  # Множественный выбор
         self.table_view.setSortingEnabled(True)  # Включить сортировку по клику на заголовок
 
