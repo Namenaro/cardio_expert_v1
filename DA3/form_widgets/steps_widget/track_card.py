@@ -11,13 +11,40 @@ from DA3.app_signals import ParamsInitTrackEditor
 
 
 class TrackCard(QFrame):
-    # Начальный стиль виджета - строгий, нейтральный
+    # Начальный стиль виджета
     _DEFAULT_STYLE = """
         TrackCard {
             background-color: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 6px;
             margin: 4px 0;
+        }
+
+        /* Стили для меток полей (ID:, SM:, PS:) */
+        TrackCard QFormLayout QLabel {
+            color: #9ca3af;
+            font-size: 11px;
+            font-style: italic;
+            font-weight: normal;
+            min-width: 90px;
+        }
+
+        /* Стили для значений полей */
+        TrackCard QFormLayout QLabel + QLabel {
+            color: #1e293b;
+            font-size: 11px;
+            font-weight: 500;
+            background-color: #f1f5f9;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Специальный стиль для ID значения */
+        #idLabel {
+            color: #334155;
+            font-weight: 600;
+            border-color: #cbd5e1;
         }
     """
 
@@ -105,6 +132,30 @@ class TrackCard(QFrame):
                     border: 1px solid #cbd5e1;
                     border-radius: 6px;
                     margin: 4px 0;
+                }
+
+                TrackCard QFormLayout QLabel {
+                    color: #9ca3af;
+                    font-size: 11px;
+                    font-style: italic;
+                    font-weight: normal;
+                    min-width: 90px;
+                }
+
+                TrackCard QFormLayout QLabel + QLabel {
+                    color: #1e293b;
+                    font-size: 11px;
+                    font-weight: 500;
+                    background-color: #f1f5f9;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    border: 1px solid #e2e8f0;
+                }
+
+                #idLabel {
+                    color: #334155;
+                    font-weight: 600;
+                    border-color: #cbd5e1;
                 }
             """)
         else:
