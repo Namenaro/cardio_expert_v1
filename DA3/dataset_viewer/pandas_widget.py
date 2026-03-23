@@ -9,6 +9,18 @@ from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, QPoint, QSortFi
 from PySide6.QtGui import QColor, QBrush, QFont, QPalette, QAction
 from PySide6.QtGui import QGuiApplication
 
+# Импорты для работы с вашей базой данных
+from CORE.db.db_manager import DBManager
+from CORE.db.forms_services import FormService
+from CORE.datasets_wrappers.form_associated.exemplars_dataset import ExemplarsDataset
+from CORE.datasets_wrappers.form_associated.parametrised_dataset import ParametrisedDataset
+from CORE.db_dataclasses import Form
+from CORE.paths import DB_PATH
+from CORE.logger import get_logger
+from CORE.datasets_wrappers import LUDB
+
+logger = get_logger(__name__)
+
 
 class PandasModel(QAbstractTableModel):
     """Модель для отображения pandas DataFrame с подсветкой NaN"""
@@ -338,58 +350,93 @@ class DataFrameWidget(QWidget):
         return self._data
 
 
-class MainWindow(QMainWindow):
-    """Главное окно с примером использования"""
+class FormDatasetWindow(QMainWindow):
+    """Главное окно с отображением параметров формы"""
 
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("DataFrame Viewer")
-        self.setGeometry(100, 100, 1000, 600)
+    def __init__(self, form: Form, ludb: LUDB = None, parent=None):
+        super().__init__(parent)
 
-        # Создаем пример данных с NaN
-        data = self.create_sample_data()
+        self.form = form
+        self.ludb = ludb
+        self.setWindowTitle(f"Параметры формы: {form.name}")
+        self.setGeometry(100, 100, 1200, 700)
 
-        # Создаем виджет для отображения
-        self.data_widget = DataFrameWidget(data)
-        self.setCentralWidget(self.data_widget)
+        # Загружаем данные формы
+        try:
+            df = self.load_form_parameters(form)
 
-        # Добавляем информацию о количестве строк
-        self.statusBar().showMessage(f"Всего строк: {len(data)}, Колонок: {len(data.columns)}")
+            # Создаем виджет для отображения
+            self.data_widget = DataFrameWidget(df)
+            self.setCentralWidget(self.data_widget)
 
-    def create_sample_data(self):
-        """Создает пример данных с NaN для демонстрации"""
-        np.random.seed(42)
+            # Добавляем информацию в статусную строку
+            self.statusBar().showMessage(
+                f"Форма: {form.name} | Строк: {len(df)}, Колонок: {len(df.columns)}"
+            )
 
-        data = {
-            'Имя': ['Анна', 'Борис', 'Виктор', 'Галина', 'Дмитрий', 'Елена', 'Жанна', 'Иван'],
-            'Возраст': [25, 32, 45, 28, 36, 29, 41, 33],
-            'Зарплата': [50000, 65000, 80000, 55000, 72000, 58000, 69000, 47000],
-            'Отдел': ['IT', 'HR', 'IT', 'Finance', 'IT', 'HR', 'Finance', 'IT'],
-            'Оценка': [4.5, 4.2, np.nan, 4.8, 4.6, 4.3, np.nan, 4.1],
-            'Бонус': [5000, 3000, np.nan, 4000, 6000, 3500, 4500, np.nan],
-            'Город': ['Москва', 'СПб', 'Москва', 'Казань', 'Новосибирск', 'Москва', 'СПб', 'Екатеринбург']
-        }
+        except Exception as e:
+            logger.exception(f"Ошибка при загрузке параметров формы {form.id}: {e}")
+            self.statusBar().showMessage(f"Ошибка загрузки: {str(e)}")
+            # Создаем пустой виджет
+            self.data_widget = DataFrameWidget(pd.DataFrame())
+            self.setCentralWidget(self.data_widget)
 
-        df = pd.DataFrame(data)
+    def load_form_parameters(self, form: Form) -> pd.DataFrame:
+        """
+        Загружает параметры формы из базы данных
 
-        # Добавляем еще несколько строк для демонстрации скролла
-        extra_data = {
-            'Имя': ['Кирилл', 'Людмила', 'Михаил', 'Наталья'],
-            'Возраст': [29, 38, 42, 31],
-            'Зарплата': [54000, 71000, 83000, 59000],
-            'Отдел': ['IT', 'HR', 'Finance', 'IT'],
-            'Оценка': [4.4, np.nan, 4.7, 4.2],
-            'Бонус': [5200, 3800, 5500, np.nan],
-            'Город': ['Москва', 'СПб', 'Казань', 'Москва']
-        }
+        Args:
+            form: объект формы
 
-        df_extra = pd.DataFrame(extra_data)
-        df = pd.concat([df, df_extra], ignore_index=True)
+        Returns:
+            pd.DataFrame: таблица параметров
+        """
+        logger.info(f"Загрузка параметров формы {form.id} - {form.name}")
+
+        # Получаем имя датасета из формы
+        dataset_name = form.path_to_dataset
+        if not dataset_name:
+            raise ValueError(f"У формы {form.id} не указан путь к датасету")
+
+        logger.info(f"Загрузка датасета: {dataset_name}")
+
+        # Загружаем сырой датасет с использованием LUDB
+        raw_dataset = ExemplarsDataset(
+            form_dataset_name=dataset_name,
+            outer_dataset=self.ludb
+        )
+
+        # Создаем параметризованный датасет
+        parametrised_dataset = ParametrisedDataset(
+            raw_exemplars=raw_dataset,
+            form=form
+        )
+
+        # Получаем таблицу параметров
+        df = parametrised_dataset.parameters_frame
+
+        if df.empty:
+            logger.warning(f"Таблица параметров для формы {form.id} пуста")
+        else:
+            logger.info(f"Загружено {len(df)} записей, {len(df.columns)} колонок")
 
         return df
 
 
 if __name__ == '__main__':
+    # Загружаем форму из базы данных
+    db_manager = DBManager(DB_PATH)
+    forms_service = FormService()
+
+    # Создаем экземпляр LUDB
+    ludb = LUDB()
+
+    with db_manager.get_connection() as conn:
+        # Получаем форму по ID
+        FORM_ID = 1  # Замените на нужный ID формы
+        form = forms_service.get_form_by_id(form_id=FORM_ID, conn=conn)
+
+    # Запускаем приложение
     app = QApplication(sys.argv)
 
     # Настройка стиля приложения
@@ -400,7 +447,8 @@ if __name__ == '__main__':
     palette.setColor(QPalette.Window, QColor(240, 240, 240))
     app.setPalette(palette)
 
-    window = MainWindow()
+    # Создаем и показываем окно с формой
+    window = FormDatasetWindow(form=form, ludb=ludb)
     window.show()
 
     sys.exit(app.exec())
