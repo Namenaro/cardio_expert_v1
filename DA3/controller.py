@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QMessageBox
 
 from DA3.dataset_viewer.form_dataset_window import FormDatasetWindow
 from CORE.datasets_wrappers import LUDB
+from DA3.simulation_app.simulator_controller import SimulatorController
 
 from DA3.specialized_controllers import *
 
@@ -191,6 +192,8 @@ class Controller(QObject):
 
     def run_simulator(self):
         self.logger.info("Запускается симулятор")
+        self.controller = SimulatorController(form=self.current_form)
+        self.controller.run()
 
 
     def run_show_dataset(self):

@@ -7,7 +7,7 @@ from typing import Optional
 from PySide6.QtCore import QObject, Slot
 
 from CORE.db_dataclasses import Form
-
+from DA3 import app_signals
 
 from DA3.model import Model
 
@@ -49,6 +49,7 @@ class BaseController(QObject):
         """Обновить данные формы через родительский контроллер"""
         if hasattr(self.parent_controller, 'refresh_form_data') and self.get_current_form():
             self.parent_controller.refresh_form_data(self.get_current_form().id)
+            app_signals.form.form_changed.emit(self.get_current_form())
 
     def reinit_by_empty(self):
         """ Создать пустую форму и ее показать в GUI"""
