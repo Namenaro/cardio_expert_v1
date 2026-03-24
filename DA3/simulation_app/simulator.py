@@ -1,4 +1,5 @@
 import random
+from copy import deepcopy
 from typing import Optional, List, Union
 
 from CORE import Signal
@@ -41,7 +42,7 @@ class Simulator:
 
     def reset_form(self, form: Form):
         self._reset_dataset(name=form.path_to_dataset)
-        dataset = ParametrisedDataset(form=form, raw_exemplars=self.dataset)
+        dataset = ParametrisedDataset(form=form, raw_exemplars=deepcopy(self.dataset))
         try:
             evaluator = self.settings.evaluator_class(positive_dataset=dataset)
         except TypeError:
