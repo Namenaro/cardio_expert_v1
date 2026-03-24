@@ -3,8 +3,7 @@
 """
 from PySide6.QtCore import Slot
 
-
-from DA3.redactors_widgets import HCEditor, PCEditor
+from DA3.main_app_widgets.redactors_widgets import HCEditor, PCEditor
 from CORE.db_dataclasses import BasePazzle
 from .base_controller import BaseController
 

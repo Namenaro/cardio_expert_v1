@@ -1,14 +1,9 @@
-from enum import Enum
+from CORE.db_dataclasses import Step
+from typing import List, Tuple
 
-from CORE.db_dataclasses import Form, Step, Point, BasePazzle, Parameter
-from typing import List, Dict, Tuple
-
-from CORE.exeptions import SchemaError
-from CORE.run.run_pazzle import PazzleParser
 from CORE.run.schema.context import Context
 from CORE.run.schema.schemed_HC import HC_Wrapper
 from CORE.run.schema.schemed_PC import PC_Wrapper
-from DA3.form_widgets.hcs_widget.HC_card import HCCard
 
 
 class SchemedStep:

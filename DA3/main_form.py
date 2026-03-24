@@ -3,7 +3,8 @@ from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, Q
 
 from CORE.db_dataclasses import Form
 from DA3 import app_signals
-from DA3.form_widgets import (FormInfoWidget, HCsWidget, PCsWidget, PointsWidget, ParametersWidget, StepsWidget)
+from DA3.main_app_widgets.form_widgets import (FormInfoWidget, HCsWidget, PCsWidget, PointsWidget, ParametersWidget,
+                                               StepsWidget)
 
 
 class MainForm(QMainWindow):

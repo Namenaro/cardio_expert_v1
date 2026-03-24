@@ -3,9 +3,8 @@
 """
 from PySide6.QtCore import Slot
 
-
-from DA3.redactors_widgets import StepInfoEditor
-from DA3.form_widgets.dialog_new_step import AddStepDialog
+from DA3.main_app_widgets.redactors_widgets import StepInfoEditor
+from DA3.main_app_widgets.form_widgets.dialog_new_step import AddStepDialog
 from CORE.db_dataclasses import Step
 from .base_controller import BaseController
 
