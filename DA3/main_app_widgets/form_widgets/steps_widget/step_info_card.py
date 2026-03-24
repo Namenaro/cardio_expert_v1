@@ -8,15 +8,15 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 import logging
 
-from DA3.base_widget import BaseWidget  # Добавляем импорт BaseWidget
+from DA3.base_widget import BaseWidget
 
 
-class StepInfoCard(BaseWidget):  # Наследуемся от BaseWidget
+class StepInfoCard(BaseWidget):
     def __init__(self, step: Step, parent=None):
         super().__init__(parent)
         self.step = step
         self.setup_ui()
-        self.apply_styles("step_info_card.qss")  # Подключаем файл стилей
+        self.apply_styles("step_info_card.qss")
 
     def setup_ui(self):
         # Основной вертикальный макет
@@ -93,23 +93,38 @@ class StepInfoCard(BaseWidget):  # Наследуемся от BaseWidget
         limit_left_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         form_layout.addRow(limit_left_label)
 
-        # Левая точка
-        self.left_point_name_label = QLabel()
-        self.left_point_name_label.setWordWrap(True)
-        self.left_point_name_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        if self.step.left_point is not None:
-            self.left_point_name_label.setText(self.step.left_point.name)
-        else:
-            self.left_point_name_label.setText("Не задано")
-        form_layout.addRow("Левая точка:", self.left_point_name_label)
+        # Левое ограничение - показываем только то, что задано
+        left_point_set = self.step.left_point is not None
+        left_padding_set = self.step.left_padding_t is not None
 
-        # Левый отступ
-        self.left_padding_label = QLabel()
-        if self.step.left_padding_t is not None:
+        if left_point_set and not left_padding_set:
+            # Только левая точка
+            self.left_point_name_label = QLabel()
+            self.left_point_name_label.setWordWrap(True)
+            self.left_point_name_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+            self.left_point_name_label.setText(self.step.left_point.name)
+            form_layout.addRow("Левая точка:", self.left_point_name_label)
+        elif left_padding_set and not left_point_set:
+            # Только левый отступ
+            self.left_padding_label = QLabel()
             self.left_padding_label.setText(f"{self.step.left_padding_t}")
+            form_layout.addRow("Левый отступ (t):", self.left_padding_label)
+        elif left_point_set and left_padding_set:
+            # Оба поля заданы - показываем оба
+            self.left_point_name_label = QLabel()
+            self.left_point_name_label.setWordWrap(True)
+            self.left_point_name_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+            self.left_point_name_label.setText(self.step.left_point.name)
+            form_layout.addRow("Левая точка:", self.left_point_name_label)
+
+            self.left_padding_label = QLabel()
+            self.left_padding_label.setText(f"{self.step.left_padding_t}")
+            form_layout.addRow("Левый отступ (t):", self.left_padding_label)
         else:
-            self.left_padding_label.setText("Не задано")
-        form_layout.addRow("Левый отступ (t):", self.left_padding_label)
+            # Ничего не задано
+            nothing_label = QLabel("Не задано")
+            nothing_label.setStyleSheet("color: gray; font-style: italic;")
+            form_layout.addRow("Левое ограничение:", nothing_label)
 
         # Вторая горизонтальная линия
         line2 = QFrame()
@@ -124,28 +139,38 @@ class StepInfoCard(BaseWidget):  # Наследуемся от BaseWidget
         limit_right_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         form_layout.addRow(limit_right_label)
 
-        # Правая точка
-        self.right_point_name_label = QLabel()
-        self.right_point_name_label.setWordWrap(True)
-        self.right_point_name_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        if self.step.right_point is not None:
+        # Правое ограничение - показываем только то, что задано
+        right_point_set = self.step.right_point is not None
+        right_padding_set = self.step.right_padding_t is not None
+
+        if right_point_set and not right_padding_set:
+            # Только правая точка
+            self.right_point_name_label = QLabel()
+            self.right_point_name_label.setWordWrap(True)
+            self.right_point_name_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
             self.right_point_name_label.setText(self.step.right_point.name)
-        else:
-            self.right_point_name_label.setText("Не задано")
-        form_layout.addRow("Правая точка:", self.right_point_name_label)
-
-        # Правый отступ
-        self.right_padding_label = QLabel()
-        if self.step.right_padding_t is not None:
+            form_layout.addRow("Правая точка:", self.right_point_name_label)
+        elif right_padding_set and not right_point_set:
+            # Только правый отступ
+            self.right_padding_label = QLabel()
             self.right_padding_label.setText(f"{self.step.right_padding_t}")
-        else:
-            self.right_padding_label.setText("Не задано")
-        form_layout.addRow("Правый отступ (t):", self.right_padding_label)
+            form_layout.addRow("Правый отступ (t):", self.right_padding_label)
+        elif right_point_set and right_padding_set:
+            # Оба поля заданы - показываем оба
+            self.right_point_name_label = QLabel()
+            self.right_point_name_label.setWordWrap(True)
+            self.right_point_name_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+            self.right_point_name_label.setText(self.step.right_point.name)
+            form_layout.addRow("Правая точка:", self.right_point_name_label)
 
-        # Количество треков
-        self.tracks_count_label = QLabel()
-        self.tracks_count_label.setNum(len(self.step.tracks))
-        form_layout.addRow("Количество треков:", self.tracks_count_label)
+            self.right_padding_label = QLabel()
+            self.right_padding_label.setText(f"{self.step.right_padding_t}")
+            form_layout.addRow("Правый отступ (t):", self.right_padding_label)
+        else:
+            # Ничего не задано
+            nothing_label = QLabel("Не задано")
+            nothing_label.setStyleSheet("color: gray; font-style: italic;")
+            form_layout.addRow("Правое ограничение:", nothing_label)
 
         # Контейнер для кнопок
         buttons_layout = QHBoxLayout()
