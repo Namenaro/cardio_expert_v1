@@ -1,4 +1,0 @@
-from DA3.simulation_widgets.track_SMs_widget import Track_SMs_ResWidget
-from DA3.simulation_widgets.track_res_widget import TrackResWidget
-from DA3.simulation_widgets.step_res_widget import StepResWidget
-from DA3.simulation_widgets.form_res_widget import FormResWidget

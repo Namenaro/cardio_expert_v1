@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QWidget
-from utils.style_loader import get_style_loader
+from DA3.utils.style_loader import get_style_loader
 
 
 class BaseWidget(QWidget):

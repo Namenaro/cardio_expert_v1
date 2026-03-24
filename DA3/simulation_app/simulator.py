@@ -14,8 +14,7 @@ from CORE.run.exemplars_pool import ExemplarsPool
 from CORE.run.r_form import RForm
 from CORE.visual_debug import TrackRes, StepRes
 from DA3.settings import Settings
-from DA3.simulation_widgets.track_res_widget import TrackResWidget
-from DA3.simulator_utils import find_track, make_interval, get_coords, exec_track
+from DA3.simulation_app.simulator_utils import find_track, make_interval, get_coords, exec_track
 
 logger = get_logger(__name__)
 
@@ -188,17 +187,17 @@ class Simulator:
 if __name__ == "__main__":
     from CORE.paths import EXEMPLARS_DATASETS_PATH, DB_PATH
     from PySide6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QWidget,
-                                   QPushButton, QHBoxLayout, QComboBox, QSplitter,
-                                   QLabel, QMessageBox)
+                                   QSplitter,
+                                   QLabel)
     from PySide6.QtCore import Qt
     import sys
     import os
 
     # Импортируем виджеты
-    from DA3.simulation_widgets.track_res_widget import TrackResWidget
-    from DA3.simulation_widgets.track_SMs_widget import Track_SMs_ResWidget
-    from DA3.simulation_widgets.step_res_widget import StepResWidget
-    from DA3.simulation_widgets.form_res_widget import FormResWidget  # <-- НОВЫЙ ИМПОРТ
+    from DA3.simulation_app.simulation_widgets.track_res_widget import TrackResWidget
+    from DA3.simulation_app.simulation_widgets.track_SMs_widget import Track_SMs_ResWidget
+    from DA3.simulation_app.simulation_widgets.step_res_widget import StepResWidget
+    from DA3.simulation_app.simulation_widgets.form_res_widget import FormResWidget  # <-- НОВЫЙ ИМПОРТ
 
     print(f"Датасеты: {EXEMPLARS_DATASETS_PATH}")
     if os.path.exists(EXEMPLARS_DATASETS_PATH):
