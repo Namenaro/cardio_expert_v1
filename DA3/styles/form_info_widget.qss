@@ -1,6 +1,15 @@
-/* form_info_widget.qss - Minimal Flat Theme */
+/* form_info_widget.qss - Minimal Flat Theme with border */
 
-/* Заголовок - без дополнительных отступов */
+/* Используем ID вместо класса виджета */
+#formInfoWidget {
+    background-color: transparent;
+    border:2px dotted #4682b4;
+    border-radius: 8px;
+    margin: 1px;
+}
+
+
+/* Заголовок */
 #mainTitle {
     font-size: 14px;
     font-weight: bold;
@@ -11,14 +20,14 @@
     margin: 0;
 }
 
-/* Карточка - без дополнительных отступов */
+/* Карточка - прозрачный фон */
 #infoCard {
     background-color: #ffffff;
     border: 1px solid #e9ecef;
     border-radius: 6px;
 }
 
-/* Фрейм изображения - сохраняем исходный размер */
+/* Фрейм с картинкой */
 #imageFrame {
     background-color: #f8f9fa;
     border: 1px solid #dee2e6;
@@ -29,14 +38,12 @@
     border-color: #4e73df;
 }
 
-/* Плейсхолдер */
 #placeholderLabel {
     color: #6c757d;
     font-size: 11px;
     padding: 4px;
 }
 
-/* Кнопки - сохраняем исходную высоту */
 #editButton {
     background-color: #4e73df;
     color: white;

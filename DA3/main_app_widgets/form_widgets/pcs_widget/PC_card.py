@@ -23,8 +23,9 @@ class PCCard(QFrame):
         self.apply_styles()
 
     def setup_ui(self):
-        self.setFixedWidth(220)
+        self.setFixedWidth(240)
         self.setMinimumHeight(180)
+        self.setMaximumHeight(220)
         self.setFrameStyle(QFrame.Shape.Box | QFrame.Shadow.Raised)
 
         main_layout = QVBoxLayout(self)

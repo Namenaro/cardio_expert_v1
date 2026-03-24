@@ -30,8 +30,9 @@ class HCCard(QFrame):
 
     def setup_ui(self):
         """Настройка интерфейса карточки"""
-        self.setFixedWidth(220)
+        self.setFixedWidth(240)
         self.setMinimumHeight(180)
+        self.setMaximumHeight(220)
         self.setFrameStyle(QFrame.Shape.Box | QFrame.Shadow.Raised)
 
         main_layout = QVBoxLayout(self)

@@ -17,6 +17,10 @@ class FormInfoWidget(BaseWidget):
 
     def __init__(self):
         super().__init__()
+        # Настройки для корректного отображения стилей с рамкой
+        self.setObjectName("formInfoWidget")  # Устанавливаем ID
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+
         self._form: Optional[Form] = None
         self.setup_ui()
         # Применяем стили (теперь они будут работать благодаря установленным objectName и property)
@@ -31,13 +35,13 @@ class FormInfoWidget(BaseWidget):
         # Заголовок - добавляем objectName для стилизации
         title_label = QLabel("Основная информация о форме")
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_label.setObjectName("mainTitle")  # <-- Добавлено для CSS
+        title_label.setObjectName("mainTitle")
         main_layout.addWidget(title_label)
 
         # Карточка с информацией - создаем контейнер для группировки
         self.info_card = QFrame()
-        self.info_card.setObjectName("infoCard")  # <-- Добавлено для CSS
-        self.info_card.setProperty("class", "card")  # <-- Для общих стилей карточек
+        self.info_card.setObjectName("infoCard")
+        self.info_card.setProperty("class", "card")
         card_layout = QVBoxLayout(self.info_card)
         card_layout.setContentsMargins(15, 15, 15, 15)
         card_layout.setSpacing(10)
@@ -47,39 +51,39 @@ class FormInfoWidget(BaseWidget):
         self.info_grid.setSpacing(10)
         self.info_grid.setContentsMargins(0, 0, 0, 0)
 
-        # ID формы - добавляем property для стилизации
+        # ID формы
         id_label = QLabel("ID формы:")
-        id_label.setProperty("class", "fieldLabel")  # для CSS
+        id_label.setProperty("class", "fieldLabel")
         id_label.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         self.id_value_label = QLabel("не задан")
-        self.id_value_label.setProperty("class", "valueLabel")  # для CSS
+        self.id_value_label.setProperty("class", "valueLabel")
 
         # Имя формы
         name_label = QLabel("Имя формы:")
-        name_label.setProperty("class", "fieldLabel")  # для CSS
+        name_label.setProperty("class", "fieldLabel")
         name_label.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         self.name_value_label = QLabel("не задано")
-        self.name_value_label.setProperty("class", "valueLabel")  # для CSS
+        self.name_value_label.setProperty("class", "valueLabel")
 
         # Комментарий
         comment_label = QLabel("Комментарий:")
-        comment_label.setProperty("class", "fieldLabel")  # для CSS
+        comment_label.setProperty("class", "fieldLabel")
         comment_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
 
         self.comment_value_label = QLabel("не задан")
-        self.comment_value_label.setProperty("class", "valueLabel")  # для CSS
+        self.comment_value_label.setProperty("class", "valueLabel")
         self.comment_value_label.setWordWrap(True)
 
         # Картинка
         image_label = QLabel("Изображение:")
-        image_label.setProperty("class", "fieldLabel")  # для CSS
+        image_label.setProperty("class", "fieldLabel")
         image_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
 
-        # Контейнер для изображения - добавляем objectName
+        # Контейнер для изображения
         self.image_frame = QFrame()
-        self.image_frame.setObjectName("imageFrame")  # для CSS
+        self.image_frame.setObjectName("imageFrame")
         self.image_frame.setFixedSize(200, 150)
 
         # Layout для фрейма с картинкой
@@ -92,10 +96,10 @@ class FormInfoWidget(BaseWidget):
         self.image_display_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.image_display_label.setFixedSize(190, 140)
 
-        # Текст плейсхолдера - добавляем objectName
+        # Текст плейсхолдера
         self.placeholder_label = QLabel("Изображение\nне загружено")
         self.placeholder_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.placeholder_label.setObjectName("placeholderLabel")  # для CSS
+        self.placeholder_label.setObjectName("placeholderLabel")
         self.placeholder_label.setWordWrap(True)
 
         self.image_layout.addWidget(self.image_display_label)
@@ -126,26 +130,30 @@ class FormInfoWidget(BaseWidget):
         card_layout.addLayout(self.info_grid)
         main_layout.addWidget(self.info_card)
 
-        # Пустое пространство (растягивающийся элемент)
-        main_layout.addStretch()
+        # Горизонтальный layout для кнопок
+        buttons_layout = QHBoxLayout()
+        buttons_layout.setSpacing(10)  # Расстояние между кнопками
 
-        # Кнопка редактирования - добавляем objectName
-        self.edit_button = QPushButton("Редактировать основную информацию")
-        self.edit_button.setObjectName("editButton")  # для CSS
+        # Кнопка редактирования
+        self.edit_button = QPushButton("Редактировать")
+        self.edit_button.setObjectName("editButton")
         self.edit_button.clicked.connect(self.on_edit_clicked)
         self.edit_button.setEnabled(False)
         self.edit_button.setMinimumHeight(40)
 
-        main_layout.addWidget(self.edit_button)
-
-        # Кнопка удаления формы - добавляем objectName
+        # Кнопка удаления формы
         self.delete_button = QPushButton("Удалить форму")
-        self.delete_button.setObjectName("deleteButton")  # для CSS
+        self.delete_button.setObjectName("deleteButton")
         self.delete_button.clicked.connect(self.on_delete_clicked)
         self.delete_button.setEnabled(False)
         self.delete_button.setMinimumHeight(40)
 
-        main_layout.addWidget(self.delete_button)
+        # Добавляем кнопки в горизонтальный layout
+        buttons_layout.addWidget(self.edit_button)
+        buttons_layout.addWidget(self.delete_button)
+
+        # Добавляем горизонтальный layout в основной
+        main_layout.addLayout(buttons_layout)
 
 
     def reset_form(self, form: Form) -> None:
