@@ -133,6 +133,11 @@ class MainForm(QMainWindow):
         dataset_action = dataset_menu.addAction("Показать датасет формы")
         dataset_action.triggered.connect(self.on_dataset)
 
+        # Меню «Симулятор»
+        simulator_menu = menu_bar.addMenu("Симулятор")
+        simulator_action = simulator_menu.addAction("Запуск")
+        simulator_action.triggered.connect(self.on_simulator)
+
     @Slot()
     def on_compile(self):
         """Запросить запуск компилятора формы"""
@@ -147,3 +152,8 @@ class MainForm(QMainWindow):
     def on_dataset(self):
         """Запросить запуск компилятора формы"""
         app_signals.menu_signals.request_show_dataset.emit()
+
+    @Slot()
+    def on_simulator(self):
+        """Запросить запуск компилятора формы"""
+        app_signals.menu_signals.request_simulator.emit()

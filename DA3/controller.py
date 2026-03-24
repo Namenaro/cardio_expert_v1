@@ -79,6 +79,7 @@ class Controller(QObject):
 
         app_signals.menu_signals.request_compile.connect(self.run_compilator)
         app_signals.menu_signals.request_show_dataset.connect(self.run_show_dataset)
+        app_signals.menu_signals.request_simulator.connect(self.run_simulator)
 
     # ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
 
@@ -187,6 +188,10 @@ class Controller(QObject):
 
         compiler_window = CompilerWindow(success=success, report=report, parent=self.main_window)
         compiler_window.exec()
+
+    def run_simulator(self):
+        self.logger.info("Запускается симулятор")
+
 
     def run_show_dataset(self):
         """

@@ -40,7 +40,7 @@ class Simulator:
         return random.uniform(coord - delta, coord + delta)
 
     def reset_form(self, form: Form):
-        self.reset_dataset(name=form.path_to_dataset)
+        self._reset_dataset(name=form.path_to_dataset)
         dataset = ParametrisedDataset(form=form, raw_exemplars=self.dataset)
         try:
             evaluator = self.settings.evaluator_class(positive_dataset=dataset)
@@ -48,7 +48,7 @@ class Simulator:
             evaluator = self.settings.evaluator_class()
         self.rform = RForm(form, evaluator=evaluator)
 
-    def reset_dataset(self, name: str) -> None:
+    def _reset_dataset(self, name: str) -> None:
         if self.dataset is None or self.dataset.form_dataset_name != name:
             logger.info(f"Загрузка датасета: {name}")
             self.dataset = ExemplarsDataset(form_dataset_name=name, outer_dataset=self.ludb)
