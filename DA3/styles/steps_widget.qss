@@ -1,54 +1,58 @@
-/* steps_widget.qss - Flat стили для виджета шагов */
+/* steps_widget.qss - Стиль с жирной рамкой и тенью */
 
 /* Основной виджет */
 StepsWidget {
-    background-color: #ffffff;
+    background-color: #f8fafc;
 }
 
 /* Стили для QTabWidget */
 QTabWidget::pane {
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
+    border: 2px solid #4e73df;
+    border-radius: 8px;
     background-color: #ffffff;
     margin-top: -1px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 /* Стили для вкладок */
 QTabBar::tab {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
+    background-color: #f1f5f9;
+    border: 1px solid #e2e8f0;
     border-bottom: none;
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
-    padding: 8px 16px;
-    margin-right: 2px;
-    color: #6c757d;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    padding: 8px 20px;
+    margin-right: 4px;
+    color: #475569;
     font-size: 12px;
+    font-weight: 500;
 }
 
 QTabBar::tab:selected {
     background-color: #ffffff;
-    color: #2c3e50;
+    color: #4e73df;
     font-weight: 600;
-    border-bottom: 2px solid #4e73df;
+    border: 2px solid #4e73df;
+    border-bottom: none;
+    margin-bottom: -1px;
 }
 
 QTabBar::tab:hover:!selected {
     background-color: #e9ecef;
-    color: #495057;
+    color: #2c3e50;
 }
 
 /* Кнопка добавления шага */
 #addStepButton {
     background-color: #ffffff;
     color: #4e73df;
-    border: 1px solid #4e73df;
-    border-radius: 4px;
-    font-weight: 500;
+    border: 2px solid #4e73df;
+    border-radius: 6px;
+    font-weight: 600;
     font-size: 12px;
-    padding: 6px;
-    margin: 6px;
-    min-height: 32px;
+    padding: 6px 12px;
+    margin: 8px;
+    min-height: 34px;
 }
 
 #addStepButton:hover {
