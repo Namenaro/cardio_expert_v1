@@ -1,12 +1,14 @@
 from typing import Optional, List
 from PySide6.QtWidgets import (QFrame, QVBoxLayout, QHBoxLayout, QPushButton,
-                               QLabel, QMessageBox, QSizePolicy)
+                               QLabel, QMessageBox, QSizePolicy, QScrollArea, QWidget)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 
 from DA3 import app_signals
 from CORE.db_dataclasses import BasePazzle, Parameter, ObjectInputParamValue
 from DA3.utils.utils import get_affected_form_parameters
+from DA3.utils.style_loader import get_style_loader
+
 
 class HCCard(QFrame):
     """Карточка для отображения HC объекта"""
@@ -24,69 +26,98 @@ class HCCard(QFrame):
         self.hc = hc
         self.form_parameters = form_parameters  # Параметры формы для поиска имен
         self.setup_ui()
+        self.apply_styles()
 
     def setup_ui(self):
         """Настройка интерфейса карточки"""
-        self.setFrameStyle(QFrame.Shape.Box | QFrame.Shadow.Raised)
-        self.setLineWidth(1)
-        self.setMidLineWidth(2)
         self.setFixedWidth(220)
         self.setMinimumHeight(180)
+        self.setFrameStyle(QFrame.Shape.Box | QFrame.Shadow.Raised)
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(5)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setSpacing(5)
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         # Заголовок с ID
         title_label = QLabel(f"ID: {self.hc.id if self.hc.id else 'Новый'}")
-        layout.addWidget(title_label)
+        title_label.setObjectName("titleLabel")
+        main_layout.addWidget(title_label)
+
+        # Создаем контейнер для всего содержимого
+        content_container = QWidget()
+        content_layout = QVBoxLayout(content_container)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(5)
+        content_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         # Имя
         name_label = QLabel(f"Имя: {self.hc.name if self.hc.name else 'Без имени'}")
+        name_label.setObjectName("nameLabel")
         name_label.setWordWrap(True)
-        layout.addWidget(name_label)
+        name_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        content_layout.addWidget(name_label)
+
+        # Добавляем отступ между полями
+        content_layout.addSpacing(4)
 
         # Имя класса (если есть)
         if self.hc.class_ref and hasattr(self.hc.class_ref, 'name') and self.hc.class_ref.name:
             class_label = QLabel(f"Класс: {self.hc.class_ref.name}")
-            class_label.setStyleSheet("color: #2c5282;")
+            class_label.setObjectName("classLabel")
             class_label.setWordWrap(True)
-            layout.addWidget(class_label)
+            class_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+            content_layout.addWidget(class_label)
+            content_layout.addSpacing(4)
         elif self.hc.class_ref and hasattr(self.hc.class_ref, 'id') and self.hc.class_ref.id:
-            # Если есть только ID класса
             class_label = QLabel(f"Класс ID: {self.hc.class_ref.id}")
-            class_label.setStyleSheet("color: #718096; font-style: italic;")
-            layout.addWidget(class_label)
+            class_label.setObjectName("classIdLabel")
+            class_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+            content_layout.addWidget(class_label)
+            content_layout.addSpacing(4)
 
         # Затронутые параметры формы
         affected_params_names = get_affected_form_parameters(puzzle=self.hc,
                                                              form_parameters=self.form_parameters)
-        # Объединяем и ограничиваем длину
         affected_params_result = ", ".join(affected_params_names)
-        if len(affected_params_result) > 40:  # Ограничиваем длину для компактности
-            affected_params_result = affected_params_result[:37] + "..."
+
         if affected_params_result:
             params_label = QLabel(f"Параметры: {affected_params_result}")
-            params_label.setStyleSheet("color: #2d3748; font-size: 15px;")
+            params_label.setObjectName("paramsLabel")
             params_label.setWordWrap(True)
-            params_label.setMaximumHeight(30)
-            params_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-            layout.addWidget(params_label)
+            params_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+            content_layout.addWidget(params_label)
+            content_layout.addSpacing(4)
 
         # Комментарий
         if self.hc.comment:
-            comment_text = f"Комментарий: {self.hc.comment}"
+            comment_text = f"{self.hc.comment}"
             comment_label = QLabel(comment_text)
+            comment_label.setObjectName("commentLabel")
             comment_label.setWordWrap(True)
-            comment_label.setMaximumHeight(30)
-            comment_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-            comment_label.setStyleSheet("color: #4a5568; font-size: 15px;")
-            layout.addWidget(comment_label)
+            comment_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+            content_layout.addWidget(comment_label)
 
-        layout.addStretch()
+        # Добавляем растяжку в контейнере, чтобы прижать содержимое к верху
+        content_layout.addStretch()
+
+        # Оборачиваем контейнер в скролл-область
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameStyle(QFrame.Shape.NoFrame)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll_area.setWidget(content_container)
+        scroll_area.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        main_layout.addWidget(scroll_area)
+
+        # Добавляем растяжку после скролл-области, чтобы кнопки прижались вниз
+        main_layout.addStretch()
 
         # Кнопки действий
         buttons_layout = QHBoxLayout()
+        buttons_layout.setAlignment(Qt.AlignmentFlag.AlignBottom)
 
         edit_btn = QPushButton("Редактировать")
         edit_btn.clicked.connect(self.on_edit_clicked)
@@ -95,15 +126,18 @@ class HCCard(QFrame):
         buttons_layout.addWidget(edit_btn)
 
         delete_btn = QPushButton("Удалить")
+        delete_btn.setObjectName("deleteButton")
         delete_btn.clicked.connect(self.on_delete_clicked)
         delete_btn.setFixedHeight(25)
         delete_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        delete_btn.setStyleSheet("color: #c53030;")
         buttons_layout.addWidget(delete_btn)
 
-        layout.addLayout(buttons_layout)
+        main_layout.addLayout(buttons_layout)
 
-
+    def apply_styles(self):
+        """Применяет стили к карточке"""
+        style_loader = get_style_loader()
+        style_loader.apply_style(self, "hc_card.qss")
 
     def on_edit_clicked(self):
         """Обработчик нажатия кнопки редактирования"""

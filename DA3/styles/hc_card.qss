@@ -1,0 +1,132 @@
+/* HCCard - основная карточка */
+HCCard {
+    background-color: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+/* Заголовок с ID - белый фон */
+HCCard QLabel#titleLabel {
+    font-weight: bold;
+    font-size: 13px;
+    color: #1a202c;
+    background-color: #ffffff;
+    padding: 4px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+}
+
+/* Имя */
+HCCard QLabel#nameLabel {
+    font-weight: 500;
+    font-size: 12px;
+    color: #2c3e50;
+    padding: 2px 0;
+}
+
+/* Класс */
+HCCard QLabel#classLabel {
+    font-size: 12px;
+    color: #2c5282;
+    font-weight: 500;
+    padding: 2px 0;
+}
+
+/* ID класса */
+HCCard QLabel#classIdLabel {
+    font-size: 11px;
+    color: #718096;
+    font-style: italic;
+    padding: 2px 0;
+}
+
+/* Параметры */
+HCCard QLabel#paramsLabel {
+    font-size: 11px;
+    color: #2d3748;
+    padding: 2px 0;
+    background-color: #f7fafc;
+    border-radius: 4px;
+    padding: 4px;
+}
+
+/* Комментарий - белый фон */
+HCCard QLabel#commentLabel {
+    font-size: 11px;
+    color: #718096;
+    font-style: italic;
+    padding: 2px 0;
+    background-color: #ffffff;
+}
+
+/* ScrollArea */
+HCCard QScrollArea {
+    border: none;
+    background-color: transparent;
+}
+
+HCCard QScrollArea > QWidget > QWidget {
+    background-color: transparent;
+}
+
+/* Полоса прокрутки */
+HCCard QScrollBar:vertical {
+    border: none;
+    background-color: #f1f5f9;
+    width: 8px;
+    border-radius: 4px;
+    margin: 0px;
+}
+
+HCCard QScrollBar::handle:vertical {
+    background-color: #cbd5e1;
+    border-radius: 4px;
+    min-height: 20px;
+}
+
+HCCard QScrollBar::handle:vertical:hover {
+    background-color: #94a3b8;
+}
+
+HCCard QScrollBar::add-line:vertical,
+HCCard QScrollBar::sub-line:vertical {
+    border: none;
+    background: none;
+    height: 0px;
+}
+
+/* Кнопки */
+HCCard QPushButton {
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    background-color: #f8fafc;
+    color: #1e293b;
+}
+
+HCCard QPushButton:hover {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+HCCard QPushButton:pressed {
+    background-color: #e2e8f0;
+}
+
+/* Кнопка удаления */
+HCCard QPushButton#deleteButton {
+    color: #dc2626;
+    border-color: #fee2e2;
+    background-color: #fef2f2;
+}
+
+HCCard QPushButton#deleteButton:hover {
+    background-color: #fee2e2;
+    border-color: #fecaca;
+}
+
+HCCard QPushButton#deleteButton:pressed {
+    background-color: #fecaca;
+}

@@ -1,0 +1,106 @@
+/* PCCard - основная карточка */
+PCCard {
+    background-color: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+/* Заголовок с ID - белый фон */
+PCCard QLabel#titleLabel {
+    font-weight: bold;
+    font-size: 12px;
+    color: #1a202c;
+    background-color: #ffffff;
+    padding: 4px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+}
+
+/* Имя */
+PCCard QLabel#nameLabel {
+    font-weight: 500;
+    font-size: 12px;
+    color: #2c3e50;
+    padding: 2px 0;
+}
+
+/* Комментарий - белый фон */
+PCCard QLabel#commentLabel {
+    font-size: 11px;
+    color: #718096;
+    font-style: italic;
+    padding: 2px 0;
+    background-color: #ffffff;
+}
+
+/* ScrollArea */
+PCCard QScrollArea {
+    border: none;
+    background-color: transparent;
+}
+
+PCCard QScrollArea > QWidget > QWidget {
+    background-color: transparent;
+}
+
+/* Полоса прокрутки */
+PCCard QScrollBar:vertical {
+    border: none;
+    background-color: #f1f5f9;
+    width: 8px;
+    border-radius: 4px;
+    margin: 0px;
+}
+
+PCCard QScrollBar::handle:vertical {
+    background-color: #cbd5e1;
+    border-radius: 4px;
+    min-height: 20px;
+}
+
+PCCard QScrollBar::handle:vertical:hover {
+    background-color: #94a3b8;
+}
+
+PCCard QScrollBar::add-line:vertical,
+PCCard QScrollBar::sub-line:vertical {
+    border: none;
+    background: none;
+    height: 0px;
+}
+
+/* Кнопки */
+PCCard QPushButton {
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    background-color: #f8fafc;
+    color: #1e293b;
+}
+
+PCCard QPushButton:hover {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+PCCard QPushButton:pressed {
+    background-color: #e2e8f0;
+}
+
+/* Кнопка удаления */
+PCCard QPushButton#deleteButton {
+    color: #dc2626;
+    border-color: #fee2e2;
+    background-color: #fef2f2;
+}
+
+PCCard QPushButton#deleteButton:hover {
+    background-color: #fee2e2;
+    border-color: #fecaca;
+}
+
+PCCard QPushButton#deleteButton:pressed {
+    background-color: #fecaca;
+}
