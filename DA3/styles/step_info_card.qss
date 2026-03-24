@@ -51,37 +51,38 @@ QFrame[class="separator"] {
     font-weight: bold;
 }
 
+/* Общие стили для обеих кнопок */
 #editButton, #deleteButton {
-    min-width: 90px;
-    padding: 5px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 4px 8px;
     font-size: 11px;
     font-weight: 500;
-    border: none;
-    border-radius: 5px;
+    background-color: #f8fafc;
+    color: #1e293b;
 }
 
-#editButton {
-    background: #5a8fbb;
-    color: white;
+#editButton:hover, #deleteButton:hover {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
 }
 
-#editButton:hover {
-    background: #6a9fca;
+#editButton:pressed, #deleteButton:pressed {
+    background-color: #e2e8f0;
 }
 
-#editButton:pressed {
-    background: #4a7a9e;
-}
-
+/* Кнопка удаления - переопределяем цвета */
 #deleteButton {
-    background: #c27c6e;
-    color: white;
+    color: #dc2626;
+    border-color: #fee2e2;
+    background-color: #fef2f2;
 }
 
 #deleteButton:hover {
-    background: #d28c7e;
+    background-color: #fee2e2;
+    border-color: #fecaca;
 }
 
 #deleteButton:pressed {
-    background: #b26c5e;
+    background-color: #fecaca;
 }

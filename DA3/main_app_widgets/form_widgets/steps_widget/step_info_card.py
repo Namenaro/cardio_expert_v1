@@ -152,7 +152,7 @@ class StepInfoCard(BaseWidget):  # Наследуемся от BaseWidget
         buttons_layout.setContentsMargins(12, 8, 12, 12)
         buttons_layout.addStretch()
 
-        self.edit_button = QPushButton("Редактировать")
+        self.edit_button = QPushButton("Редактировать шаг")
         self.edit_button.setObjectName("editButton")  # Метка для CSS
         self.edit_button.clicked.connect(self.on_edit_clicked)
         buttons_layout.addWidget(self.edit_button)
