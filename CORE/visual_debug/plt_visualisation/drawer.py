@@ -58,7 +58,10 @@ class Drawer:
         if self.popup and self.popup.is_alive():
             self.popup.update_content()
         else:
-            self.popup = PopupWindow(self.renderer, self._on_popup_closed)
+            # Получаем текущие границы
+            current_xlim = self.ax.get_xlim()
+            # Передаем их в popup
+            self.popup = PopupWindow(self.renderer, self._on_popup_closed, xlim=current_xlim)
             self.popup.show()
 
     def _on_popup_closed(self):

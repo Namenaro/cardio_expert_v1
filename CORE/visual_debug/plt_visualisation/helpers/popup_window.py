@@ -7,13 +7,15 @@ class PopupWindow:
     Управляет всплывающим окном с увеличенным видом.
     """
 
-    def __init__(self, renderer, on_closing: Optional[Callable[[], None]] = None):
+    def __init__(self, renderer, on_closing: Optional[Callable[[], None]] = None, xlim=None):
         self.renderer = renderer
         self.on_closing = on_closing
 
         self.window = None
         self.fig = None
         self.ax = None
+
+        self.xlim = xlim
 
     def show(self):
         """Показывает всплывающее окно."""
@@ -29,6 +31,10 @@ class PopupWindow:
 
         self.fig, self.ax = plt.subplots(figsize=(16, 8))
         self.renderer.draw(self.ax)  # Просто вызываем draw у renderer'а
+
+        if self.xlim:
+            self.ax.set_xlim(self.xlim[0], self.xlim[1])
+            self.ax.autoscale(enable=False, axis='x')
 
         self.window = tk.Tk()
         self.window.title("Увеличенный вид сигнала")
