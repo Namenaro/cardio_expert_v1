@@ -12,6 +12,10 @@ class SimulatorSignals(QObject):
     SM_selected = Signal(int, int)  # (SM_id, num_in_track)
     PS_selected = Signal(int)  # (PS_id)
 
+    # Сигналы для навигации по датасету
+    requested_next = Signal()  # запрос следующего примера
+    requested_prev = Signal()  # запрос предыдущего примера
+
 
 # Создаем глобальный экземпляр для использования во всем приложении
 _signals_instance = None

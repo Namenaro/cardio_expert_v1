@@ -2,11 +2,12 @@ from typing import Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QPushButton, QLabel, QSplitter, QScrollArea, QFrame
+    QMainWindow, QWidget, QVBoxLayout, QPushButton, QLabel, QSplitter, QScrollArea, QFrame, QHBoxLayout
 )
 
 from CORE.run.r_form import RForm
 from DA3.simulation_app.simulation_widgets.id_selector import IdSelector
+from DA3.simulation_app.simulation_widgets.dataset_navigator import DatasetNavigator
 
 
 class MainFormSimulator(QMainWindow):
@@ -28,16 +29,43 @@ class MainFormSimulator(QMainWindow):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
 
-        # Основной layout
+        # Основной layout (вертикальный)
         main_layout = QVBoxLayout(central_widget)
         main_layout.setContentsMargins(10, 10, 10, 10)
         main_layout.setSpacing(10)
 
-        # Верхняя панель
-        top_panel = self._create_top_panel()
+        # Верхняя панель - навигатор, название формы и кнопка в один ряд
+        top_panel = QWidget()
+        top_panel.setMaximumHeight(80)
+        top_layout = QHBoxLayout(top_panel)
+        top_layout.setContentsMargins(0, 0, 0, 0)
+        top_layout.setSpacing(15)
+
+        # Навигатор
+        self.dataset_navigator = DatasetNavigator()
+        top_layout.addWidget(self.dataset_navigator)
+
+        # Название формы
+        self.form_name_label = QLabel(f"Симулируемая форма: {self.form_name}")
+        self.form_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.form_name_label.setStyleSheet("""
+            QLabel {
+                background-color: #f0f0f0;
+                padding: 6px;
+                border-radius: 4px;
+                border: 1px solid #ccc;
+            }
+        """)
+        top_layout.addWidget(self.form_name_label, 1)  # Растягивается
+
+        # Кнопка симуляции
+        self.simulate_button = QPushButton("Полная симуляция")
+        self.simulate_button.clicked.connect(self._on_simulate_clicked)
+        top_layout.addWidget(self.simulate_button)
+
         main_layout.addWidget(top_panel)
 
-        # Горизонтальный разделитель для левой и правой панели
+        # Горизонтальный разделитель для левой и правой панели (основная часть)
         splitter = QSplitter(Qt.Orientation.Horizontal)
 
         # Левая панель - селектор с прокруткой
@@ -49,55 +77,25 @@ class MainFormSimulator(QMainWindow):
         splitter.addWidget(right_panel)
 
         # Устанавливаем соотношение 30% на 70%
-        splitter.setSizes([300, 700])  # 30% от 1000 = 300, 70% = 700
+        splitter.setSizes([300, 700])
 
-        main_layout.addWidget(splitter)
-
-    def _create_top_panel(self) -> QWidget:
-        """Создает верхнюю панель с информацией и кнопкой"""
-        panel = QWidget()
-        panel.setMaximumHeight(100)
-        layout = QVBoxLayout(panel)
-        layout.setSpacing(5)
-
-        # Информационная надпись
-        self.form_name_label = QLabel(f"Симулируемая форма: {self.form_name}")
-        self.form_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.form_name_label.setStyleSheet("""
-            QLabel {
-                background-color: #f0f0f0;
-                padding: 8px;
-                border-radius: 5px;
-                border: 1px solid #ccc;
-                font-weight: bold;
-            }
-        """)
-        layout.addWidget(self.form_name_label)
-
-        # Кнопка симуляции
-        self.simulate_button = QPushButton("Полная симуляция формы")
-        self.simulate_button.clicked.connect(self._on_simulate_clicked)
-        layout.addWidget(self.simulate_button)
-
-        return panel
+        # Splitter занимает всё оставшееся место
+        main_layout.addWidget(splitter, 1)
 
     def _create_selector_panel(self) -> QWidget:
         """Создает панель с селектором и прокруткой"""
-        # Контейнер для селектора с прокруткой
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scroll_area.setFrameShape(QFrame.Shape.NoFrame)
 
-        # Контейнер для IdSelector
         self.selector_container = QWidget()
         self.selector_layout = QVBoxLayout(self.selector_container)
         self.selector_layout.setContentsMargins(0, 0, 0, 0)
 
         scroll_area.setWidget(self.selector_container)
 
-        # Оборачиваем в QWidget для управления размерами
         wrapper = QWidget()
         wrapper_layout = QVBoxLayout(wrapper)
         wrapper_layout.setContentsMargins(0, 0, 0, 0)
@@ -119,7 +117,6 @@ class MainFormSimulator(QMainWindow):
         layout = QVBoxLayout(panel)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        # Добавляем информационную надпись
         info_label = QLabel("Правая панель\n(пустой виджет)")
         info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         info_label.setStyleSheet("""
@@ -141,12 +138,10 @@ class MainFormSimulator(QMainWindow):
 
         self.form_name_label.setText(f"Симулируемая форма: {self.form_name}")
 
-        # Обновляем IdSelector
         self._update_id_selector()
 
     def _update_id_selector(self):
         """Обновляет виджет IdSelector"""
-        # Очищаем контейнер
         while self.selector_layout.count():
             item = self.selector_layout.takeAt(0)
             widget = item.widget()
@@ -164,9 +159,7 @@ class MainFormSimulator(QMainWindow):
     def resizeEvent(self, event):
         """Обработка изменения размера окна для сохранения пропорций"""
         super().resizeEvent(event)
-        # Обновляем пропорции при изменении размера
         if hasattr(self, 'centralWidget'):
-            # Находим splitter в layout
             for child in self.centralWidget().children():
                 if isinstance(child, QSplitter):
                     total_width = child.width()
