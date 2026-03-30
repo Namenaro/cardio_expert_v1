@@ -1,13 +1,17 @@
+# DA3/simulation_app/main_window.py
+
 from typing import Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QPushButton, QLabel, QSplitter, QScrollArea, QFrame, QHBoxLayout
+    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QSplitter, QScrollArea, QFrame
 )
 
 from CORE.run.r_form import RForm
 from DA3.simulation_app.simulation_widgets.id_selector import IdSelector
 from DA3.simulation_app.simulation_widgets.dataset_navigator import DatasetNavigator
+from DA3.simulation_app.content_manager import ContentManager
+from DA3.simulation_app.simulator_signals import get_signals
 
 
 class MainFormSimulator(QMainWindow):
@@ -15,6 +19,12 @@ class MainFormSimulator(QMainWindow):
         super().__init__(parent)
         self.r_form = r_form
         self.form_name = r_form.form.name if r_form and hasattr(r_form, 'form') else "Неизвестная форма"
+
+        # Получаем сигналы
+        self.signals = get_signals()
+
+        # Создаем менеджер контента
+        self.content_manager = ContentManager(self)
 
         self._setup_ui()
 
@@ -29,12 +39,12 @@ class MainFormSimulator(QMainWindow):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
 
-        # Основной layout (вертикальный)
+        # Основной layout
         main_layout = QVBoxLayout(central_widget)
         main_layout.setContentsMargins(10, 10, 10, 10)
         main_layout.setSpacing(10)
 
-        # Верхняя панель - навигатор, название формы и кнопка в один ряд
+        # Верхняя панель
         top_panel = QWidget()
         top_panel.setMaximumHeight(80)
         top_layout = QHBoxLayout(top_panel)
@@ -56,34 +66,42 @@ class MainFormSimulator(QMainWindow):
                 border: 1px solid #ccc;
             }
         """)
-        top_layout.addWidget(self.form_name_label, 1)  # Растягивается
+        top_layout.addWidget(self.form_name_label, 1)
+
+        # Кнопки
+        buttons_layout = QHBoxLayout()
+        buttons_layout.setSpacing(10)
 
         # Кнопка симуляции
         self.simulate_button = QPushButton("Полная симуляция")
         self.simulate_button.clicked.connect(self._on_simulate_clicked)
-        top_layout.addWidget(self.simulate_button)
+        buttons_layout.addWidget(self.simulate_button)
+
+        # Кнопка снять выделение
+        self.clear_selection_button = QPushButton("Снять выделение")
+        self.clear_selection_button.clicked.connect(self._on_clear_selection_clicked)
+        buttons_layout.addWidget(self.clear_selection_button)
+
+        top_layout.addLayout(buttons_layout)
 
         main_layout.addWidget(top_panel)
 
-        # Горизонтальный разделитель для левой и правой панели (основная часть)
+        # Горизонтальный разделитель
         splitter = QSplitter(Qt.Orientation.Horizontal)
 
-        # Левая панель - селектор с прокруткой
+        # Левая панель - селектор
         left_panel = self._create_selector_panel()
         splitter.addWidget(left_panel)
 
-        # Правая панель - пустой виджет
-        right_panel = self._create_empty_panel()
+        # Правая панель - контент
+        right_panel = self.content_manager.get_widget()
         splitter.addWidget(right_panel)
 
-        # Устанавливаем соотношение 30% на 70%
         splitter.setSizes([300, 700])
-
-        # Splitter занимает всё оставшееся место
         main_layout.addWidget(splitter, 1)
 
     def _create_selector_panel(self) -> QWidget:
-        """Создает панель с селектором и прокруткой"""
+        """Создает панель с селектором"""
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -103,45 +121,20 @@ class MainFormSimulator(QMainWindow):
 
         return wrapper
 
-    def _create_empty_panel(self) -> QWidget:
-        """Создает пустую правую панель"""
-        panel = QWidget()
-        panel.setStyleSheet("""
-            QWidget {
-                background-color: #fafafa;
-                border: 1px solid #ddd;
-                border-radius: 5px;
-            }
-        """)
-
-        layout = QVBoxLayout(panel)
-        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        info_label = QLabel("Правая панель\n(пустой виджет)")
-        info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        info_label.setStyleSheet("""
-            QLabel {
-                color: #999;
-                font-size: 14px;
-                font-style: italic;
-            }
-        """)
-        layout.addWidget(info_label)
-
-        return panel
-
     def update_form(self, r_form: RForm):
-        """Обновляет форму и перестраивает интерфейс"""
+        """Обновляет форму"""
         self.r_form = r_form
         if hasattr(r_form, 'form') and hasattr(r_form.form, 'name'):
             self.form_name = r_form.form.name
 
         self.form_name_label.setText(f"Симулируемая форма: {self.form_name}")
-
         self._update_id_selector()
 
+        # При смене формы очищаем правую панель
+        self.content_manager.show_empty()
+
     def _update_id_selector(self):
-        """Обновляет виджет IdSelector"""
+        """Обновляет IdSelector"""
         while self.selector_layout.count():
             item = self.selector_layout.takeAt(0)
             widget = item.widget()
@@ -152,12 +145,46 @@ class MainFormSimulator(QMainWindow):
             self.id_selector = IdSelector(self.r_form)
             self.selector_layout.addWidget(self.id_selector)
 
+    # Публичные методы для управления контентом
+    def show_exemplar(self, exemplar, color='green'):
+        """Показывает текущий экземпляр датасета"""
+        self.content_manager.show_exemplar(exemplar, color)
+
+    def show_track(self, track_res):
+        """Показывает Track контент"""
+        self.content_manager.show_track(track_res)
+
+    def show_empty(self, error_message=None):
+        """Показывает пустой контент"""
+        self.content_manager.show_empty(error_message)
+
+    # Методы для управления навигатором
+    def set_example_id(self, example_id: str) -> None:
+        """Устанавливает ID примера в навигаторе"""
+        if hasattr(self, 'dataset_navigator'):
+            self.dataset_navigator.set_example_id(example_id)
+
+    def get_example_id(self) -> str:
+        """Возвращает текущий ID примера из навигатора"""
+        if hasattr(self, 'dataset_navigator'):
+            return self.dataset_navigator.get_example_id()
+        return "—"
+
+    def set_navigation_buttons_enabled(self, prev_enabled: bool, next_enabled: bool) -> None:
+        """Устанавливает доступность кнопок навигации"""
+        if hasattr(self, 'dataset_navigator'):
+            self.dataset_navigator.set_buttons_enabled(prev_enabled, next_enabled)
+
     def _on_simulate_clicked(self):
-        """Обработчик нажатия кнопки симуляции (пока пустой)"""
-        pass
+        """Обработчик кнопки симуляции"""
+        self.signals.full_simulate_requested.emit()
+
+    def _on_clear_selection_clicked(self):
+        """Обработчик кнопки снять выделение"""
+        self.signals.clear_selection_requested.emit()
 
     def resizeEvent(self, event):
-        """Обработка изменения размера окна для сохранения пропорций"""
+        """Обработка изменения размера"""
         super().resizeEvent(event)
         if hasattr(self, 'centralWidget'):
             for child in self.centralWidget().children():

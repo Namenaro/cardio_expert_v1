@@ -47,6 +47,7 @@ class ExemplarsDataset:
         for point_name, point_coord in entry.points.items():
             exemplar.add_point(point_name=point_name, point_coord_t=point_coord, track_id=None)
 
+        exemplar.id = entry.entry_id
         return exemplar
 
     def _load_data(self, filepath: str):

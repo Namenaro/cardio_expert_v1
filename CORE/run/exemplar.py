@@ -27,6 +27,8 @@ class Exemplar:
         self.failed_HCs_ids: [List[int]] = []  # id проваленных жестких условий.
         self.passed_HCs_ids: [List[int]] = []  # id успешно выполнившихся жестких условий.
 
+        self.id: Optional[Any] = None
+
     def get_param_names(self) -> List[str]:
         return list(self._parameters.keys())
 

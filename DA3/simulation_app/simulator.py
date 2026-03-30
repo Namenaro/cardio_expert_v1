@@ -17,6 +17,7 @@ from CORE.visual_debug import TrackRes, StepRes
 from DA3.settings import Settings
 from DA3.simulation_app.simulator_utils import find_track, make_interval, get_coords, exec_track
 
+
 logger = get_logger(__name__)
 
 
@@ -183,6 +184,22 @@ class Simulator:
             import traceback
             traceback.print_exc()
             return f"Ошибка выполнения формы: {e}"
+
+    def get_current_exemplar(self) -> Optional[Exemplar]:
+        """Возвращает текущий экземпляр датасета"""
+        if not self.dataset or self._current_idx < 0 or self._current_idx >= len(self._exemplar_ids):
+            return None
+        return self.dataset.get_exemplar_by_id(self._exemplar_ids[self._current_idx])
+
+    def has_next(self) -> bool:
+        """Проверяет, есть ли следующий экземпляр"""
+        if not self.dataset:
+            return False
+        return self._current_idx + 1 < len(self._exemplar_ids)
+
+    def has_prev(self) -> bool:
+        """Проверяет, есть ли предыдущий экземпляр"""
+        return self._current_idx > 0
 
 
 if __name__ == "__main__":
