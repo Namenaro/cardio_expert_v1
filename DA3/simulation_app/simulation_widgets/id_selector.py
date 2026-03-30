@@ -3,28 +3,26 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QScrollArea,
     QPushButton, QFrame
 )
-from PySide6.QtCore import Signal, Qt
+from PySide6.QtCore import Qt
 from CORE.run.r_form import RForm
 from CORE.run.r_step import RStep
 from CORE.run.r_track import RTrack
 from CORE.run.r_sm import R_SM
 from CORE.run.r_ps import R_PS
 from DA3.base_widget import BaseWidget
+from DA3.simulation_app.simulator_signals import get_signals
 
 
 class IdSelector(BaseWidget):
     """Виджет для отображения и выбора шагов, треков, SM и PS"""
 
-    # Сигналы
-    step_selected = Signal(int, int)  # (step_id, num_in_form)
-    track_selected = Signal(int)  # (track_id)
-    SM_selected = Signal(int, int)  # (SM_id, num_in_track)
-    PS_selected = Signal(int)  # (PS_id)
-
     def __init__(self, r_form: RForm, parent=None):
         super().__init__(parent)
         self.r_form = r_form
         self.rsteps: List[RStep] = r_form.rsteps
+
+        # Получаем сигналы
+        self.signals = get_signals()
 
         self._setup_ui()
         self._build_structure()
@@ -205,25 +203,27 @@ class IdSelector(BaseWidget):
 
     def _on_step_clicked(self, step: RStep):
         """Обработка клика по кнопке шага"""
-        self.step_selected.emit(step.num_in_form, step.num_in_form)
+        self.signals.step_selected.emit(step.num_in_form, step.num_in_form)
 
     def _on_track_clicked(self, track: RTrack):
         """Обработка клика по кнопке трека"""
-        self.track_selected.emit(track.id)
+        self.signals.track_selected.emit(track.id)
 
     def _on_sm_clicked(self, sm: R_SM, num_in_track: int):
         """Обработка клика по кнопке SM"""
-        self.SM_selected.emit(sm.base_pazzle.id, num_in_track)
+        self.signals.SM_selected.emit(sm.base_pazzle.id, num_in_track)
 
     def _on_ps_clicked(self, ps: R_PS):
         """Обработка клика по кнопке PS"""
-        self.PS_selected.emit(ps.base_pazzle.id)
+        self.signals.PS_selected.emit(ps.base_pazzle.id)
 
     def update_form(self, r_form: RForm):
         """Обновляет форму и перестраивает интерфейс"""
         self.r_form = r_form
         self.rsteps = r_form.rsteps
         self._build_structure()
+        # Эмитируем сигнал об обновлении формы
+        self.signals.form_updated.emit(r_form)
 
     def reload_styles(self) -> None:
         """Перезагружает стили"""

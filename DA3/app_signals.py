@@ -3,7 +3,6 @@ from typing import NamedTuple
 from PySide6.QtCore import QObject, Signal
 
 from CORE.db_dataclasses import *
-from DA3.simulation_app.simulator import Simulator
 
 
 # Вспомогательные типы для явной документации аргументов сигналов
