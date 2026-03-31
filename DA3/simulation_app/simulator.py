@@ -151,6 +151,7 @@ class Simulator:
             # Запускаем шаг
             ex = create_snapshot_from_step(exemplar=ex, step_num=step_id, rform=self.rform, include_current_step=True)
             step_res, exemplars = r_step.run(ex)
+            step_res.set_exemplars(exemplars)
 
             # Сохраняем созданные экземпляры
             self._last_step_exemplars = exemplars

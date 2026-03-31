@@ -1,7 +1,8 @@
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from CORE import Signal
+from CORE.run import Exemplar
 from CORE.visual_debug.results_datcalsses.track_res import TrackRes
 
 
@@ -14,6 +15,7 @@ class StepRes:
     right_coord: float  # правая. Вместе с левой ограничивает интервал, на котором шаг допускает поиск целевой точки
 
     tracks_results: List[TrackRes]
+    exemplars: Optional[List[Exemplar]] = None
 
     def get_tracks_results(self) -> Dict[int, List[float]]:
         """ Возвращает словарь, где ключ - id трека, значение - найденные этим треком точки (с дублями) """
@@ -39,3 +41,9 @@ class StepRes:
         all_coords = self.get_all_points_flat()
         delete_similar_points(all_coords)
         return all_coords
+
+    def set_exemplars(self, exemplars: List[Exemplar]) -> None:
+        self.exemplars = exemplars
+
+    def get_exemplars(self) -> Optional[List[Exemplar]]:
+        return self.exemplars
