@@ -15,7 +15,8 @@ from CORE.run.exemplars_pool import ExemplarsPool
 from CORE.run.r_form import RForm
 from CORE.visual_debug import TrackRes, StepRes
 from DA3.settings import Settings
-from DA3.simulation_app.simulator_utils import find_track, make_interval, get_coords, exec_track
+from DA3.simulation_app.simulator_utils import find_track, make_interval, get_coords, exec_track, \
+    create_snapshot_from_step
 
 
 logger = get_logger(__name__)
@@ -43,7 +44,8 @@ class Simulator:
 
     def reset_form(self, form: Form):
         self._reset_dataset(name=form.path_to_dataset)
-        dataset = ParametrisedDataset(form=form, raw_exemplars=deepcopy(self.dataset))
+        raw_exemplars = deepcopy(self.dataset)
+        dataset = ParametrisedDataset(form=form, raw_exemplars=raw_exemplars)
         try:
             evaluator = self.settings.evaluator_class(positive_dataset=dataset)
         except TypeError:
@@ -133,6 +135,7 @@ class Simulator:
         # Для первого шага устанавливаем центр
         if step_id == 0:
             # Пытаемся получить центр через существующий метод
+
             center = self._request_random_center_for_first_point(ex)
 
             # Если не получилось (нет точек в экземпляре), используем середину сигнала
@@ -146,6 +149,7 @@ class Simulator:
 
         try:
             # Запускаем шаг
+            ex = create_snapshot_from_step(exemplar=ex, step_num=step_id, rform=self.rform, include_current_step=True)
             step_res, exemplars = r_step.run(ex)
 
             # Сохраняем созданные экземпляры

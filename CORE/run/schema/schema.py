@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Set
 
 from CORE.db_dataclasses import Form, BasePazzle
 from CORE.exeptions import SchemaError
@@ -157,3 +157,39 @@ class Schema:
         current_num_step = self.context.nums_of_steps_done[-1] if self.context.nums_of_steps_done else 0
         err_info = f" При выполнеии {current_num_step} шага ошибки: \n {'\n'.join(self.context.errors)}"
         return err_info
+
+    def get_HC_ids_from_step(self, step_num: int, include_current: bool) -> List[int]:
+        """
+        Возвращает ID всех HC, поставленных начиная с указанного шага.
+
+        :param step_num: номер шага (начиная с 0)
+        :param include_current: включать ли HC текущего шага
+        :return: список ID HC
+        """
+        hc_ids = []
+        start_step = step_num if include_current else step_num + 1
+
+        for i in range(start_step, len(self.steps_sorted)):
+            for hc_wrapper in self.steps_sorted[i].wHCs:
+                if hc_wrapper.hc.id is not None:
+                    hc_ids.append(hc_wrapper.hc.id)
+
+        return hc_ids
+
+    def get_PC_params_from_step(self, step_num: int, include_current: bool) -> Set[str]:
+        """
+        Возвращает имена всех параметров, которые возвращают PC начиная с указанного шага.
+
+        :param step_num: номер шага (начиная с 0)
+        :param include_current: включать ли параметры PC текущего шага
+        :return: множество имен параметров
+        """
+        params = set()
+        start_step = step_num if include_current else step_num + 1
+
+        for i in range(start_step, len(self.steps_sorted)):
+            for pc_wrapper in self.steps_sorted[i].wPCs:
+                if hasattr(pc_wrapper, 'returned_params_names'):
+                    params.update(pc_wrapper.returned_params_names)
+
+        return params
