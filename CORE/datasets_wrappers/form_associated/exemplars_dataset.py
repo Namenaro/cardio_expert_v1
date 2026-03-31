@@ -1,3 +1,4 @@
+import copy
 import json
 import os
 from typing import List, Optional, Dict
@@ -103,6 +104,27 @@ class ExemplarsDataset:
     def __contains__(self, id: str) -> bool:
         """Проверка наличия ID"""
         return id in self.exemplars
+
+    def __deepcopy__(self, memo):
+        """Кастомное глубокое копирование, исключающее копирование outer_dataset"""
+        # Создаем новый экземпляр без вызова __init__
+        new_instance = self.__class__.__new__(self.__class__)
+        memo[id(self)] = new_instance
+
+        # Копируем все атрибуты, кроме outer_dataset
+        for key, value in self.__dict__.items():
+            if key == 'outer_dataset':
+                # Для outer_dataset сохраняем ссылку, а не копию
+                setattr(new_instance, key, value)
+            else:
+                # Для остальных атрибутов делаем глубокое копирование
+                try:
+                    setattr(new_instance, key, copy.deepcopy(value, memo))
+                except Exception as e:
+                    logger.warning(f"Не удалось скопировать атрибут {key}: {e}")
+                    setattr(new_instance, key, value)
+
+        return new_instance
 
 
 if __name__ == "__main__":
