@@ -13,6 +13,12 @@ from CORE.visual_debug import StepRes
 from CORE.visual_debug import TrackRes, PS_Res
 from CORE.visual_debug.results_drawers.draw_exemplars_pool import DrawExemplarsPool
 from CORE.visual_debug.results_drawers.draw_step_res import DrawStepRes
+from DA3.simulation_app.simulation_widgets.utils import (
+    ExemplarColorManager,
+    ExemplarInfoFormatter,
+    XLimitsCalculator,
+    TextEditHelper
+)
 
 
 class StepResWidget(QWidget):
@@ -24,12 +30,15 @@ class StepResWidget(QWidget):
     """
 
     def __init__(self, parent=None, padding_percent: float = 20):
-        """
-        :param parent: родительский виджет
-        :param padding_percent: процент отступа от крайних точек для обоих канвасов
-        """
         super().__init__(parent)
         self.padding_percent = padding_percent
+
+        # Утилиты
+        self.color_manager = ExemplarColorManager()
+        self.formatter = ExemplarInfoFormatter()
+        self.limits_calculator = XLimitsCalculator(padding_percent)
+
+        # Хранилища
         self.step_res_obj = None
         self.draw_step_res = None
         self.draw_exemplars_pool = None
@@ -43,284 +52,111 @@ class StepResWidget(QWidget):
         self.ax_exemplars = None
         self.canvas_exemplars = None
 
-        # Словарь для хранения цветов экземпляров
-        self.exemplar_colors = {}
+        # Текстовое поле
+        self.exemplars_text = None
 
         self.init_ui()
 
     def init_ui(self):
-        # Основной layout виджета
         layout = QVBoxLayout(self)
         layout.setSpacing(10)
 
-        # Текстовое поле для ID шага
+        # ID шага
         self.id_text_edit = QTextEdit()
         self.id_text_edit.setMaximumHeight(50)
         self.id_text_edit.setReadOnly(True)
         layout.addWidget(QLabel("ID шага (StepRes):"))
         layout.addWidget(self.id_text_edit)
 
-        # Первый канвас - треки шага (верхняя часть)
+        # Канвас с треками
         self.figure_step, self.ax_step = plt.subplots(figsize=(10, 4))
         self.canvas_step = FigureCanvas(self.figure_step)
         layout.addWidget(self.canvas_step)
 
-        # Второй канвас - созданные экземпляры (средняя часть)
+        # Канвас с экземплярами
         self.figure_exemplars, self.ax_exemplars = plt.subplots(figsize=(10, 4))
         self.canvas_exemplars = FigureCanvas(self.figure_exemplars)
         layout.addWidget(self.canvas_exemplars)
 
-        # Текстовое поле для списка экземпляров (нижняя часть)
+        # Текстовое поле для списка экземпляров
         self.exemplars_text = QTextEdit()
-        self.exemplars_text.setMaximumHeight(150)
-        self.exemplars_text.setReadOnly(True)
-        self.exemplars_text.setStyleSheet("""
-            QTextEdit {
-                background-color: #fafafa;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                font-family: monospace;
-                font-size: 10pt;
-                padding: 5px;
-            }
-        """)
+        TextEditHelper.setup_text_edit(self.exemplars_text)
         layout.addWidget(QLabel("Созданные экземпляры:"))
         layout.addWidget(self.exemplars_text)
 
-    def _generate_color_from_index(self, index: int) -> str:
-        """Генерирует цвет на основе индекса экземпляра."""
-        golden_ratio = 0.618033988749895
-        hue = (index * golden_ratio) % 1.0
-        saturation = 0.7
-        value = 0.8
-
-        import colorsys
-        rgb = colorsys.hsv_to_rgb(hue, saturation, value)
-        return f'#{int(rgb[0] * 255):02x}{int(rgb[1] * 255):02x}{int(rgb[2] * 255):02x}'
-
-    def _get_exemplar_color(self, exemplar, index: int) -> str:
-        """Возвращает цвет для экземпляра, используя кэш."""
-        exemplar_id = id(exemplar)
-        if exemplar_id not in self.exemplar_colors:
-            self.exemplar_colors[exemplar_id] = self._generate_color_from_index(index)
-        return self.exemplar_colors[exemplar_id]
-
-    def _format_exemplar_info(self, exemplar: Exemplar, index: int, color: str) -> str:
-        """
-        Форматирует информацию об экземпляре для отображения.
-
-        :param exemplar: объект Exemplar
-        :param index: индекс экземпляра
-        :param color: цвет экземпляра в формате hex
-        :return: отформатированная строка
-        """
-        block_style = f'style="color: {color}; display: inline-block; margin-right: 15px;"'
-        badge_style = f'style="color: {color}; background-color: rgba({int(color[1:3], 16)}, {int(color[3:5], 16)}, {int(color[5:7], 16)}, 0.1); padding: 2px 6px; border-radius: 12px; display: inline-block; margin-right: 10px;"'
-
-        parts = []
-
-        # Заголовок
-        parts.append(f'<span style="color: {color}; font-weight: bold;">Экземпляр {index + 1}</span>')
-
-        # Оценка
-        if exemplar.evaluation_result is not None:
-            parts.append(f'<span {badge_style}>оценка: {exemplar.evaluation_result:.3f}</span>')
-
-        # Параметры
-        param_names = exemplar.get_param_names()
-        if param_names:
-            params_list = [f"{name}={exemplar.get_parameter_value(name)}" for name in param_names]
-            parts.append(f'<span {block_style}>📊 {", ".join(params_list)}</span>')
-
-        # HC нарушены
-        failed_ids = exemplar.get_failed_hc_ids()
-        if failed_ids:
-            parts.append(f'<span {block_style}>❌ HC нарушены: {", ".join(map(str, failed_ids))}</span>')
-        else:
-            parts.append(f'<span {block_style}>✅ HC нарушены: нет</span>')
-
-        # HC выполнены
-        passed_ids = exemplar.get_passed_hc_ids()
-        if passed_ids:
-            parts.append(f'<span {block_style}>✓ HC выполнены: {", ".join(map(str, passed_ids))}</span>')
-        else:
-            parts.append(f'<span {block_style}>✓ HC выполнены: нет</span>')
-
-        # Точки
-        points_info = []
-        for point_name, (x, track_id) in exemplar._points.items():
-            points_info.append(f"{point_name}: {x:.3f}с")
-        points_str = ", ".join(points_info) if points_info else "нет точек"
-        parts.append(f'<span {block_style}>📍 Точки: {points_str}</span>')
-
-        return ' '.join(parts)
-
-    def _update_exemplars_text(self, exemplars: List[Exemplar]):
-        """
-        Обновляет текстовое поле со списком экземпляров.
-
-        :param exemplars: список экземпляров
-        """
-        if not exemplars:
-            self.exemplars_text.clear()
-            self.exemplars_text.setHtml('<i style="color: #999;">Нет созданных экземпляров</i>')
-            return
-
-        # Формируем HTML-текст
-        html_lines = ['<div style="font-family: monospace;">']
-
-        for idx, exemplar in enumerate(exemplars):
-            color = self._get_exemplar_color(exemplar, idx)
-            html_lines.append(self._format_exemplar_info(exemplar, idx, color))
-            if idx < len(exemplars) - 1:
-                html_lines.append('<hr style="margin: 8px 0; border-color: #ddd;">')
-
-        html_lines.append('</div>')
-
-        self.exemplars_text.setHtml(''.join(html_lines))
-
-    def _calculate_combined_x_limits(self, step_res: StepRes) -> Tuple[float, float]:
-        """
-        Рассчитывает объединенные границы по X для обоих канвасов.
-
-        :param step_res: объект StepRes
-        :return: кортеж (left, right) объединенных границ
-        """
-        # Создаем временный DrawStepRes для расчета границ
-        temp_draw_step = DrawStepRes(
-            res_obj=step_res,
-            exemplar_color_map={},
-            padding_percent=self.padding_percent
-        )
-        step_left, step_right = temp_draw_step._calculate_x_limits()
-
-        # Закрываем временную фигуру
-        plt.close(temp_draw_step.fig)
-
-        # Получаем экземпляры
-        exemplars = step_res.get_exemplars()
-
-        if exemplars and len(exemplars) > 0:
-            # Создаем временный DrawExemplarsPool для расчета границ
-            temp_draw_pool = DrawExemplarsPool(
-                exemplars=exemplars,
-                padding_percent=self.padding_percent
-            )
-            # Запускаем сбор точек
-            for exemplar in exemplars:
-                temp_draw_pool._get_sorted_points_from_exemplar(exemplar)
-            pool_left, pool_right = temp_draw_pool._calculate_x_limits()
-
-            # Закрываем временную фигуру
-            plt.close(temp_draw_pool.fig)
-        else:
-            pool_left, pool_right = step_left, step_right
-
-        # Возвращаем самые широкие границы
-        left = min(step_left, pool_left)
-        right = max(step_right, pool_right)
-
-        return left, right
-
     def clear(self):
-        """Очищает графики перед загрузкой новых данных"""
+        """Очищает все данные и графики"""
         if self.ax_step:
             self.ax_step.clear()
         if self.ax_exemplars:
             self.ax_exemplars.clear()
 
-        # Очищаем кэш цветов
-        self.exemplar_colors.clear()
+        self.color_manager.clear()
+        TextEditHelper.clear(self.exemplars_text)
 
-        # Очищаем текстовое поле
-        self.exemplars_text.clear()
-
-        # Обнуляем ссылки
         self.draw_step_res = None
         self.draw_exemplars_pool = None
         self.step_res_obj = None
 
+    def _update_canvas(self, canvas, new_figure):
+        """Обновляет канвас новой фигурой"""
+        old_figure = canvas.figure
+        canvas.figure = new_figure
+        if old_figure is not None and old_figure != new_figure:
+            plt.close(old_figure)
+        canvas.draw()
+
     def reset_data(self, step_res: StepRes):
-        """Заполняет канвасы на основе StepRes и записывает ID в текстовое поле."""
+        """Заполняет виджет данными из StepRes"""
         self.step_res_obj = step_res
+        self.color_manager.clear()
 
-        # Очищаем кэш цветов перед новой загрузкой
-        self.exemplar_colors.clear()
-
-        # Обновляем текстовое поле с ID
+        # Обновляем ID
         self.id_text_edit.clear()
         self.id_text_edit.append(str(step_res.id))
 
-        # Получаем список экземпляров
-        exemplars = step_res.get_exemplars()
+        # Получаем экземпляры
+        exemplars = step_res.get_exemplars() or []
 
-        # Обновляем текстовое поле со списком экземпляров
-        self._update_exemplars_text(exemplars if exemplars else [])
+        # Обновляем текстовое поле
+        html = self.formatter.format_exemplars_list(exemplars, self.color_manager)
+        TextEditHelper.set_html(self.exemplars_text, html)
 
         # Рассчитываем объединенные границы
-        combined_left, combined_right = self._calculate_combined_x_limits(step_res)
+        combined_left, combined_right = self.limits_calculator.calculate_combined_limits(
+            step_res, DrawStepRes, DrawExemplarsPool
+        )
 
-        # === Верхний канвас: треки шага ===
-        # Создаем словарь цветов для передачи в DrawStepRes
-        exemplar_color_map = {}
-        if exemplars:
-            for idx, exemplar in enumerate(exemplars):
-                exemplar_color_map[exemplar] = self._get_exemplar_color(exemplar, idx)
-
-        # Передаем карту цветов и явные границы
+        # Рисуем треки
+        color_map = self.color_manager.get_color_map(exemplars)
         self.draw_step_res = DrawStepRes(
             res_obj=step_res,
-            exemplar_color_map=exemplar_color_map,
+            exemplar_color_map=color_map,
             padding_percent=self.padding_percent,
             x_limits=(combined_left, combined_right)
         )
-        updated_fig_step = self.draw_step_res.get_fig()
+        self._update_canvas(self.canvas_step, self.draw_step_res.get_fig())
 
-        # Заменяем фигуру
-        old_figure_step = self.canvas_step.figure
-        self.canvas_step.figure = updated_fig_step
-
-        # Закрываем старую фигуру
-        if old_figure_step is not None and old_figure_step != updated_fig_step:
-            plt.close(old_figure_step)
-
-        self.canvas_step.draw()
-
-        # === Средний канвас: созданные экземпляры ===
-        if exemplars and len(exemplars) > 0:
-            # Создаем список цветов для экземпляров в том же порядке
-            exemplar_colors_list = []
-            for idx, exemplar in enumerate(exemplars):
-                exemplar_colors_list.append(self._get_exemplar_color(exemplar, idx))
-
-            # Создаём визуализатор для экземпляров с заданными цветами и явными границами
+        # Рисуем экземпляры
+        if exemplars:
+            colors_list = self.color_manager.get_colors_list(exemplars)
             self.draw_exemplars_pool = DrawExemplarsPool(
                 exemplars=exemplars,
-                exemplar_colors=exemplar_colors_list,
+                exemplar_colors=colors_list,
                 padding_percent=self.padding_percent,
                 show_legend=False,
                 x_limits=(combined_left, combined_right)
             )
-            updated_fig_exemplars = self.draw_exemplars_pool.get_fig()
+            self._update_canvas(self.canvas_exemplars, self.draw_exemplars_pool.get_fig())
         else:
-            # Если нет экземпляров, показываем пустой график
+            # Пустой график
             self.ax_exemplars.clear()
             self.ax_exemplars.set_xlim(combined_left, combined_right)
             self.ax_exemplars.text(0.5, 0.5, 'Нет созданных экземпляров',
                                    horizontalalignment='center',
                                    verticalalignment='center',
                                    transform=self.ax_exemplars.transAxes)
-            updated_fig_exemplars = self.figure_exemplars
-
-        # Заменяем фигуру
-        old_figure_exemplars = self.canvas_exemplars.figure
-        self.canvas_exemplars.figure = updated_fig_exemplars
-
-        # Закрываем старую фигуру
-        if old_figure_exemplars is not None and old_figure_exemplars != updated_fig_exemplars:
-            plt.close(old_figure_exemplars)
-
-        self.canvas_exemplars.draw()
+            self.canvas_exemplars.draw()
 
     def cleanup(self):
         """Очищает ресурсы matplotlib"""
@@ -343,8 +179,7 @@ class StepResWidget(QWidget):
         self.draw_step_res = None
         self.draw_exemplars_pool = None
         self.step_res_obj = None
-        self.exemplar_colors.clear()
-        self.exemplars_text.clear()
+        self.color_manager.clear()
 
 if __name__ == "__main__":
     class MainWindow(QMainWindow):
