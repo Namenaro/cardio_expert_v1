@@ -14,67 +14,74 @@ from CORE.visual_debug.results_drawers.draw_exemplar import DrawExemplar
 class ExemplarWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.exemplar = None
+        self.draw_exemplar = None
+        self.figure = None
+        self.ax = None
+        self.canvas = None
         self.init_ui()
 
     def init_ui(self):
-        # Основной layout виджета
+        # Основной layout
         layout = QVBoxLayout(self)
 
-        # Текстовое поле для информации об экземпляре
-        self.info_text_edit = QTextEdit()
-        self.info_text_edit.setMaximumHeight(100)
-        self.info_text_edit.setReadOnly(True)
-        layout.addWidget(QLabel("Информация об экземпляре:"))
-        layout.addWidget(self.info_text_edit)
+        # Текстовое поле для ID
+        self.id_label = QLabel()
+        self.id_label.setStyleSheet("""
+            QLabel {
+                font-size: 14px;
+                font-weight: bold;
+                padding: 5px;
+                background-color: #f0f0f0;
+                border-radius: 3px;
+            }
+        """)
+        layout.addWidget(self.id_label)
 
-        # Канвас для визуализации
+        # Создаем фигуру и канвас
         self.figure, self.ax = plt.subplots(figsize=(10, 4))
         self.canvas = FigureCanvas(self.figure)
         layout.addWidget(self.canvas)
 
-        # Хранилище для объекта Exemplar и Drawer
-        self.exemplar_obj = None
+    def clear(self):
+        """Очищает график перед загрузкой новых данных"""
+        if self.ax:
+            self.ax.clear()
+        # Обнуляем ссылку на старый drawer, чтобы он мог быть собран GC
         self.draw_exemplar = None
 
     def reset_data(self, exemplar: Exemplar, color: str = 'green'):
-        """Заполняет канвас на основе Exemplar и выводит информацию о точках."""
-        self.exemplar_obj = exemplar
+        """Отображает экземпляр датасета"""
+        self.exemplar = exemplar
 
-        # Обновляем текстовое поле с информацией
-        self.info_text_edit.clear()
-
-        # Информация о количестве точек
-        points_count = len(exemplar)
-        self.info_text_edit.append(f"Всего точек: {points_count}")
-
-        # Информация о параметрах
-        params = exemplar.get_param_names()
-        if params:
-            self.info_text_edit.append(f"Параметры: {', '.join(params)}")
-
-        # Информация об оценке
-        if exemplar.evaluation_result is not None:
-            self.info_text_edit.append(f"Оценка: {exemplar.evaluation_result:.3f}")
-
-        # Информация о точках
-        if exemplar._points:
-            self.info_text_edit.append("\nТочки:")
-            sorted_points = sorted(exemplar._points.items(), key=lambda item: item[1][0])
-            for point_name, (coord, track_id) in sorted_points:
-                y = exemplar.signal.get_amplplitude_in_moment(coord)
-                y_str = f"{y:.3f}" if y is not None else "вне сигнала"
-                self.info_text_edit.append(f"  {point_name}: x={coord:.3f}с, y={y_str}мВ, track_id={track_id}")
-
-        # Очищаем фигуру перед перерисовкой
-        self.ax.clear()
+        # Обновляем ID
+        self.id_label.setText(f"ID экземпляра: {exemplar.id}")
 
         # Создаём визуализатор и получаем фигуру
         self.draw_exemplar = DrawExemplar(res_obj=exemplar, color=color)
         updated_fig = self.draw_exemplar.get_fig()
 
         # Заменяем текущую фигуру на обновлённую
+        old_figure = self.canvas.figure
         self.canvas.figure = updated_fig
+
+        # Закрываем старую фигуру, чтобы освободить память
+        if old_figure is not None and old_figure != updated_fig:
+            plt.close(old_figure)
+
         self.canvas.draw()
+
+    def cleanup(self):
+        """Очищает ресурсы matplotlib"""
+        if self.canvas:
+            self.canvas.deleteLater()
+        if self.figure:
+            plt.close(self.figure)
+        self.figure = None
+        self.ax = None
+        self.canvas = None
+        self.draw_exemplar = None
+        self.exemplar = None
 
 
 if __name__ == "__main__":

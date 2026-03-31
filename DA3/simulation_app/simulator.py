@@ -212,10 +212,10 @@ if __name__ == "__main__":
     import os
 
     # Импортируем виджеты
-    from DA3.simulation_app.simulation_widgets.track_res_widget import TrackResWidget
-    from DA3.simulation_app.simulation_widgets.track_SMs_widget import Track_SMs_ResWidget
+    from DA3.simulation_app.simulation_widgets.track_res_widget import TrackFullResWidget
+
     from DA3.simulation_app.simulation_widgets.step_res_widget import StepResWidget
-    from DA3.simulation_app.simulation_widgets.form_res_widget import FormResWidget  # <-- НОВЫЙ ИМПОРТ
+    from DA3.simulation_app.simulation_widgets.form_res_widget import FormResWidget
 
     print(f"Датасеты: {EXEMPLARS_DATASETS_PATH}")
     if os.path.exists(EXEMPLARS_DATASETS_PATH):
@@ -244,67 +244,6 @@ if __name__ == "__main__":
         print("Не удалось получить экземпляр!")
         sys.exit(1)
 
-    # ===== ТЕСТИРОВАНИЕ ТРЕКА =====
-    print("\n" + "=" * 50)
-    print("ТЕСТИРОВАНИЕ ТРЕКА")
-    print("=" * 50)
-
-    if not (form.steps and form.steps[0].tracks):
-        print("В форме нет треков!")
-    else:
-        first_track_id = form.steps[0].tracks[0].id
-        print(f"Запуск трека {first_track_id}...")
-
-        # Запускаем трек
-        track_result = sim.run_track(first_ex, first_track_id, center=None)
-
-        if isinstance(track_result, str):
-            print(f"Ошибка трека: {track_result}")
-        else:
-            print(f"✅ Трек выполнен успешно!")
-            print(f"  SM объектов: {len(track_result.sm_res_objs)}")
-            print(f"  PS объектов: {len(track_result.ps_res_objs)}")
-            print(f"  Найдено точек: {len(track_result.to_uniq_coords())}")
-            if track_result.to_uniq_coords():
-                print(f"  Координаты: {[f'{p:.3f}' for p in track_result.to_uniq_coords()]}")
-
-
-            # Запускаем визуализацию трека
-            class TrackWindow(QMainWindow):
-                def __init__(self):
-                    super().__init__()
-                    self.setWindowTitle(f"Визуализация трека {first_track_id} - Форма: {form.name}")
-                    self.setGeometry(100, 100, 1600, 800)
-
-                    central_widget = QWidget()
-                    self.setCentralWidget(central_widget)
-                    layout = QVBoxLayout(central_widget)
-
-                    # Информация
-                    info_label = QLabel(f"Сигнал: {len(first_ex.signal)} отсчетов, {first_ex.signal.frequency} Гц")
-                    layout.addWidget(info_label)
-
-                    # Сплиттер для двух виджетов
-                    splitter = QSplitter(Qt.Horizontal)
-
-                    self.ps_widget = TrackResWidget()
-                    self.sm_widget = Track_SMs_ResWidget()
-
-                    splitter.addWidget(self.ps_widget)
-                    splitter.addWidget(self.sm_widget)
-                    splitter.setSizes([800, 800])
-
-                    layout.addWidget(splitter)
-
-                    # Показываем результаты
-                    self.ps_widget.reset_data(track_result)
-                    self.sm_widget.reset_data(track_result)
-
-
-            track_app = QApplication.instance() or QApplication(sys.argv)
-            track_window = TrackWindow()
-            track_window.show()
-            track_app.exec()
 
     # ===== ТЕСТИРОВАНИЕ ШАГА =====
     print("\n" + "=" * 50)

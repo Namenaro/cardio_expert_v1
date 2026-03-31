@@ -1,3 +1,5 @@
+# DA3/simulation_app/simulation_widgets/empty_widget.py
+
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel
 from PySide6.QtCore import Qt
 
@@ -9,6 +11,7 @@ class EmptyWidget(QWidget):
         super().__init__(parent)
         self.info_label = None
         self.error_label = None
+        self.layout = None
         self.init_ui()
 
     def init_ui(self):
@@ -28,10 +31,8 @@ class EmptyWidget(QWidget):
 
     def set_error_message(self, message: str):
         """Показывает сообщение об ошибке"""
-        # Очищаем layout
         self._clear_layout()
 
-        # Создаем метку для ошибки
         self.error_label = QLabel(f"Ошибка:\n{message}")
         self.error_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.error_label.setStyleSheet("""
@@ -51,6 +52,12 @@ class EmptyWidget(QWidget):
         """Очищает сообщение об ошибке и показывает стандартный текст"""
         self._clear_layout()
         self.layout.addWidget(self.info_label)
+
+    def cleanup(self):
+        """Очищает ресурсы"""
+        self._clear_layout()
+        self.info_label = None
+        self.error_label = None
 
     def _clear_layout(self):
         """Очищает layout от всех виджетов"""

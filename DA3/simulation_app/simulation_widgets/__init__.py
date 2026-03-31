@@ -1,1 +1,1 @@
-from DA3.simulation_app.simulation_widgets.track_res_widget import TrackResWidget
+from DA3.simulation_app.simulation_widgets.track_res_widget import TrackFullResWidget
