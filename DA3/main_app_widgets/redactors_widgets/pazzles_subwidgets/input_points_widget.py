@@ -1,9 +1,9 @@
-from typing import List, Optional
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem,
     QHeaderView, QLabel, QComboBox
 )
-from PySide6.QtCore import Qt, Signal
+
 from CORE.db_dataclasses import *
 
 

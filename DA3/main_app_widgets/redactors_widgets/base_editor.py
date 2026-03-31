@@ -1,10 +1,10 @@
-from abc import ABC, abstractmethod
 from typing import Any
+
+from PySide6.QtCore import Signal, Qt
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QPushButton,
     QMessageBox, QWidget, QApplication
 )
-from PySide6.QtCore import Signal, Qt
 
 
 class BaseEditor(QDialog):

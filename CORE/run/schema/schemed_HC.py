@@ -1,8 +1,6 @@
-from enum import Enum
-
-from CORE.db_dataclasses import Form, Step, Point, BasePazzle, Parameter
 from typing import List, Dict, Tuple
 
+from CORE.db_dataclasses import BasePazzle, Parameter
 from CORE.run.run_pazzle import PazzleParser
 from CORE.run.schema.context import Context
 

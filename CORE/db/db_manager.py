@@ -1,10 +1,10 @@
-from CORE.paths import DB_PATH
-from CORE.db.schema import create_tables
-
-import sqlite3
-import os
 import logging
+import os
+import sqlite3
 from contextlib import contextmanager
+
+from CORE.db.schema import create_tables
+from CORE.paths import DB_PATH
 
 
 class DBManager:

@@ -2,9 +2,8 @@
 Простая конфигурация логирования для приложения
 """
 import logging
-import sys
 import os
-import traceback
+import sys
 from typing import Optional
 
 

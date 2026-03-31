@@ -1,14 +1,14 @@
-from DA3 import app_signals
-from DA3.app_signals import ParamsInitTrackEditor
-from DA3.main_app_widgets.form_widgets.steps_widget.track_card import TrackCard
-from DA3.main_app_widgets.form_widgets.steps_widget.step_info_card import StepInfoCard
-from CORE.db_dataclasses import *
-
+from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import (
     QHBoxLayout, QVBoxLayout, QPushButton, QScrollArea, QFrame
 )
-from PySide6.QtCore import Qt, Slot
+
+from CORE.db_dataclasses import *
+from DA3 import app_signals
+from DA3.app_signals import ParamsInitTrackEditor
 from DA3.base_widget import BaseWidget
+from DA3.main_app_widgets.form_widgets.steps_widget.step_info_card import StepInfoCard
+from DA3.main_app_widgets.form_widgets.steps_widget.track_card import TrackCard
 
 
 class StepCard(BaseWidget):

@@ -1,12 +1,14 @@
+from copy import deepcopy
+
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QLineEdit, QTextEdit, QPushButton, QFileDialog
 )
-from DA3.main_app_widgets.redactors_widgets.base_editor import BaseEditor
-from DA3 import app_signals
+
 from CORE.db_dataclasses import Form
 from CORE.paths import EXEMPLARS_DATASETS_PATH  # Импортируем константу
-from copy import deepcopy
+from DA3 import app_signals
+from DA3.main_app_widgets.redactors_widgets.base_editor import BaseEditor
 
 
 class FormEditor(BaseEditor):

@@ -1,8 +1,8 @@
-from CORE.db.db_manager import DBManager
-from CORE.db_dataclasses import *
-
 import sqlite3
 from typing import List
+
+from CORE.db.db_manager import DBManager
+from CORE.db_dataclasses import *
 
 
 class ClassesRepoRead:

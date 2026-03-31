@@ -1,7 +1,5 @@
 from typing import List, Optional
 
-import bisect
-
 from CORE.utils import find_closest_sorted
 
 

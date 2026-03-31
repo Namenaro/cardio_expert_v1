@@ -3,12 +3,11 @@
 """
 from PySide6.QtCore import Slot
 
-from DA3.main_app_widgets.redactors_widgets import StepInfoEditor
-from DA3.main_app_widgets.form_widgets.dialog_new_step import AddStepDialog
 from CORE.db_dataclasses import Step
-from .base_controller import BaseController
-
 from DA3.app_signals import AppSignals
+from DA3.main_app_widgets.form_widgets.dialog_new_step import AddStepDialog
+from DA3.main_app_widgets.redactors_widgets import StepInfoEditor
+from .base_controller import BaseController
 
 
 class StepController(BaseController):

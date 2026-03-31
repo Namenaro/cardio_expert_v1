@@ -1,11 +1,8 @@
-from CORE.db_dataclasses.base_class import BaseClass, CLASS_TYPES
-from CORE.db_dataclasses.classes_to_pazzles_helpers import *
-
 import ast
-import inspect
-from dataclasses import dataclass, field
-from typing import List, Optional, Any, Dict
-from pathlib import Path
+from typing import List, Optional
+
+from CORE.db_dataclasses.base_class import BaseClass
+from CORE.db_dataclasses.classes_to_pazzles_helpers import *
 
 
 class ClassParser:

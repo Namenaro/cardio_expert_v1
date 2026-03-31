@@ -1,12 +1,11 @@
-import logging
-from typing import Optional, List, Any
-from PySide6.QtWidgets import (QWidget, QVBoxLayout, QFormLayout,
-                               QGroupBox, QLineEdit, QLabel, QMessageBox, QApplication, QHBoxLayout)
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (QWidget, QVBoxLayout, QFormLayout,
+                               QGroupBox, QLineEdit, QLabel, QMessageBox, QHBoxLayout)
+
 from CORE.db_dataclasses import *
+from DA3 import app_signals
 from DA3.main_app_widgets.redactors_widgets import BaseEditor
 from DA3.main_app_widgets.redactors_widgets.pazzles_subwidgets import *
-from DA3 import app_signals
 
 
 class PCEditor(BaseEditor):

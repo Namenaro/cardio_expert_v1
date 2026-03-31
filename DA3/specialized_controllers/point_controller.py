@@ -3,11 +3,10 @@
 """
 from PySide6.QtCore import Slot
 
-from DA3.main_app_widgets.redactors_widgets import PointEditor
 from CORE.db_dataclasses import Point
-from DA3.specialized_controllers.base_controller import BaseController
-
 from DA3.app_signals import AppSignals
+from DA3.main_app_widgets.redactors_widgets import PointEditor
+from DA3.specialized_controllers.base_controller import BaseController
 
 
 class PointController(BaseController):

@@ -1,10 +1,11 @@
-from typing import List, Optional
+from typing import List
+
+from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
     QLabel, QFrame, QMessageBox, QScrollArea, QSizePolicy
 )
-from PySide6.QtCore import Qt, Slot
-from PySide6.QtGui import QFont
+
 from CORE.db_dataclasses import Parameter
 from DA3 import app_signals
 from DA3.base_widget import BaseWidget

@@ -1,9 +1,9 @@
+from typing import List, Optional
 
-from PySide6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout,
-                              QWidget, QFrame, QLabel, QSizePolicy, QMenu)
 from PySide6.QtCore import Qt, QEvent
 from PySide6.QtGui import QPalette, QColor
-from typing import List, Optional
+from PySide6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout,
+                               QWidget, QFrame, QLabel, QSizePolicy, QMenu)
 
 from CORE.db_dataclasses import BaseClass, BasePazzle
 from DA3 import app_signals

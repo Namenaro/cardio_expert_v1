@@ -3,12 +3,10 @@
 """
 from PySide6.QtCore import Slot
 
-from DA3.main_app_widgets.redactors_widgets import HCEditor, PCEditor
 from CORE.db_dataclasses import BasePazzle
-from .base_controller import BaseController
-
-
 from DA3.app_signals import AppSignals
+from DA3.main_app_widgets.redactors_widgets import HCEditor, PCEditor
+from .base_controller import BaseController
 
 
 class PC_HC_Controller(BaseController):

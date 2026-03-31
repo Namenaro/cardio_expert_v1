@@ -6,7 +6,6 @@ from CORE import Signal
 from CORE.db_dataclasses import BasePazzle
 from CORE.exeptions import RunPazzleError, PazzleOutOfSignal
 from CORE.pazzles_lib.ps_base import PSBase
-
 from CORE.run.run_pazzle import PazzleParser
 
 

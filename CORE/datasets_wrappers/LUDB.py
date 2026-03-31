@@ -1,13 +1,11 @@
+import json
 import os
+from typing import Optional, List
 
 from CORE.datasets_wrappers.third_party_dataset import ThirdPartyDataset
 from CORE.enums import LEADS_NAMES
-from CORE.signal_1d import Signal
-
-from importlib import resources
-import json
-from typing import Optional, List
 from CORE.paths import LUDB_JSON_PATH
+from CORE.signal_1d import Signal
 
 
 class LUDB(ThirdPartyDataset):

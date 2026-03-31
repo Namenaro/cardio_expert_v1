@@ -1,13 +1,13 @@
-from CORE.db_dataclasses import *
-from DA3 import app_signals
-from typing import List
+import logging
+
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QFrame, QVBoxLayout, QFormLayout, QLabel, QPushButton, QApplication,
     QHBoxLayout, QSizePolicy, QWidget, QScrollArea
 )
-from PySide6.QtCore import Qt
-import logging
 
+from CORE.db_dataclasses import *
+from DA3 import app_signals
 from DA3.base_widget import BaseWidget
 
 

@@ -1,5 +1,6 @@
-import matplotlib.pyplot as plt
 from typing import List, Tuple
+
+import matplotlib.pyplot as plt
 
 from CORE.run import Exemplar
 from CORE.visual_debug.plt_visualisation import Drawer

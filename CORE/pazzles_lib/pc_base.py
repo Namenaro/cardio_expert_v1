@@ -1,10 +1,7 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
 from typing import Any, Dict, Tuple
 
 from CORE import Signal
-from CORE.exeptions import PazzleOutOfSignal
-
 
 
 class PCBase(ABC):

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from typing import Optional, List
 from enum import Enum
+from typing import Optional, List
 
 from CORE.signal_1d import Signal
 

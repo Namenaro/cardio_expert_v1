@@ -1,21 +1,20 @@
 import logging
-from CORE.db_dataclasses import *
-from CORE.run.schema import Schema
-from DA3.model import Model
-from DA3.main_form import MainForm
-from DA3.main_app_widgets.compilator_widget import CompilerWindow
-from DA3.main_app_widgets.dialogs import select_form_from_dialog
+
 from PySide6.QtCore import QObject, Qt
 from PySide6.QtWidgets import QMessageBox
 
-from DA3.dataset_viewer.form_dataset_window import FormDatasetWindow
-from CORE.datasets_wrappers import LUDB
-from DA3.simulation_app.simulator_controller import SimulatorController
-
-from DA3.specialized_controllers import *
-
 # Импортируем app_signals для типизации
 import DA3.app_signals as app_signals
+from CORE.datasets_wrappers.LUDB import LUDB
+from CORE.db_dataclasses import *
+from CORE.run.schema import Schema
+from DA3.dataset_viewer.form_dataset_window import FormDatasetWindow
+from DA3.main_app_widgets.compilator_widget import CompilerWindow
+from DA3.main_app_widgets.dialogs import select_form_from_dialog
+from DA3.main_form import MainForm
+from DA3.model import Model
+from DA3.simulation_app.simulator_controller import SimulatorController
+from DA3.specialized_controllers import *
 
 
 class Controller(QObject):

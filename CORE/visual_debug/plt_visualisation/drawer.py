@@ -1,5 +1,7 @@
-import matplotlib.pyplot as plt
 from typing import Optional, List
+
+import matplotlib.pyplot as plt
+
 from CORE.signal_1d import Signal
 from CORE.visual_debug.plt_visualisation.helpers.drawinfg_entities_dataclasses import LineStyle, VerticalLineInfo
 from CORE.visual_debug.plt_visualisation.helpers.popup_window import PopupWindow

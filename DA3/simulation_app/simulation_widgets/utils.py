@@ -2,6 +2,7 @@
 
 import colorsys
 from typing import List, Optional
+
 from PySide6.QtWidgets import QTextEdit
 
 from CORE.run import Exemplar

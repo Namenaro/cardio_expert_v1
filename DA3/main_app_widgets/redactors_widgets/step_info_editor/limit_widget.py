@@ -1,13 +1,9 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QLineEdit, QTextEdit, QComboBox, QRadioButton, QGroupBox
+    QLineEdit, QComboBox, QRadioButton, QGroupBox
 )
-from DA3.main_app_widgets.redactors_widgets.base_editor import BaseEditor
-from DA3 import app_signals
+
 from CORE.db_dataclasses import *
-from copy import deepcopy
-
-
 
 
 class LimitWidget(QGroupBox):

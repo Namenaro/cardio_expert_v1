@@ -2,7 +2,7 @@ import sys
 from math import sin
 
 import matplotlib.pyplot as plt
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit
+from PySide6.QtWidgets import QWidget, QLabel, QTextEdit
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
 from CORE import Signal

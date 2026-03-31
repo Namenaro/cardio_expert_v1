@@ -1,8 +1,8 @@
-import pytest
-from typing import Any, get_type_hints, List, get_origin, get_args
 from dataclasses import dataclass
-
+from typing import List, get_origin, get_args
 from unittest.mock import patch
+
+import pytest
 
 # Импорты из вашего проекта
 from CORE.db_dataclasses import (

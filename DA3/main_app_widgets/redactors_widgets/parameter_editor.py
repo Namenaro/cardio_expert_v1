@@ -1,11 +1,13 @@
 from copy import deepcopy
+
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QLineEdit, QTextEdit
 )
-from DA3.main_app_widgets.redactors_widgets.base_editor import BaseEditor
-from DA3 import app_signals
+
 from CORE.db_dataclasses import Parameter
+from DA3 import app_signals
+from DA3.main_app_widgets.redactors_widgets.base_editor import BaseEditor
 
 
 class ParameterEditor(BaseEditor):

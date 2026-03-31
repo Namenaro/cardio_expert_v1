@@ -1,11 +1,12 @@
+import colorsys
+from typing import List, Dict, Optional, Tuple
+
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, TABLEAU_COLORS
-from typing import List, Dict, Optional, Tuple
-import colorsys
 
+from CORE.run import Exemplar
 from CORE.visual_debug import StepRes
 from CORE.visual_debug.plt_visualisation import Drawer, VerticalLineInfo
-from CORE.run import Exemplar
 
 
 class DrawStepRes:

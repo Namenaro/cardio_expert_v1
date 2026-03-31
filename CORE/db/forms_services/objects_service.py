@@ -1,11 +1,11 @@
-from CORE.db_dataclasses import *
-from CORE.db.forms_services.object_relation_service import ObjectRelationService
-from CORE.db.forms_services.object_data_service import ObjectDataService
-
 import logging
 from typing import List, Optional, Tuple
 
 from CORE.db.classes_service import ClassesRepoRead
+from CORE.db.forms_services.object_data_service import ObjectDataService
+from CORE.db.forms_services.object_relation_service import ObjectRelationService
+from CORE.db_dataclasses import *
+
 
 class ObjectsService:
     """

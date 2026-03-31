@@ -1,8 +1,8 @@
-from CORE.db_dataclasses import *
-from CORE.db.classes_service import ClassesRepoRead
-
-import logging
 from typing import List, Optional, Tuple
+
+from CORE.db.classes_service import ClassesRepoRead
+from CORE.db_dataclasses import *
+
 
 class ObjectRelationService:
     """

@@ -1,12 +1,13 @@
 from typing import List, Optional
+
 from PySide6.QtWidgets import (
     QTabWidget, QVBoxLayout, QPushButton
 )
 
-from DA3.main_app_widgets.form_widgets.steps_widget.step_card import StepCard
 from CORE.db_dataclasses import Step
 from DA3 import app_signals
 from DA3.base_widget import BaseWidget
+from DA3.main_app_widgets.form_widgets.steps_widget.step_card import StepCard
 
 
 class StepsWidget(BaseWidget):

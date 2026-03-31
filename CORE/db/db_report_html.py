@@ -1,6 +1,6 @@
-from CORE.paths import DB_PATH
-
 import sqlite3
+
+from CORE.paths import DB_PATH
 
 
 def generate_html_report(output_file='REPORT.html'):

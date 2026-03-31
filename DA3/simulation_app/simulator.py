@@ -3,7 +3,7 @@ from copy import deepcopy
 from typing import Optional, List, Union
 
 from CORE import Signal
-from CORE.datasets_wrappers import LUDB
+from CORE.datasets_wrappers.LUDB import LUDB
 from CORE.datasets_wrappers.form_associated.exemplars_dataset import ExemplarsDataset
 from CORE.datasets_wrappers.form_associated.parametrised_dataset import ParametrisedDataset
 from CORE.db.db_manager import DBManager
@@ -17,7 +17,6 @@ from CORE.visual_debug import TrackRes, StepRes
 from DA3.settings import Settings
 from DA3.simulation_app.simulator_utils import find_track, make_interval, get_coords, exec_track, \
     create_snapshot_from_step
-
 
 logger = get_logger(__name__)
 
@@ -210,14 +209,11 @@ class Simulator:
 if __name__ == "__main__":
     from CORE.paths import EXEMPLARS_DATASETS_PATH, DB_PATH
     from PySide6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QWidget,
-                                   QSplitter,
                                    QLabel)
-    from PySide6.QtCore import Qt
     import sys
     import os
 
     # Импортируем виджеты
-    from DA3.simulation_app.simulation_widgets.track_res_widget import TrackFullResWidget
 
     from DA3.simulation_app.simulation_widgets.step_res_widget import StepResWidget
     from DA3.simulation_app.simulation_widgets.form_res_widget import FormResWidget

@@ -1,6 +1,6 @@
 import sys
 from math import sin
-from typing import Optional, List
+from typing import Optional
 
 import matplotlib.pyplot as plt
 from PySide6.QtWidgets import QWidget, QLabel, QTextEdit

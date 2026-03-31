@@ -1,9 +1,10 @@
-from CORE.pazzles_lib import FoldersParser
-from CORE.db.db_manager import DBManager
-from CORE.db_dataclasses import BaseClass
-
 import sqlite3
 from typing import List
+
+from CORE.db.db_manager import DBManager
+from CORE.db_dataclasses import BaseClass
+from CORE.pazzles_lib import FoldersParser
+
 
 class ClassesRepoWrite:
     """Репозиторий для работы с классами в базе данных"""

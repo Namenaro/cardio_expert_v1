@@ -1,6 +1,7 @@
+from typing import List
+
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-from typing import List
 
 from CORE.visual_debug import TrackRes
 from CORE.visual_debug.plt_visualisation import Drawer

@@ -1,8 +1,5 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import Any, Dict, Tuple
-
-from CORE import Signal
+from typing import Any
 
 
 class HCBase(ABC):

@@ -1,7 +1,7 @@
+from typing import List
+
 from CORE.db_dataclasses import *
 
-import logging
-from typing import List, Optional
 
 class ObjectDataService:
     """

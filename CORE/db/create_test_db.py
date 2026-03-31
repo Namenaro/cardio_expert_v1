@@ -1,7 +1,7 @@
 from CORE.db.classes_service.classes_repo_write import add_all_classes_to_db
 from CORE.db.db_manager import DBManager
-from CORE.db.forms_services import *
 from CORE.db.db_report_html import generate_html_report
+from CORE.db.forms_services import *
 from CORE.db_dataclasses import *
 
 

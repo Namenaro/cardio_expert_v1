@@ -1,6 +1,8 @@
+from typing import List, Optional
+
 from CORE import Signal
 from CORE.run import Exemplar
-from typing import List, Optional
+
 
 class ExemplarsPool:
     """Набор конкурирующих между собой экземпляров одной и той же формы на одном и том же сигнале."""

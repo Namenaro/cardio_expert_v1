@@ -1,26 +1,17 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit
-from PySide6.QtCore import Qt
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
-from typing import Optional
-
-from CORE.run import Exemplar
-from CORE.run.exemplars_pool import ExemplarsPool
-from CORE.visual_debug.results_drawers.draw_exemplars_pool import DrawExemplarsPool
-
-# DA3/simulation_app/simulation_widgets/form_res_widget.py
-
-import matplotlib.pyplot as plt
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit
+from PySide6.QtWidgets import QWidget, QLabel, QTextEdit
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
 from CORE.run.exemplars_pool import ExemplarsPool
-
+from CORE.visual_debug.results_drawers.draw_exemplars_pool import DrawExemplarsPool
 from DA3.simulation_app.simulation_widgets.utils import (
     ExemplarColorManager,
     ExemplarInfoFormatter,
     TextEditHelper
 )
+
+
+# DA3/simulation_app/simulation_widgets/form_res_widget.py
 
 
 class FormResWidget(QWidget):

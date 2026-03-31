@@ -2,14 +2,15 @@
 
 from enum import Enum
 from typing import Optional
+
 from PySide6.QtWidgets import QWidget, QStackedWidget
 
 from CORE.run import Exemplar
 from CORE.visual_debug import TrackRes, StepRes
-from DA3.simulation_app.simulation_widgets.track_res_widget import TrackFullResWidget
-from DA3.simulation_app.simulation_widgets.step_res_widget import StepResWidget
-from DA3.simulation_app.simulation_widgets.exemplar_widget import ExemplarWidget
 from DA3.simulation_app.simulation_widgets.empty_widget import EmptyWidget
+from DA3.simulation_app.simulation_widgets.exemplar_widget import ExemplarWidget
+from DA3.simulation_app.simulation_widgets.step_res_widget import StepResWidget
+from DA3.simulation_app.simulation_widgets.track_res_widget import TrackFullResWidget
 
 
 class ContentType(Enum):

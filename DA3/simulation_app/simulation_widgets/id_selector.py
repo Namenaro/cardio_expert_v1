@@ -1,14 +1,16 @@
 from typing import List, Optional
+
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QScrollArea,
     QPushButton, QFrame
 )
-from PySide6.QtCore import Qt
+
 from CORE.run.r_form import RForm
+from CORE.run.r_ps import R_PS
+from CORE.run.r_sm import R_SM
 from CORE.run.r_step import RStep
 from CORE.run.r_track import RTrack
-from CORE.run.r_sm import R_SM
-from CORE.run.r_ps import R_PS
 from DA3.base_widget import BaseWidget
 from DA3.simulation_app.simulator_signals import get_signals
 

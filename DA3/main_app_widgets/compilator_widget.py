@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import (QDialog, QVBoxLayout, QLabel, QTextEdit, QPushButton, QWidget)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette, QColor
+from PySide6.QtWidgets import (QDialog, QVBoxLayout, QLabel, QTextEdit, QPushButton)
 
 
 class CompilerWindow(QDialog):

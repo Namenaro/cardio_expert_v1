@@ -1,8 +1,8 @@
 from typing import List
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QFrame, QVBoxLayout, QHBoxLayout, QPushButton,
                                QLabel, QMessageBox, QSizePolicy, QScrollArea, QWidget)
-from PySide6.QtCore import Qt
 
 from CORE.db_dataclasses import BasePazzle, Parameter, Point
 from DA3 import app_signals

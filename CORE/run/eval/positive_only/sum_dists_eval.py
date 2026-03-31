@@ -6,6 +6,7 @@ from CORE.datasets_wrappers.form_associated.parametrised_dataset import Parametr
 from CORE.run import Exemplar
 from CORE.run.eval.base_eval import BaseEvaluator
 
+
 class SumDistsEval(BaseEvaluator):
     """
     Оценка экземпляра через нормированные отклонения параметров от матожидания позитивной выборки.

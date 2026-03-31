@@ -1,11 +1,8 @@
-from CORE.db_dataclasses.classes_to_pazzles_helpers import *
-
 from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
+
+from CORE.db_dataclasses.classes_to_pazzles_helpers import *
 from CORE.enums import CLASS_TYPES
-
-
-
 
 
 @dataclass

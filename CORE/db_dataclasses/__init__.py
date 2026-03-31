@@ -1,15 +1,13 @@
-from CORE.db_dataclasses.form import Form
-from CORE.db_dataclasses.point import Point
-from CORE.db_dataclasses.parameter import Parameter
-from CORE.db_dataclasses.track import Track
-from CORE.db_dataclasses.step import Step
-
-from CORE.db_dataclasses.base_pazzle import *
-from CORE.db_dataclasses.base_class import *
-from CORE.db_dataclasses.classes_to_pazzles_helpers import *
-
-
 import sys
+
+from CORE.db_dataclasses.base_class import *
+from CORE.db_dataclasses.base_pazzle import *
+from CORE.db_dataclasses.classes_to_pazzles_helpers import *
+from CORE.db_dataclasses.form import Form
+from CORE.db_dataclasses.parameter import Parameter
+from CORE.db_dataclasses.point import Point
+from CORE.db_dataclasses.step import Step
+from CORE.db_dataclasses.track import Track
 
 # Собираем all полуавтоматически
 __all__ = ['Form', 'Point', 'Parameter', 'Track', 'Step', 'BaseClass', 'DATA_TYPES']

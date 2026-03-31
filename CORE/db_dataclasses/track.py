@@ -1,8 +1,9 @@
+from dataclasses import dataclass, field
+from typing import List
+from typing import Optional
+
 from CORE.db_dataclasses.base_pazzle import BasePazzle
 
-from typing import List
-from dataclasses import dataclass, field
-from typing import Optional
 
 @dataclass
 class Track:

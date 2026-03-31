@@ -2,22 +2,18 @@ import sys
 from math import sin
 
 import matplotlib.pyplot as plt
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit, QApplication, QMainWindow
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
-
-from CORE import Signal
-from CORE.visual_debug import TrackRes, PS_Res
-from CORE.visual_debug.results_drawers.draw_track_res import DrawTrackRes
-
-# DA3/simulation_app/simulation_widgets/track_full_res_widget.py
-
-import matplotlib.pyplot as plt
+from PySide6.QtWidgets import QApplication, QMainWindow
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
+from CORE import Signal
+from CORE.visual_debug import PS_Res
 from CORE.visual_debug import TrackRes
 from CORE.visual_debug.results_drawers.draw_track_res import DrawTrackRes
 from CORE.visual_debug.results_drawers.draw_track_res_SM import DrawTrackRes_SM
+
+
+# DA3/simulation_app/simulation_widgets/track_full_res_widget.py
 
 
 class TrackFullResWidget(QWidget):

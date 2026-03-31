@@ -1,9 +1,9 @@
 # DA3/simulation_app/visual_debug/plt_visualisation/draw_exemplars_pool.py
 
-import matplotlib.pyplot as plt
 from typing import List, Tuple, Optional
+
+import matplotlib.pyplot as plt
 import numpy as np
-import colorsys
 
 from CORE.run import Exemplar
 from CORE.run.exemplars_pool import ExemplarsPool

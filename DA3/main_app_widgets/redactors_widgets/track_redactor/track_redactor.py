@@ -1,12 +1,12 @@
-from PySide6.QtWidgets import (QApplication, QMainWindow, QHBoxLayout,
-                               QVBoxLayout, QWidget, QFrame, QLabel, QSizePolicy, QDialog, QPushButton)
+import logging
+from typing import List, Optional
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette, QColor
-from typing import List, Optional
-from dataclasses import field
-import logging
+from PySide6.QtWidgets import (QApplication, QMainWindow, QHBoxLayout,
+                               QVBoxLayout, QWidget, QLabel, QSizePolicy, QDialog, QPushButton)
 
-from CORE.db_dataclasses import Track, BasePazzle, BaseClass
+from CORE.db_dataclasses import Track, BaseClass
 from DA3 import app_signals
 from DA3.app_signals import AddSMParams, AddPSParams
 from DA3.main_app_widgets.redactors_widgets.track_redactor.SM_PS_card import SM_PS_Card

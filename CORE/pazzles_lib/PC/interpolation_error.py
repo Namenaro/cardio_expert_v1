@@ -1,7 +1,7 @@
+from typing import Any, Dict
+
 from CORE.pazzles_lib.pc_base import PCBase
 from CORE.signal_1d import Signal
-from typing import Optional, Any, Dict
-from dataclasses import dataclass, field
 
 
 class InterpolationError(PCBase):

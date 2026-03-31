@@ -1,8 +1,8 @@
-from CORE.db.forms_services.track_service import TrackService
-from CORE.db_dataclasses import Step, Point
-
 import logging
 from typing import Optional
+
+from CORE.db.forms_services.track_service import TrackService
+from CORE.db_dataclasses import Step, Point
 
 
 class StepService:

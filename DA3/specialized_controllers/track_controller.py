@@ -1,17 +1,16 @@
 """
 Контроллер для управления шагами
 """
-from PySide6.QtCore import Slot
 from typing import Optional
 
-from DA3.main_app_widgets.redactors_widgets.track_redactor import TrackRedactor
-from CORE.db_dataclasses import Track
-from .base_controller import BaseController
+from PySide6.QtCore import Slot
 
 from DA3.app_signals import AppSignals, ParamsInitTrackEditor, AddSMParams, AddPSParams, Del_Upd_SM_PS_Params
-from ..model import TrackDbResult
 from DA3.main_app_widgets.redactors_widgets.pazzles_modal_editors import SMEditor
 from DA3.main_app_widgets.redactors_widgets.pazzles_modal_editors.ps_editor import PSEditor
+from DA3.main_app_widgets.redactors_widgets.track_redactor import TrackRedactor
+from .base_controller import BaseController
+from ..model import TrackDbResult
 
 
 class TrackController(BaseController):

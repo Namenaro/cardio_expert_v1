@@ -1,13 +1,13 @@
-from typing import Optional, List
+from typing import List
+
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QFrame, QVBoxLayout, QHBoxLayout, QPushButton,
                                QLabel, QMessageBox, QSizePolicy, QScrollArea, QWidget)
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
 
+from CORE.db_dataclasses import BasePazzle, Parameter
 from DA3 import app_signals
-from CORE.db_dataclasses import BasePazzle, Parameter, ObjectInputParamValue
-from DA3.utils.utils import get_affected_form_parameters
 from DA3.utils.style_loader import get_style_loader
+from DA3.utils.utils import get_affected_form_parameters
 
 
 class HCCard(QFrame):

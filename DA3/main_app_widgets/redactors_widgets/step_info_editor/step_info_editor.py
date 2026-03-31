@@ -1,13 +1,14 @@
+from copy import deepcopy
+
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QLineEdit, QTextEdit, QComboBox, QRadioButton, QGroupBox
+    QTextEdit, QComboBox
 )
-from DA3.main_app_widgets.redactors_widgets.base_editor import BaseEditor
-from DA3 import app_signals
-from CORE.db_dataclasses import *
-from DA3.main_app_widgets.redactors_widgets.step_info_editor.limit_widget import LimitWidget
 
-from copy import deepcopy
+from CORE.db_dataclasses import *
+from DA3 import app_signals
+from DA3.main_app_widgets.redactors_widgets.base_editor import BaseEditor
+from DA3.main_app_widgets.redactors_widgets.step_info_editor.limit_widget import LimitWidget
 
 
 class StepInfoEditor(BaseEditor):

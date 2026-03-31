@@ -1,14 +1,13 @@
+from typing import List, Optional
+
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QFormLayout, QLineEdit, QComboBox,
     QHBoxLayout, QPushButton, QMessageBox
 )
-from PySide6.QtCore import Qt
-from dataclasses import field
-from typing import List, Optional
 
-from DA3 import app_signals
 from CORE.db_dataclasses import Step, Point
-
+from DA3 import app_signals
 
 
 class AddStepDialog(QDialog):

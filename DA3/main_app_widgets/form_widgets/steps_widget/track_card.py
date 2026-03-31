@@ -1,11 +1,10 @@
-from CORE.db_dataclasses import *
-from typing import List
+from PySide6.QtCore import Qt, QEvent, Slot
+from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import (
     QFrame, QVBoxLayout, QFormLayout, QLabel, QApplication, QMenu
 )
-from PySide6.QtCore import Qt, QEvent, Slot
-from PySide6.QtGui import QMouseEvent
 
+from CORE.db_dataclasses import *
 from DA3 import app_signals
 from DA3.app_signals import ParamsInitTrackEditor
 

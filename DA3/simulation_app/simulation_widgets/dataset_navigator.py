@@ -2,11 +2,10 @@
 Виджет для навигации по датасету с кнопками "Вперед" и "Назад"
 """
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QPushButton, QLabel, QSizePolicy
 )
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont
 
 from DA3.simulation_app.simulator_signals import get_signals
 

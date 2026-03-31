@@ -1,7 +1,8 @@
-from CORE.db_dataclasses import *
-
 import logging
 from typing import List, Optional
+
+from CORE.db_dataclasses import *
+
 
 class PointService:
     """

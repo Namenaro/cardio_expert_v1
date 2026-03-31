@@ -1,13 +1,13 @@
+import logging
+from typing import List, Optional
+
+from CORE.db.classes_service import ClassesRepoRead
+from CORE.db.forms_services.objects_service import ObjectsService
 from CORE.db.forms_services.parameter_service import ParameterService
 from CORE.db.forms_services.point_service import PointService
 from CORE.db.forms_services.step_service import StepService
-from CORE.db.forms_services.objects_service import ObjectsService
 from CORE.db.forms_services.track_service import TrackService
-from CORE.db.classes_service import ClassesRepoRead
 from CORE.db_dataclasses import *
-
-import logging
-from typing import List, Optional
 
 
 class FormService:

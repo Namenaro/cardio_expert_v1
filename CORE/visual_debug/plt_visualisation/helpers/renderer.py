@@ -1,8 +1,9 @@
 import random
 from typing import Optional, List
+
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MultipleLocator
 from matplotlib.lines import Line2D
+from matplotlib.ticker import MultipleLocator
 
 from CORE.signal_1d import Signal
 from CORE.visual_debug.plt_visualisation.helpers.drawinfg_entities_dataclasses import (

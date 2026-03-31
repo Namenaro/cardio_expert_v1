@@ -1,4 +1,5 @@
 from typing import Optional, List
+
 import numpy as np
 
 from CORE.pazzles_lib.ps_base import PSBase

@@ -1,6 +1,5 @@
 import sys
 from math import sin
-from typing import Tuple, List
 
 import matplotlib.pyplot as plt
 from PySide6.QtWidgets import QApplication, QMainWindow
@@ -8,7 +7,6 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
 from CORE import Signal
-from CORE.run import Exemplar
 from CORE.visual_debug import StepRes
 from CORE.visual_debug import TrackRes, PS_Res
 from CORE.visual_debug.results_drawers.draw_exemplars_pool import DrawExemplarsPool

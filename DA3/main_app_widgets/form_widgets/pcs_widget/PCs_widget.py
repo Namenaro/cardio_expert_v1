@@ -1,10 +1,11 @@
 from typing import Optional
+
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QPushButton,
                                QLabel, QMessageBox, QScrollArea)
-from PySide6.QtCore import Qt
 
-from DA3 import app_signals
 from CORE.db_dataclasses import BasePazzle, Form
+from DA3 import app_signals
 from DA3.main_app_widgets.form_widgets.pcs_widget.PC_card import PCCard
 
 

@@ -1,7 +1,7 @@
+from typing import Optional, List
+
 from CORE.pazzles_lib.ps_base import PSBase
 from CORE.signal_1d import Signal
-
-from typing import Optional, List
 
 
 class GlobalMinSelector(PSBase):

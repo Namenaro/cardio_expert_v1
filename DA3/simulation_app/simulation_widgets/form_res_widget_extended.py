@@ -1,28 +1,22 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QSizePolicy, QHBoxLayout
-from PySide6.QtCore import Qt, QSize
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from typing import Optional, List
+
 import matplotlib.pyplot as plt
-from typing import Optional
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QHBoxLayout
+from PySide6.QtWidgets import QWidget, QScrollArea, QSizePolicy, QLabel, QTextEdit
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from CORE.run import Exemplar
 from CORE.run.exemplars_pool import ExemplarsPool
 from CORE.visual_debug.results_drawers.draw_exemplars_pool import DrawExemplarsPool
-# DA3/simulation_app/simulation_widgets/form_res_widget_extended.py
-
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QSizePolicy, QLabel, QTextEdit
-from PySide6.QtCore import Qt
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-import matplotlib.pyplot as plt
-from typing import Optional, List
-
-from CORE.run import Exemplar
-from CORE.run.exemplars_pool import ExemplarsPool
-
 from DA3.simulation_app.simulation_widgets.utils import (
     ExemplarColorManager,
     ExemplarInfoFormatter,
     TextEditHelper
 )
+
+
+# DA3/simulation_app/simulation_widgets/form_res_widget_extended.py
 
 
 class ExemplarCard(QWidget):

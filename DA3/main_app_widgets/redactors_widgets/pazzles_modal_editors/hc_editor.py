@@ -1,8 +1,10 @@
-from typing import Optional, List
+from typing import List
+
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QFormLayout,
                                QGroupBox, QLineEdit, QLabel, QMessageBox)
-from PySide6.QtCore import Qt
-from CORE.db_dataclasses import BasePazzle, Form, BaseClass, Parameter
+
+from CORE.db_dataclasses import BasePazzle, Form, BaseClass
 from DA3 import app_signals
 from DA3.main_app_widgets.redactors_widgets import BaseEditor
 from DA3.main_app_widgets.redactors_widgets.pazzles_subwidgets import (ArgumentsTableWidget, ClassesListWidget,

@@ -2,12 +2,11 @@ import sys
 from math import sin
 
 import matplotlib.pyplot as plt
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit, QApplication, QMainWindow
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QApplication, QMainWindow
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
 from CORE import Signal
 from CORE.run import Exemplar
-
 from CORE.visual_debug.results_drawers.draw_exemplar import DrawExemplar
 
 

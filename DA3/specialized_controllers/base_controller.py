@@ -2,14 +2,16 @@
 Базовый класс для всех специализированных контроллеров
 """
 from __future__ import annotations
+
 import logging
 from typing import Optional
-from PySide6.QtCore import QObject, Slot
+
+from PySide6.QtCore import QObject
 
 from CORE.db_dataclasses import Form
 from DA3 import app_signals
-
 from DA3.model import Model
+
 
 class BaseController(QObject):
     """Базовый контроллер с общими методами"""

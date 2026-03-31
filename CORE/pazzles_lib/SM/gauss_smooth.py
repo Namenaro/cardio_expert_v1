@@ -1,15 +1,11 @@
-import numpy as np
-
-from CORE.pazzles_lib.sm_base import SMBase
-from CORE.signal_1d import Signal
-from copy import deepcopy
-from CORE.signal_1d import Signal
 from copy import deepcopy
 from typing import Optional
+
 import numpy as np
 from scipy.signal import convolve
 
-from typing import Optional
+from CORE.pazzles_lib.sm_base import SMBase
+from CORE.signal_1d import Signal
 
 
 class GaussianSmooth(SMBase):

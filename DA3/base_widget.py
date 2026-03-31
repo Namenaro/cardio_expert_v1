@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import QWidget
+
 from DA3.utils.style_loader import get_style_loader
 
 

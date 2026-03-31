@@ -1,14 +1,14 @@
 from typing import Optional, List
+
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QFormLayout,
                                QGroupBox, QLineEdit, QLabel, QMessageBox)
-from PySide6.QtCore import Qt
 
-from CORE.db_dataclasses import BasePazzle, Form, BaseClass, Parameter, ClassArgument, ObjectArgumentValue, Track
+from CORE.db_dataclasses import BasePazzle, BaseClass, ClassArgument, ObjectArgumentValue, Track
 from DA3 import app_signals
 from DA3.app_signals import AddSMParams, Del_Upd_SM_PS_Params
 from DA3.main_app_widgets.redactors_widgets import BaseEditor
-from DA3.main_app_widgets.redactors_widgets.pazzles_subwidgets import (ArgumentsTableWidget, ClassesListWidget,
-                                                                       InputParamsWidget)
+from DA3.main_app_widgets.redactors_widgets.pazzles_subwidgets import (ArgumentsTableWidget, ClassesListWidget)
 
 
 class SMEditor(BaseEditor):

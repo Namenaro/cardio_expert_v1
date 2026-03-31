@@ -8,9 +8,9 @@ from PySide6.QtWidgets import (
 )
 
 from CORE.run.r_form import RForm
-from DA3.simulation_app.simulation_widgets.id_selector import IdSelector
-from DA3.simulation_app.simulation_widgets.dataset_navigator import DatasetNavigator
 from DA3.simulation_app.content_manager import ContentManager
+from DA3.simulation_app.simulation_widgets.dataset_navigator import DatasetNavigator
+from DA3.simulation_app.simulation_widgets.id_selector import IdSelector
 from DA3.simulation_app.simulator_signals import get_signals
 
 

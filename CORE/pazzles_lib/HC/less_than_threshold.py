@@ -1,7 +1,4 @@
 from CORE.pazzles_lib.hc_base import HCBase
-from CORE.signal_1d import Signal
-from typing import Optional, Any
-from dataclasses import dataclass
 
 
 class LessThanThreshold(HCBase):

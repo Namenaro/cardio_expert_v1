@@ -1,7 +1,9 @@
-from CORE.paths import DB_PATH
 import os
 import sqlite3
+
 import graphviz
+
+from CORE.paths import DB_PATH
 
 
 def generate_detailed_schema_diagram(output_file='database_er_diagram'):

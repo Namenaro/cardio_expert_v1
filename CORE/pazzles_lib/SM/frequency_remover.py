@@ -1,7 +1,8 @@
-import numpy as np
-from scipy.fft import fft, ifft, fftfreq, rfft, irfft
 from copy import deepcopy
-from typing import Optional, Literal
+from typing import Optional
+
+import numpy as np
+from scipy.fft import fftfreq, rfft, irfft
 
 from CORE.pazzles_lib.sm_base import SMBase
 from CORE.signal_1d import Signal

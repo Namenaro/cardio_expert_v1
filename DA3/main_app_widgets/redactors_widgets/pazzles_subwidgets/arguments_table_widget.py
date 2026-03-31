@@ -1,11 +1,12 @@
-from typing import Optional, List
-from PySide6.QtWidgets import (
-    QLabel, QLineEdit, QFormLayout, QGroupBox, QVBoxLayout,
-    QTableWidget, QTableWidgetItem, QWidget, QHeaderView, QHBoxLayout
-)
-from PySide6.QtCore import Qt
-from CORE.db_dataclasses import ClassArgument, ObjectArgumentValue
+from typing import List
 
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QLabel, QVBoxLayout,
+    QTableWidget, QTableWidgetItem, QWidget, QHeaderView
+)
+
+from CORE.db_dataclasses import ClassArgument, ObjectArgumentValue
 
 
 class ArgumentsTableWidget(QWidget):

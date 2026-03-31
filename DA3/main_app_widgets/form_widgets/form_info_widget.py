@@ -1,14 +1,15 @@
+import os
 from typing import Optional
+
+from PySide6.QtCore import Qt, Slot
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+    QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QGridLayout, QFrame
 )
-from PySide6.QtCore import Qt, Slot, QSize
-from PySide6.QtGui import QPixmap, QPainter, QColor, QFont
+
 from CORE.db_dataclasses import Form
 from DA3 import app_signals
-import os
-
 from DA3.base_widget import BaseWidget
 
 
