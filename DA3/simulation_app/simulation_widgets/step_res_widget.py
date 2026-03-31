@@ -1,20 +1,25 @@
 import sys
 from math import sin
-from dataclasses import dataclass
-from typing import List, Dict
 
 import matplotlib.pyplot as plt
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit, QApplication, QMainWindow
+from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
 from CORE import Signal
-from CORE.visual_debug import TrackRes, PS_Res, StepRes
+from CORE.visual_debug import StepRes
+from CORE.visual_debug import TrackRes, PS_Res
 from CORE.visual_debug.results_drawers.draw_step_res import DrawStepRes
 
 
 class StepResWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.step_res_obj = None
+        self.draw_step_res = None
+        self.figure = None
+        self.ax = None
+        self.canvas = None
         self.init_ui()
 
     def init_ui(self):
@@ -33,9 +38,13 @@ class StepResWidget(QWidget):
         self.canvas = FigureCanvas(self.figure)
         layout.addWidget(self.canvas)
 
-        # Хранилище для объекта StepRes и Drawer
-        self.step_res_obj = None
+    def clear(self):
+        """Очищает график перед загрузкой новых данных"""
+        if self.ax:
+            self.ax.clear()
+        # Обнуляем ссылку на старый drawer
         self.draw_step_res = None
+        self.step_res_obj = None
 
     def reset_data(self, step_res: StepRes):
         """Заполняет канвас на основе StepRes и записывает ID в текстовое поле."""
@@ -45,16 +54,31 @@ class StepResWidget(QWidget):
         self.id_text_edit.clear()
         self.id_text_edit.append(str(step_res.id))
 
-        # Очищаем фигуру перед перерисовкой
-        self.ax.clear()
-
         # Создаём визуализатор и получаем фигуру
         self.draw_step_res = DrawStepRes(res_obj=step_res)
         updated_fig = self.draw_step_res.get_fig()
 
         # Заменяем текущую фигуру на обновлённую
+        old_figure = self.canvas.figure
         self.canvas.figure = updated_fig
+
+        # Закрываем старую фигуру
+        if old_figure is not None and old_figure != updated_fig:
+            plt.close(old_figure)
+
         self.canvas.draw()
+
+    def cleanup(self):
+        """Очищает ресурсы matplotlib"""
+        if self.canvas:
+            self.canvas.deleteLater()
+        if self.figure:
+            plt.close(self.figure)
+        self.figure = None
+        self.ax = None
+        self.canvas = None
+        self.draw_step_res = None
+        self.step_res_obj = None
 
 
 if __name__ == "__main__":

@@ -1,11 +1,13 @@
+# DA3/simulation_app/content_manager.py
 
 from enum import Enum
 from typing import Optional
 from PySide6.QtWidgets import QWidget, QStackedWidget
 
 from CORE.run import Exemplar
-from CORE.visual_debug import TrackRes
+from CORE.visual_debug import TrackRes, StepRes
 from DA3.simulation_app.simulation_widgets.track_res_widget import TrackFullResWidget
+from DA3.simulation_app.simulation_widgets.step_res_widget import StepResWidget
 from DA3.simulation_app.simulation_widgets.exemplar_widget import ExemplarWidget
 from DA3.simulation_app.simulation_widgets.empty_widget import EmptyWidget
 
@@ -15,6 +17,7 @@ class ContentType(Enum):
     EMPTY = "empty"
     EXEMPLAR = "exemplar"
     TRACK = "track"
+    STEP = "step"
 
 
 class ContentManager:
@@ -29,11 +32,13 @@ class ContentManager:
         # Создаем виджеты
         self.empty_widget = EmptyWidget()
         self.exemplar_widget = ExemplarWidget()
-        self.track_widget = TrackFullResWidget()  # Используем новый объединенный виджет
+        self.track_widget = TrackFullResWidget()
+        self.step_widget = StepResWidget()
 
         self.stacked_widget.addWidget(self.empty_widget)
         self.stacked_widget.addWidget(self.exemplar_widget)
         self.stacked_widget.addWidget(self.track_widget)
+        self.stacked_widget.addWidget(self.step_widget)
 
     def show_exemplar(self, exemplar: Exemplar, color: str = 'green') -> None:
         """Показывает виджет с текущим экземпляром датасета"""
@@ -42,10 +47,16 @@ class ContentManager:
         self.stacked_widget.setCurrentWidget(self.exemplar_widget)
 
     def show_track(self, track_res: TrackRes) -> None:
-        """Показывает полный виджет с результатами трека (SM + детальный трек)"""
+        """Показывает полный виджет с результатами трека"""
         self.track_widget.clear()
         self.track_widget.reset_data(track_res)
         self.stacked_widget.setCurrentWidget(self.track_widget)
+
+    def show_step(self, step_res: StepRes) -> None:
+        """Показывает виджет с результатами шага"""
+        self.step_widget.clear()
+        self.step_widget.reset_data(step_res)
+        self.stacked_widget.setCurrentWidget(self.step_widget)
 
     def show_empty(self, error_message: Optional[str] = None) -> None:
         """Показывает пустой виджет"""
@@ -63,5 +74,6 @@ class ContentManager:
         """Очищает все ресурсы"""
         self.exemplar_widget.cleanup()
         self.track_widget.cleanup()
+        self.step_widget.cleanup()
         self.empty_widget.cleanup()
         self.stacked_widget.deleteLater()

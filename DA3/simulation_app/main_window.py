@@ -154,6 +154,10 @@ class MainFormSimulator(QMainWindow):
         """Показывает Track контент"""
         self.content_manager.show_track(track_res)
 
+    def show_step(self, step_res):
+        """Показывает Step контент"""
+        self.content_manager.show_step(step_res)
+
     def show_empty(self, error_message=None):
         """Показывает пустой контент"""
         self.content_manager.show_empty(error_message)

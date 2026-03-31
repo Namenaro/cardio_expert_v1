@@ -6,7 +6,7 @@ from typing import Optional
 from PySide6.QtCore import QObject
 
 from CORE.db_dataclasses import Form
-from CORE.visual_debug import TrackRes
+from CORE.visual_debug import TrackRes, StepRes
 from DA3 import app_signals
 from DA3.simulation_app.main_window import MainFormSimulator
 from DA3.simulation_app.simulator import Simulator
@@ -23,6 +23,7 @@ class SimulatorController(QObject):
 
         # Для хранения текущего выбранного элемента
         self.current_track_id: Optional[int] = None
+        self.current_step_id: Optional[int] = None
 
         # Получаем глобальные сигналы
         self.signals = get_signals()
@@ -37,6 +38,7 @@ class SimulatorController(QObject):
     def _connect_signals(self):
         """Подключает сигналы к обработчикам"""
         self.signals.track_selected.connect(self.on_track_selected)
+        self.signals.step_selected.connect(self.on_step_selected)
         self.signals.requested_next.connect(self.on_next_requested)
         self.signals.requested_prev.connect(self.on_prev_requested)
         self.signals.clear_selection_requested.connect(self.on_clear_selection)
@@ -44,7 +46,8 @@ class SimulatorController(QObject):
     def on_form_changed(self, form: Form):
         """Обработчик смены формы"""
         self.simulator.reset_form(form)
-        self.current_track_id = None  # Сбрасываем выбранный трек
+        self.current_track_id = None
+        self.current_step_id = None
         if self.main_window:
             self.main_window.update_form(self.get_r_form())
             self._init_first_exemplar()
@@ -59,7 +62,38 @@ class SimulatorController(QObject):
                 prev_enabled=False,
                 next_enabled=self.simulator.has_next()
             )
-            self.current_track_id = None  # Сбрасываем выбранный трек
+            self.current_track_id = None
+            self.current_step_id = None
+
+    def on_step_selected(self, step_id: int, num_in_form: int):
+        """Обработчик выбора шага"""
+        logger.debug(f"Выбран шаг: id={step_id}, num_in_form={num_in_form}")
+
+        # Сохраняем выбранный шаг
+        self.current_step_id = step_id
+        self.current_track_id = None  # Сбрасываем выбранный трек
+
+        # Получаем текущий экземпляр
+        current_exemplar = self.simulator.get_current_exemplar()
+        if not current_exemplar:
+            self.signals.error_occurred.emit("Нет текущего экземпляра для симуляции")
+            if self.main_window:
+                self.main_window.show_empty("Нет текущего экземпляра для симуляции")
+            return
+
+        # Запускаем шаг
+        result = self.simulator.run_step(current_exemplar, step_id)
+
+        if isinstance(result, str):
+            # Ошибка
+            logger.error(f"Ошибка при выполнении шага {step_id}: {result}")
+            if self.main_window:
+                self.main_window.show_empty(result)
+        else:
+            # Успех - показываем результат
+            step_res: StepRes = result
+            if self.main_window:
+                self.main_window.show_step(step_res)
 
     def on_track_selected(self, track_id: int):
         """Обработчик выбора трека"""
@@ -67,6 +101,7 @@ class SimulatorController(QObject):
 
         # Сохраняем выбранный трек
         self.current_track_id = track_id
+        self.current_step_id = None  # Сбрасываем выбранный шаг
 
         # Получаем текущий экземпляр
         current_exemplar = self.simulator.get_current_exemplar()
@@ -94,16 +129,15 @@ class SimulatorController(QObject):
         """Обработчик снятия выделения"""
         logger.debug("Снятие выделения")
 
-        # Сбрасываем выбранный трек
+        # Сбрасываем выбранные элементы
         self.current_track_id = None
+        self.current_step_id = None
 
         # Показываем текущий экземпляр
         current_exemplar = self.simulator.get_current_exemplar()
         if current_exemplar and self.main_window:
             self.main_window.show_exemplar(current_exemplar)
             logger.debug("Показан текущий экземпляр")
-        else:
-            logger.warning("Нет текущего экземпляра для отображения")
 
     def _update_current_content(self):
         """Обновляет текущий контент для нового экземпляра"""
@@ -111,21 +145,34 @@ class SimulatorController(QObject):
         if not current_exemplar:
             return
 
+        # Если есть выбранный шаг - обновляем его результат
+        if self.current_step_id is not None:
+            logger.debug(f"Обновляем шаг {self.current_step_id} для нового экземпляра")
+            result = self.simulator.run_step(current_exemplar, self.current_step_id)
+
+            if isinstance(result, str):
+                logger.error(f"Ошибка при обновлении шага {self.current_step_id}: {result}")
+                if self.main_window:
+                    self.main_window.show_empty(result)
+            else:
+                step_res: StepRes = result
+                if self.main_window:
+                    self.main_window.show_step(step_res)
+
         # Если есть выбранный трек - обновляем его результат
-        if self.current_track_id is not None:
+        elif self.current_track_id is not None:
             logger.debug(f"Обновляем трек {self.current_track_id} для нового экземпляра")
             result = self.simulator.run_track(current_exemplar, self.current_track_id)
 
             if isinstance(result, str):
-                # Ошибка
                 logger.error(f"Ошибка при обновлении трека {self.current_track_id}: {result}")
                 if self.main_window:
                     self.main_window.show_empty(result)
             else:
-                # Обновляем виджет трека
                 track_res: TrackRes = result
                 if self.main_window:
                     self.main_window.show_track(track_res)
+
         else:
             # Нет выбранного элемента - показываем экземпляр
             if self.main_window:

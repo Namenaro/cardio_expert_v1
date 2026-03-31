@@ -10,7 +10,7 @@ from CORE.signal_1d import Signal
 class FrequencyFilter(SMBase):
     """Фильтрация частот с помощью преобразования Фурье"""
 
-    def __init__(self, cutoff_freq: float = 40.0, filter_type: Literal['lowpass', 'highpass'] = 'lowpass'):
+    def __init__(self, cutoff_freq: float = 40.0, filter_type: str = 'lowpass'):
         """
         :param cutoff_freq: Граничная частота в Герцах.
                            Для lowpass - всё ВЫШЕ этой частоты удаляется.
@@ -20,6 +20,10 @@ class FrequencyFilter(SMBase):
                            'highpass' - ФВЧ (оставляет высокие частоты, удаляет низкие)
         """
         self.cutoff_freq = cutoff_freq
+
+        # Нормализация filter_type: удаляем лишние кавычки и пробелы
+        filter_type = filter_type.strip().strip("'\"").lower()
+
         self.filter_type = filter_type
 
         # Проверка допустимых значений
