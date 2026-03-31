@@ -1,5 +1,6 @@
 import sys
 from math import sin
+from typing import Tuple
 
 import matplotlib.pyplot as plt
 from PySide6.QtWidgets import QApplication, QMainWindow
@@ -20,10 +21,16 @@ class StepResWidget(QWidget):
     - Нижняя часть: отображение созданных экземпляров (DrawExemplarsPool)
 
     Цвета экземпляров синхронизированы между верхним и нижним канвасами.
+    Границы по X синхронизированы между канвасами.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, padding_percent: float = 20):
+        """
+        :param parent: родительский виджет
+        :param padding_percent: процент отступа от крайних точек для обоих канвасов
+        """
         super().__init__(parent)
+        self.padding_percent = padding_percent
         self.step_res_obj = None
         self.draw_step_res = None
         self.draw_exemplars_pool = None
@@ -65,38 +72,66 @@ class StepResWidget(QWidget):
         layout.addWidget(self.canvas_exemplars)
 
     def _generate_color_from_index(self, index: int) -> str:
-        """
-        Генерирует цвет на основе индекса экземпляра.
-        Использует цветовую схему, аналогичную DrawExemplarsPool.
-
-        :param index: индекс экземпляра
-        :return: цвет в формате hex
-        """
-        # Используем ту же логику, что и в DrawExemplarsPool._get_color_from_score
-        # Но без оценки - просто разные оттенки
-        # Генерируем цвет на основе индекса в HSV пространстве
-        hue = (index * 0.618033988749895) % 1.0  # Золотое сечение для равномерного распределения
+        """Генерирует цвет на основе индекса экземпляра."""
+        golden_ratio = 0.618033988749895
+        hue = (index * golden_ratio) % 1.0
         saturation = 0.7
         value = 0.8
 
-        # Конвертируем HSV в RGB
         import colorsys
         rgb = colorsys.hsv_to_rgb(hue, saturation, value)
         return f'#{int(rgb[0] * 255):02x}{int(rgb[1] * 255):02x}{int(rgb[2] * 255):02x}'
 
     def _get_exemplar_color(self, exemplar, index: int) -> str:
-        """
-        Возвращает цвет для экземпляра, используя кэш.
-
-        :param exemplar: объект Exemplar
-        :param index: индекс экземпляра в списке
-        :return: цвет в формате hex
-        """
-        # Используем id экземпляра как ключ для кэша
+        """Возвращает цвет для экземпляра, используя кэш."""
         exemplar_id = id(exemplar)
         if exemplar_id not in self.exemplar_colors:
             self.exemplar_colors[exemplar_id] = self._generate_color_from_index(index)
         return self.exemplar_colors[exemplar_id]
+
+    def _calculate_combined_x_limits(self, step_res: StepRes) -> Tuple[float, float]:
+        """
+        Рассчитывает объединенные границы по X для обоих канвасов.
+        Создает временные рисовалки без отрисовки, чтобы получить их границы.
+
+        :param step_res: объект StepRes
+        :return: кортеж (left, right) объединенных границ
+        """
+        # Создаем временный DrawStepRes для расчета границ
+        temp_draw_step = DrawStepRes(
+            res_obj=step_res,
+            exemplar_color_map={},
+            padding_percent=self.padding_percent
+        )
+        step_left, step_right = temp_draw_step._calculate_x_limits()
+
+        # Закрываем временную фигуру, чтобы не было утечек
+        plt.close(temp_draw_step.fig)
+
+        # Получаем экземпляры
+        exemplars = step_res.get_exemplars()
+
+        if exemplars and len(exemplars) > 0:
+            # Создаем временный DrawExemplarsPool для расчета границ
+            temp_draw_pool = DrawExemplarsPool(
+                exemplars=exemplars,
+                padding_percent=self.padding_percent
+            )
+            # Запускаем сбор точек
+            for exemplar in exemplars:
+                temp_draw_pool._get_sorted_points_from_exemplar(exemplar)
+            pool_left, pool_right = temp_draw_pool._calculate_x_limits()
+
+            # Закрываем временную фигуру
+            plt.close(temp_draw_pool.fig)
+        else:
+            pool_left, pool_right = step_left, step_right
+
+        # Возвращаем самые широкие границы
+        left = min(step_left, pool_left)
+        right = max(step_right, pool_right)
+
+        return left, right
 
     def clear(self):
         """Очищает графики перед загрузкой новых данных"""
@@ -127,6 +162,9 @@ class StepResWidget(QWidget):
         # Получаем список экземпляров
         exemplars = step_res.get_exemplars()
 
+        # Рассчитываем объединенные границы
+        combined_left, combined_right = self._calculate_combined_x_limits(step_res)
+
         # === Верхний канвас: треки шага ===
         # Создаем словарь цветов для передачи в DrawStepRes
         exemplar_color_map = {}
@@ -134,8 +172,13 @@ class StepResWidget(QWidget):
             for idx, exemplar in enumerate(exemplars):
                 exemplar_color_map[exemplar] = self._get_exemplar_color(exemplar, idx)
 
-        # Передаем карту цветов в DrawStepRes
-        self.draw_step_res = DrawStepRes(res_obj=step_res, exemplar_color_map=exemplar_color_map)
+        # Передаем карту цветов и явные границы
+        self.draw_step_res = DrawStepRes(
+            res_obj=step_res,
+            exemplar_color_map=exemplar_color_map,
+            padding_percent=self.padding_percent,
+            x_limits=(combined_left, combined_right)
+        )
         updated_fig_step = self.draw_step_res.get_fig()
 
         # Заменяем фигуру
@@ -155,17 +198,19 @@ class StepResWidget(QWidget):
             for idx, exemplar in enumerate(exemplars):
                 exemplar_colors_list.append(self._get_exemplar_color(exemplar, idx))
 
-            # Создаём визуализатор для экземпляров с заданными цветами
+            # Создаём визуализатор для экземпляров с заданными цветами и явными границами
             self.draw_exemplars_pool = DrawExemplarsPool(
                 exemplars=exemplars,
                 exemplar_colors=exemplar_colors_list,
-                padding_percent=20,
-                show_legend=False
+                padding_percent=self.padding_percent,
+                show_legend=False,
+                x_limits=(combined_left, combined_right)
             )
             updated_fig_exemplars = self.draw_exemplars_pool.get_fig()
         else:
             # Если нет экземпляров, показываем пустой график
             self.ax_exemplars.clear()
+            self.ax_exemplars.set_xlim(combined_left, combined_right)
             self.ax_exemplars.text(0.5, 0.5, 'Нет созданных экземпляров',
                                    horizontalalignment='center',
                                    verticalalignment='center',
@@ -184,19 +229,16 @@ class StepResWidget(QWidget):
 
     def cleanup(self):
         """Очищает ресурсы matplotlib"""
-        # Очищаем верхний канвас
         if self.canvas_step:
             self.canvas_step.deleteLater()
         if self.figure_step:
             plt.close(self.figure_step)
 
-        # Очищаем нижний канвас
         if self.canvas_exemplars:
             self.canvas_exemplars.deleteLater()
         if self.figure_exemplars:
             plt.close(self.figure_exemplars)
 
-        # Обнуляем ссылки
         self.figure_step = None
         self.ax_step = None
         self.canvas_step = None

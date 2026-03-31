@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, TABLEAU_COLORS
-from typing import List, Dict, Optional
-import numpy as np
+from typing import List, Dict, Optional, Tuple
+import colorsys
 
 from CORE.visual_debug import StepRes
 from CORE.visual_debug.plt_visualisation import Drawer, VerticalLineInfo
@@ -11,20 +11,22 @@ from CORE.run import Exemplar
 class DrawStepRes:
     def __init__(self, res_obj: StepRes,
                  exemplar_color_map: Optional[Dict[Exemplar, str]] = None,
-                 padding_percent: float = 20):
+                 padding_percent: float = 20,
+                 x_limits: Optional[Tuple[float, float]] = None):
         """
         Создаёт fig и рисует на нём результат работы всех треков шага.
-        Каждая группа точек (от одного трека) отображается своим цветом.
 
         :param res_obj: объект StepRes для визуализации
         :param exemplar_color_map: словарь {exemplar: color} для цветов экземпляров
         :param padding_percent: отступ от интервала поиска в процентах
+        :param x_limits: явные границы по X (left, right), если заданы, то padding_percent игнорируется
         """
         self.res = res_obj
         self.exemplar_color_map = exemplar_color_map or {}
+        self.padding_percent = padding_percent
+        self.x_limits = x_limits
         self.fig, self.ax = plt.subplots(figsize=(10, 4))
         self.drawer = Drawer(ax=self.ax)
-        self.padding_percent = padding_percent
 
         # Сохраняем пределы по Y после создания, но до отрисовки
         self.y_min, self.y_max = self.ax.get_ylim()
@@ -37,10 +39,6 @@ class DrawStepRes:
         Возвращает цвет для трека.
         Если передан экземпляр и для него есть цвет в exemplar_color_map,
         используем этот цвет. Иначе генерируем цвет на основе ID трека.
-
-        :param track_id: ID трека
-        :param exemplar: экземпляр, связанный с этим треком
-        :return: цвет в формате hex
         """
         # Если есть экземпляр и для него задан цвет, используем его
         if exemplar is not None and exemplar in self.exemplar_color_map:
@@ -56,41 +54,25 @@ class DrawStepRes:
         return color
 
     def _generate_color_from_id(self, track_id: int) -> str:
-        """
-        Генерирует цвет на основе ID трека.
-        Использует золотое сечение для равномерного распределения.
-
-        :param track_id: ID трека
-        :return: цвет в формате hex
-        """
-        # Золотое сечение для равномерного распределения цветов
+        """Генерирует цвет на основе ID трека."""
         golden_ratio = 0.618033988749895
         hue = (track_id * golden_ratio) % 1.0
         saturation = 0.7
         value = 0.8
 
-        # Конвертируем HSV в RGB
-        import colorsys
         rgb = colorsys.hsv_to_rgb(hue, saturation, value)
         return f'#{int(rgb[0] * 255):02x}{int(rgb[1] * 255):02x}{int(rgb[2] * 255):02x}'
 
     def _get_colors_for_tracks(self, n_colors: int) -> List[str]:
-        """
-        Генерирует список различных цветов для треков (для обратной совместимости).
-
-        :param n_colors: количество цветов
-        :return: список цветов в формате hex
-        """
+        """Генерирует список различных цветов для треков (для обратной совместимости)."""
         if n_colors == 0:
             return []
 
-        # Используем предопределенные цвета из таблицы matplotlib
         tableau_colors = list(TABLEAU_COLORS.values())
 
         if n_colors <= len(tableau_colors):
             return tableau_colors[:n_colors]
 
-        # Если цветов не хватает, создаем градиент
         cmap = LinearSegmentedColormap.from_list(
             "track_colors_gradient",
             ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#D4A5A5", "#9B59B6", "#3498DB"]
@@ -104,13 +86,23 @@ class DrawStepRes:
         r, g, b = int(rgb[0] * 255), int(rgb[1] * 255), int(rgb[2] * 255)
         return f"#{r:02x}{g:02x}{b:02x}"
 
-    def get_fig(self):
-        # Рассчитываем границы с паддингом
+    def _calculate_x_limits(self) -> Tuple[float, float]:
+        """
+        Рассчитывает границы по X на основе интервала поиска и паддинга.
+        Используется, если x_limits не заданы.
+        """
         interval_length = self.res.right_coord - self.res.left_coord
         padding = interval_length * (self.padding_percent / 100)
+        left = self.res.left_coord - padding
+        right = self.res.right_coord + padding
+        return left, right
 
-        left_with_padding = self.res.left_coord - padding
-        right_with_padding = self.res.right_coord + padding
+    def get_fig(self):
+        # Определяем границы по X
+        if self.x_limits is not None:
+            left_with_padding, right_with_padding = self.x_limits
+        else:
+            left_with_padding, right_with_padding = self._calculate_x_limits()
 
         # Рисуем сигнал
         self.drawer.add_signal(signal=self.res.signal, color='black', name="исходный сигнал")
@@ -128,11 +120,8 @@ class DrawStepRes:
         exemplars = self.res.get_exemplars()
 
         # Создаем словарь для связи экземпляров с треками
-        # Предполагаем, что каждый экземпляр соответствует своему треку
         exemplar_by_track = {}
         if exemplars:
-            # Если количество экземпляров соответствует количеству треков
-            # или больше, сопоставляем их по порядку
             for idx, exemplar in enumerate(exemplars):
                 if idx < len(self.res.tracks_results):
                     track_id = self.res.tracks_results[idx].id
@@ -152,8 +141,7 @@ class DrawStepRes:
 
             # Рисуем точки для каждого трека
             for track_id, coords in tracks_coords_by_id.items():
-                if coords:  # Проверяем, что есть координаты для отрисовки
-                    # Получаем цвет для трека
+                if coords:
                     if use_old_method:
                         color = next(color_iter, "#FF0000")
                     else:
@@ -173,7 +161,7 @@ class DrawStepRes:
         # Заполнив все рисуемые сущности, проводим их отрисовку на холст
         self.drawer.redraw()
 
-        # Устанавливаем границы по X с учетом паддинга
+        # Устанавливаем границы по X
         self.ax.set_xlim(left_with_padding, right_with_padding)
 
         # Отключаем автоматическое масштабирование по X

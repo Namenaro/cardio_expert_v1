@@ -1,8 +1,9 @@
-# DA3/simulation_app/visual_debug/results_drawers/draw_exemplars_pool.py
+# DA3/simulation_app/visual_debug/plt_visualisation/draw_exemplars_pool.py
 
 import matplotlib.pyplot as plt
 from typing import List, Tuple, Optional
 import numpy as np
+import colorsys
 
 from CORE.run import Exemplar
 from CORE.run.exemplars_pool import ExemplarsPool
@@ -12,16 +13,16 @@ from CORE.visual_debug.plt_visualisation import Drawer, LineStyle
 class DrawExemplarsPool:
     """Класс для визуализации пула экземпляров с сигналом и ground truth."""
 
-    # Цвета для разных элементов
-    GROUND_TRUTH_COLOR = '#000000'  # Черный
-    SIGNAL_COLOR = '#0000FF'  # Синий
-    DEFAULT_EXEMPLAR_COLOR = '#808080'  # Серый для экземпляров без оценки
+    GROUND_TRUTH_COLOR = '#000000'
+    SIGNAL_COLOR = '#0000FF'
+    DEFAULT_EXEMPLAR_COLOR = '#808080'
 
     def __init__(self, pool: Optional[ExemplarsPool] = None,
                  exemplars: Optional[List[Exemplar]] = None,
                  exemplar_colors: Optional[List[str]] = None,
                  padding_percent: float = 20,
-                 show_legend: bool = True):
+                 show_legend: bool = True,
+                 x_limits: Optional[Tuple[float, float]] = None):
         """
         Создаёт fig и рисует на нём экземпляры.
 
@@ -30,6 +31,7 @@ class DrawExemplarsPool:
         :param exemplar_colors: список цветов для экземпляров (опционально)
         :param padding_percent: отступ от крайних точек в процентах
         :param show_legend: показывать ли легенду
+        :param x_limits: явные границы по X (left, right), если заданы, то padding_percent игнорируется
         """
         if pool is None and exemplars is None:
             raise ValueError("Должен быть указан либо pool, либо exemplars")
@@ -38,20 +40,18 @@ class DrawExemplarsPool:
         self.exemplars = exemplars
         self.exemplar_colors = exemplar_colors or []
         self.show_legend = show_legend
+        self.padding_percent = padding_percent
+        self.x_limits = x_limits
         self.fig, self.ax = plt.subplots(figsize=(10, 4), constrained_layout=True)
         self.drawer = Drawer(ax=self.ax)
-        self.padding_percent = padding_percent
 
-        # Настройка прозрачности для точек и сегментов
+        # Настройка прозрачности
         self.drawer.renderer.alpha = 0.7
 
-        # Сохраняем ground truth, если он будет добавлен позже
         self.ground_truth: Optional[Exemplar] = None
-
-        # Точки всех экземпляров для расчета границ
         self._all_points: List[Tuple[float, float, str, Exemplar]] = []
 
-        # Получаем сигнал из pool или из первого экземпляра
+        # Получаем сигнал
         self._signal = None
         if pool is not None and pool.signal is not None:
             self._signal = pool.signal
@@ -70,12 +70,7 @@ class DrawExemplarsPool:
         return f'#{red:02x}{green:02x}{blue:02x}'
 
     def _get_sorted_points_from_exemplar(self, exemplar: Exemplar) -> List[Tuple[float, float, str]]:
-        """
-        Возвращает отсортированные по координате x точки экземпляра с их именами и значениями y.
-
-        :param exemplar: объект Exemplar
-        :return: список кортежей (x, y, point_name)
-        """
+        """Возвращает отсортированные точки экземпляра."""
         points_with_y = []
 
         for point_name, (x, track_id) in exemplar._points.items():
@@ -87,13 +82,11 @@ class DrawExemplarsPool:
         return sorted(points_with_y, key=lambda p: p[0])
 
     def _calculate_x_limits(self) -> Tuple[float, float]:
-        """
-        Рассчитывает границы отображения по оси X с учетом паддинга.
+        """Рассчитывает границы отображения по оси X с учетом паддинга."""
+        if self.x_limits is not None:
+            return self.x_limits
 
-        :return: Tuple (x_min, x_max) - границы для отображения
-        """
         if not self._all_points:
-            # Если нет точек, используем весь сигнал
             if self._signal is not None:
                 return self._signal.time[0], self._signal.time[-1]
             return 0, 1
@@ -108,7 +101,6 @@ class DrawExemplarsPool:
         x_min_padded = x_min - padding
         x_max_padded = x_max + padding
 
-        # Не выходим за пределы сигнала, если он есть
         if self._signal is not None:
             x_min_padded = max(x_min_padded, self._signal.time[0])
             x_max_padded = min(x_max_padded, self._signal.time[-1])
@@ -117,20 +109,12 @@ class DrawExemplarsPool:
 
     def _add_exemplar_to_drawer(self, exemplar: Exemplar, color: str, label: str,
                                 is_ground_truth: bool = False):
-        """
-        Добавляет один экземпляр в drawer для отрисовки.
-
-        :param exemplar: объект Exemplar
-        :param color: цвет для отрисовки
-        :param label: метка для легенды
-        :param is_ground_truth: является ли экземпляр эталонным
-        """
+        """Добавляет один экземпляр в drawer для отрисовки."""
         points = self._get_sorted_points_from_exemplar(exemplar)
 
         if not points:
             return
 
-        # Рисуем соединительную линию между соседними точками
         if len(points) >= 2:
             for i in range(len(points) - 1):
                 x1, y1, _ = points[i]
@@ -144,7 +128,6 @@ class DrawExemplarsPool:
                     zorder=4 if is_ground_truth else 3
                 )
 
-        # Рисуем точки с подписями рядом
         for x, y, point_name in points:
             self.drawer.add_point(
                 x=x, y=y,
@@ -155,11 +138,7 @@ class DrawExemplarsPool:
             )
 
     def set_ground_truth(self, ground_truth: Optional[Exemplar]):
-        """
-        Устанавливает эталонный экземпляр для отрисовки.
-
-        :param ground_truth: эталонный экземпляр или None
-        """
+        """Устанавливает эталонный экземпляр."""
         self.ground_truth = ground_truth
 
     def get_fig(self):
@@ -172,14 +151,13 @@ class DrawExemplarsPool:
         self.drawer.renderer.points.clear()
         self.drawer.renderer.segments.clear()
 
-        # Очищаем собранные точки
         self._all_points.clear()
 
-        # Добавляем сигнал, если он есть
+        # Добавляем сигнал
         if self._signal is not None:
             self.drawer.add_signal(self._signal, color=self.SIGNAL_COLOR, name='Сигнал ЭКГ')
 
-        # Добавляем ground truth если есть
+        # Добавляем ground truth
         if self.ground_truth is not None:
             self._add_exemplar_to_drawer(
                 exemplar=self.ground_truth,
@@ -188,7 +166,7 @@ class DrawExemplarsPool:
                 is_ground_truth=True
             )
 
-        # Добавляем экземпляры из пула или из списка
+        # Добавляем экземпляры
         if self.pool is not None and self.pool.exemplars_sorted:
             for i, exemplar in enumerate(self.pool.exemplars_sorted):
                 color = self._get_color_from_score(exemplar.evaluation_result)
@@ -201,27 +179,21 @@ class DrawExemplarsPool:
                 self._add_exemplar_to_drawer(exemplar, color, label)
 
         elif self.exemplars is not None:
-            # Отрисовка списка экземпляров с заданными цветами
             for i, exemplar in enumerate(self.exemplars):
-                # Используем заданный цвет, если он есть
                 if i < len(self.exemplar_colors):
                     color = self.exemplar_colors[i]
                 else:
                     color = self.DEFAULT_EXEMPLAR_COLOR
-
-                # Не показываем метки в легенде
                 self._add_exemplar_to_drawer(exemplar, color, None)
 
-        # Отрисовываем все элементы
         self.drawer.redraw()
 
-        # Если легенда не нужна - удаляем её
         if not self.show_legend:
             legend = self.ax.get_legend()
             if legend is not None:
                 legend.remove()
 
-        # Применяем границы с паддингом
+        # Применяем границы
         x_min, x_max = self._calculate_x_limits()
         self.ax.set_xlim(x_min, x_max)
         self.ax.autoscale(enable=False, axis='x')
