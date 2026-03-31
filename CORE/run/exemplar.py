@@ -165,3 +165,10 @@ class Exemplar:
     def __len__(self):
         return len(self._points)
 
+    def get_failed_hc_ids(self) -> List[int]:
+        """Возвращает список ID проваленных жестких условий."""
+        return self.failed_HCs_ids
+
+    def get_passed_hc_ids(self) -> List[int]:
+        """Возвращает список ID успешно выполненных жестких условий."""
+        return self.passed_HCs_ids

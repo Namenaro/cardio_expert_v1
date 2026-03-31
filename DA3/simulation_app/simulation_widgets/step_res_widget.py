@@ -1,6 +1,6 @@
 import sys
 from math import sin
-from typing import Tuple
+from typing import Tuple, List
 
 import matplotlib.pyplot as plt
 from PySide6.QtWidgets import QApplication, QMainWindow
@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
 from CORE import Signal
+from CORE.run import Exemplar
 from CORE.visual_debug import StepRes
 from CORE.visual_debug import TrackRes, PS_Res
 from CORE.visual_debug.results_drawers.draw_exemplars_pool import DrawExemplarsPool
@@ -18,10 +19,8 @@ class StepResWidget(QWidget):
     """
     Виджет для отображения полной информации о шаге:
     - Верхняя часть: отображение треков шага (DrawStepRes)
-    - Нижняя часть: отображение созданных экземпляров (DrawExemplarsPool)
-
-    Цвета экземпляров синхронизированы между верхним и нижним канвасами.
-    Границы по X синхронизированы между канвасами.
+    - Средняя часть: отображение созданных экземпляров (DrawExemplarsPool)
+    - Нижняя часть: текстовое поле со списком экземпляров
     """
 
     def __init__(self, parent=None, padding_percent: float = 20):
@@ -66,10 +65,27 @@ class StepResWidget(QWidget):
         self.canvas_step = FigureCanvas(self.figure_step)
         layout.addWidget(self.canvas_step)
 
-        # Второй канвас - созданные экземпляры (нижняя часть)
+        # Второй канвас - созданные экземпляры (средняя часть)
         self.figure_exemplars, self.ax_exemplars = plt.subplots(figsize=(10, 4))
         self.canvas_exemplars = FigureCanvas(self.figure_exemplars)
         layout.addWidget(self.canvas_exemplars)
+
+        # Текстовое поле для списка экземпляров (нижняя часть)
+        self.exemplars_text = QTextEdit()
+        self.exemplars_text.setMaximumHeight(150)
+        self.exemplars_text.setReadOnly(True)
+        self.exemplars_text.setStyleSheet("""
+            QTextEdit {
+                background-color: #fafafa;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-family: monospace;
+                font-size: 10pt;
+                padding: 5px;
+            }
+        """)
+        layout.addWidget(QLabel("Созданные экземпляры:"))
+        layout.addWidget(self.exemplars_text)
 
     def _generate_color_from_index(self, index: int) -> str:
         """Генерирует цвет на основе индекса экземпляра."""
@@ -89,10 +105,83 @@ class StepResWidget(QWidget):
             self.exemplar_colors[exemplar_id] = self._generate_color_from_index(index)
         return self.exemplar_colors[exemplar_id]
 
+    def _format_exemplar_info(self, exemplar: Exemplar, index: int, color: str) -> str:
+        """
+        Форматирует информацию об экземпляре для отображения.
+
+        :param exemplar: объект Exemplar
+        :param index: индекс экземпляра
+        :param color: цвет экземпляра в формате hex
+        :return: отформатированная строка
+        """
+        block_style = f'style="color: {color}; display: inline-block; margin-right: 15px;"'
+        badge_style = f'style="color: {color}; background-color: rgba({int(color[1:3], 16)}, {int(color[3:5], 16)}, {int(color[5:7], 16)}, 0.1); padding: 2px 6px; border-radius: 12px; display: inline-block; margin-right: 10px;"'
+
+        parts = []
+
+        # Заголовок
+        parts.append(f'<span style="color: {color}; font-weight: bold;">Экземпляр {index + 1}</span>')
+
+        # Оценка
+        if exemplar.evaluation_result is not None:
+            parts.append(f'<span {badge_style}>оценка: {exemplar.evaluation_result:.3f}</span>')
+
+        # Параметры
+        param_names = exemplar.get_param_names()
+        if param_names:
+            params_list = [f"{name}={exemplar.get_parameter_value(name)}" for name in param_names]
+            parts.append(f'<span {block_style}>📊 {", ".join(params_list)}</span>')
+
+        # HC нарушены
+        failed_ids = exemplar.get_failed_hc_ids()
+        if failed_ids:
+            parts.append(f'<span {block_style}>❌ HC нарушены: {", ".join(map(str, failed_ids))}</span>')
+        else:
+            parts.append(f'<span {block_style}>✅ HC нарушены: нет</span>')
+
+        # HC выполнены
+        passed_ids = exemplar.get_passed_hc_ids()
+        if passed_ids:
+            parts.append(f'<span {block_style}>✓ HC выполнены: {", ".join(map(str, passed_ids))}</span>')
+        else:
+            parts.append(f'<span {block_style}>✓ HC выполнены: нет</span>')
+
+        # Точки
+        points_info = []
+        for point_name, (x, track_id) in exemplar._points.items():
+            points_info.append(f"{point_name}: {x:.3f}с")
+        points_str = ", ".join(points_info) if points_info else "нет точек"
+        parts.append(f'<span {block_style}>📍 Точки: {points_str}</span>')
+
+        return ' '.join(parts)
+
+    def _update_exemplars_text(self, exemplars: List[Exemplar]):
+        """
+        Обновляет текстовое поле со списком экземпляров.
+
+        :param exemplars: список экземпляров
+        """
+        if not exemplars:
+            self.exemplars_text.clear()
+            self.exemplars_text.setHtml('<i style="color: #999;">Нет созданных экземпляров</i>')
+            return
+
+        # Формируем HTML-текст
+        html_lines = ['<div style="font-family: monospace;">']
+
+        for idx, exemplar in enumerate(exemplars):
+            color = self._get_exemplar_color(exemplar, idx)
+            html_lines.append(self._format_exemplar_info(exemplar, idx, color))
+            if idx < len(exemplars) - 1:
+                html_lines.append('<hr style="margin: 8px 0; border-color: #ddd;">')
+
+        html_lines.append('</div>')
+
+        self.exemplars_text.setHtml(''.join(html_lines))
+
     def _calculate_combined_x_limits(self, step_res: StepRes) -> Tuple[float, float]:
         """
         Рассчитывает объединенные границы по X для обоих канвасов.
-        Создает временные рисовалки без отрисовки, чтобы получить их границы.
 
         :param step_res: объект StepRes
         :return: кортеж (left, right) объединенных границ
@@ -105,7 +194,7 @@ class StepResWidget(QWidget):
         )
         step_left, step_right = temp_draw_step._calculate_x_limits()
 
-        # Закрываем временную фигуру, чтобы не было утечек
+        # Закрываем временную фигуру
         plt.close(temp_draw_step.fig)
 
         # Получаем экземпляры
@@ -143,7 +232,10 @@ class StepResWidget(QWidget):
         # Очищаем кэш цветов
         self.exemplar_colors.clear()
 
-        # Обнуляем ссылки на старые drawer'ы
+        # Очищаем текстовое поле
+        self.exemplars_text.clear()
+
+        # Обнуляем ссылки
         self.draw_step_res = None
         self.draw_exemplars_pool = None
         self.step_res_obj = None
@@ -161,6 +253,9 @@ class StepResWidget(QWidget):
 
         # Получаем список экземпляров
         exemplars = step_res.get_exemplars()
+
+        # Обновляем текстовое поле со списком экземпляров
+        self._update_exemplars_text(exemplars if exemplars else [])
 
         # Рассчитываем объединенные границы
         combined_left, combined_right = self._calculate_combined_x_limits(step_res)
@@ -191,7 +286,7 @@ class StepResWidget(QWidget):
 
         self.canvas_step.draw()
 
-        # === Нижний канвас: созданные экземпляры ===
+        # === Средний канвас: созданные экземпляры ===
         if exemplars and len(exemplars) > 0:
             # Создаем список цветов для экземпляров в том же порядке
             exemplar_colors_list = []
@@ -249,6 +344,7 @@ class StepResWidget(QWidget):
         self.draw_exemplars_pool = None
         self.step_res_obj = None
         self.exemplar_colors.clear()
+        self.exemplars_text.clear()
 
 if __name__ == "__main__":
     class MainWindow(QMainWindow):
