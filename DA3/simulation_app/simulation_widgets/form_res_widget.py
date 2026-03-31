@@ -8,150 +8,133 @@ from CORE.run import Exemplar
 from CORE.run.exemplars_pool import ExemplarsPool
 from CORE.visual_debug.results_drawers.draw_exemplars_pool import DrawExemplarsPool
 
+# DA3/simulation_app/simulation_widgets/form_res_widget.py
+
+import matplotlib.pyplot as plt
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+
+from CORE.run.exemplars_pool import ExemplarsPool
+
+from DA3.simulation_app.simulation_widgets.utils import (
+    ExemplarColorManager,
+    ExemplarInfoFormatter,
+    TextEditHelper
+)
+
 
 class FormResWidget(QWidget):
     """Виджет для отображения сигнала и экземпляров из пула с кликабельным графиком."""
 
     def __init__(self, parent=None, padding_percent: float = 20):
-        """
-        Args:
-            parent: родительский виджет
-            padding_percent: процент от длины интервала между крайними точками для отступов
-        """
         super().__init__(parent)
-
         self.padding_percent = padding_percent
-        self.current_pool: Optional[ExemplarsPool] = None
-        self.current_ground_truth: Optional[Exemplar] = None
-        self.draw_exemplars_pool: Optional[DrawExemplarsPool] = None
+
+        # Утилиты
+        self.color_manager = ExemplarColorManager()
+        self.formatter = ExemplarInfoFormatter()
+
+        # Хранилища
+        self.pool = None
+        self.ground_truth = None
+        self.draw_exemplars_pool = None
+
+        # Фигура и канвас
+        self.figure = None
+        self.ax = None
+        self.canvas = None
+
+        # Текстовое поле
+        self.exemplars_text = None
 
         self.init_ui()
 
     def init_ui(self):
-        """Инициализирует пользовательский интерфейс."""
-        # Основной layout
         layout = QVBoxLayout(self)
+        layout.setSpacing(10)
 
-        # Текстовое поле для информации о лучшем экземпляре
-        self.info_label = QLabel("Информация о пуле:")
-        self.info_label.setAlignment(Qt.AlignCenter)
-        self.info_label.setStyleSheet("font-size: 14px; font-weight: bold; padding: 5px;")
-        layout.addWidget(self.info_label)
+        # Заголовок
+        title_label = QLabel("Результаты симуляции формы")
+        title_label.setStyleSheet("""
+            QLabel {
+                font-size: 14px;
+                font-weight: bold;
+                padding: 5px;
+                background-color: #f0f0f0;
+                border-radius: 3px;
+            }
+        """)
+        layout.addWidget(title_label)
 
-        # Текстовое поле для подробной информации
-        self.info_text_edit = QTextEdit()
-        self.info_text_edit.setMaximumHeight(150)
-        self.info_text_edit.setReadOnly(True)
-        layout.addWidget(self.info_text_edit)
-
-        # Канвас для визуализации
+        # Канвас
         self.figure, self.ax = plt.subplots(figsize=(10, 4))
         self.canvas = FigureCanvas(self.figure)
         layout.addWidget(self.canvas)
 
-    def _update_info_text(self):
-        """Обновляет текстовое поле с информацией о пуле."""
-        if not self.current_pool:
-            self.info_text_edit.clear()
-            self.info_label.setText("Информация о пуле:")
-            return
-
-        self.info_text_edit.clear()
-
-        # Общая информация
-        self.info_text_edit.append(f"Всего экземпляров в пуле: {self.current_pool.size}")
-
-        if self.current_ground_truth:
-            self.info_text_edit.append("Ground Truth: присутствует")
-
-        # Информация о лучшем экземпляре
-        if self.current_pool.exemplars_sorted:
-            best = self.current_pool.exemplars_sorted[0]
-            self.info_text_edit.append("\n=== Лучший экземпляр ===")
-
-            if best.evaluation_result is not None:
-                self.info_text_edit.append(f"Оценка: {best.evaluation_result:.3f}")
-                color = self._get_color_from_score(best.evaluation_result)
-                self.info_label.setText(f"Лучшая оценка: {best.evaluation_result:.3f}")
-                self.info_label.setStyleSheet(
-                    f"font-size: 14px; font-weight: bold; padding: 5px; color: {color};"
-                )
-            else:
-                self.info_label.setText("Лучшая оценка: —")
-                self.info_label.setStyleSheet("font-size: 14px; font-weight: bold; padding: 5px;")
-
-            # Точки лучшего экземпляра
-            self.info_text_edit.append("Точки:")
-            sorted_points = sorted(best._points.items(), key=lambda item: item[1][0])
-            for point_name, (coord, track_id) in sorted_points:
-                y = best.get_signal().get_amplplitude_in_moment(coord)
-                y_str = f"{y:.3f}" if y is not None else "вне сигнала"
-                self.info_text_edit.append(f"  {point_name}: x={coord:.3f}с, y={y_str}мВ")
-
-            # Параметры лучшего экземпляра
-            params = best.get_param_names()
-            if params:
-                self.info_text_edit.append("Параметры:")
-                for param in params:
-                    value = best.get_parameter_value(param)
-                    self.info_text_edit.append(f"  {param}: {value}")
-
-    def _get_color_from_score(self, score: Optional[float]) -> str:
-        """Возвращает цвет на основе оценки."""
-        if score is None:
-            return '#808080'
-
-        import numpy as np
-        normalized = np.clip(score, 0, 1)
-        red = int(255 * (1 - normalized))
-        green = int(255 * normalized)
-        blue = 0
-        return f'#{red:02x}{green:02x}{blue:02x}'
-
-    def reset_data(self, pool: ExemplarsPool, ground_truth: Optional[Exemplar] = None):
-        """
-        Сбрасывает данные и отрисовывает новый пул экземпляров.
-
-        Args:
-            pool: Объект ExemplarsPool с сигналом и экземплярами
-            ground_truth: Эталонный экземпляр (рисуется черным), если есть
-        """
-        self.current_pool = pool
-        self.current_ground_truth = ground_truth
-
-        # Создаем визуализатор
-        self.draw_exemplars_pool = DrawExemplarsPool(
-            pool=pool,
-            padding_percent=self.padding_percent
-        )
-
-        # Устанавливаем ground truth
-        self.draw_exemplars_pool.set_ground_truth(ground_truth)
-
-        # Получаем фигуру
-        updated_fig = self.draw_exemplars_pool.get_fig()
-
-        # Заменяем текущую фигуру на обновлённую
-        self.canvas.figure = updated_fig
-
-        # Обновляем информацию
-        self._update_info_text()
-
-        # Перерисовываем канвас
-        self.canvas.draw()
+        # Текстовое поле для списка экземпляров
+        self.exemplars_text = QTextEdit()
+        TextEditHelper.setup_text_edit(self.exemplars_text)
+        layout.addWidget(QLabel("Созданные экземпляры:"))
+        layout.addWidget(self.exemplars_text)
 
     def clear(self):
-        """Очищает виджет."""
-        self.current_pool = None
-        self.current_ground_truth = None
-        self.draw_exemplars_pool = None
+        """Очищает график и данные"""
+        if self.ax:
+            self.ax.clear()
 
-        self.figure.clear()
+        self.color_manager.clear()
+        TextEditHelper.clear(self.exemplars_text)
+
+        self.draw_exemplars_pool = None
+        self.pool = None
+        self.ground_truth = None
+
+    def reset_data(self, pool: ExemplarsPool, ground_truth=None):
+        """Заполняет виджет данными из пула экземпляров"""
+        self.pool = pool
+        self.ground_truth = ground_truth
+        self.color_manager.clear()
+
+        # Получаем экземпляры
+        exemplars = pool.exemplars_sorted if pool.exemplars_sorted else []
+
+        # Обновляем текстовое поле
+        html = self.formatter.format_exemplars_list(exemplars, self.color_manager)
+        TextEditHelper.set_html(self.exemplars_text, html)
+
+        # Создаем визуализатор
+        colors_list = self.color_manager.get_colors_list(exemplars)
+        self.draw_exemplars_pool = DrawExemplarsPool(
+            pool=pool,
+            exemplar_colors=colors_list,
+            padding_percent=self.padding_percent,
+            show_legend=True
+        )
+
+        if ground_truth is not None:
+            self.draw_exemplars_pool.set_ground_truth(ground_truth)
+
+        # Обновляем канвас
+        old_figure = self.canvas.figure
+        self.canvas.figure = self.draw_exemplars_pool.get_fig()
+        if old_figure is not None and old_figure != self.canvas.figure:
+            plt.close(old_figure)
         self.canvas.draw()
 
-        self.info_label.setText("Информация о пуле:")
-        self.info_label.setStyleSheet("font-size: 14px; font-weight: bold; padding: 5px;")
-        self.info_text_edit.clear()
+    def cleanup(self):
+        """Очищает ресурсы matplotlib"""
+        if self.canvas:
+            self.canvas.deleteLater()
+        if self.figure:
+            plt.close(self.figure)
+
+        self.figure = None
+        self.ax = None
+        self.canvas = None
+        self.draw_exemplars_pool = None
+        self.pool = None
+        self.ground_truth = None
+        self.color_manager.clear()
 
 
 if __name__ == "__main__":
