@@ -54,8 +54,6 @@ class Parametriser:
 
     def _apply_r_hcs(self, exemplar: Exemplar, r_hcs: List[R_HC]) -> bool:
         """Применяет список R_HC к экземпляру и возвращает результат проверки"""
-        exemplar.passed_HCs_ids = []
-        exemplar.failed_HCs_ids = []
 
         all_fitted = True
         for r_hc in r_hcs:
