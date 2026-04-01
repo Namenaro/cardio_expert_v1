@@ -122,6 +122,9 @@ class StatisticsPanel(QScrollArea):
         line.setFrameShadow(QFrame.Sunken)
         layout.addWidget(line)
 
+        # Добавляем информацию о нарушениях
+        self.add_violations_info(layout)
+
         # Находим числовые колонки
         numeric_columns = self.find_numeric_columns()
 
@@ -165,13 +168,85 @@ class StatisticsPanel(QScrollArea):
         # Устанавливаем фиксированную ширину панели
         self.setFixedWidth(500)
 
+    def add_violations_info(self, layout):
+        """Добавляет информацию о нарушениях на панель статистики"""
+        # Находим все колонки с нарушениями
+        violation_columns = []
+        for col in self.dataframe.columns:
+            if col != 'id_exemplar' and self.dataframe[col].dtype == 'object':
+                if 'нарушено' in self.dataframe[col].values:
+                    violation_columns.append(col)
+
+        if violation_columns:
+            # Создаем контейнер для информации о нарушениях
+            violations_container = QWidget()
+            violations_container.setStyleSheet("""
+                QWidget {
+                    background-color: #fff3e0;
+                    border: 1px solid #ffb74d;
+                    border-radius: 5px;
+                    margin: 5px;
+                }
+                QLabel {
+                    color: #e65100;
+                }
+            """)
+
+            violations_layout = QVBoxLayout(violations_container)
+
+            # Заголовок
+            violations_title = QLabel("<b>📊 Нарушения жестких условий (HC)</b>")
+            violations_title.setAlignment(Qt.AlignCenter)
+            violations_layout.addWidget(violations_title)
+
+            # Статистика по каждому HC
+            for hc_col in violation_columns:
+                violation_count = (self.dataframe[hc_col] == 'нарушено').sum()
+                total_count = len(self.dataframe)
+                percentage = (violation_count / total_count * 100) if total_count > 0 else 0
+
+                hc_label = QLabel(
+                    f"<b>{hc_col}</b><br>"
+                    f"Нарушений: {violation_count} / {total_count} ({percentage:.1f}%)"
+                )
+                hc_label.setWordWrap(True)
+                violations_layout.addWidget(hc_label)
+
+            # Общая статистика
+            total_violations = sum((self.dataframe[col] == 'нарушено').sum() for col in violation_columns)
+            rows_with_violations = len(self.dataframe[
+                                           self.dataframe[violation_columns].apply(
+                                               lambda row: any(row == 'нарушено'), axis=1
+                                           )
+                                       ])
+
+            summary_label = QLabel(
+                f"<hr>"
+                f"<b>Общая статистика:</b><br>"
+                f"Всего нарушений: {total_violations}<br>"
+                f"Строк с нарушениями: {rows_with_violations}"
+            )
+            violations_layout.addWidget(summary_label)
+
+            layout.addWidget(violations_container)
+
+            # Добавляем разделитель
+            separator = QFrame()
+            separator.setFrameShape(QFrame.HLine)
+            separator.setFrameShadow(QFrame.Sunken)
+            layout.addWidget(separator)
+
     def find_numeric_columns(self) -> list:
         """Находит и возвращает список числовых колонок"""
         numeric_cols = []
 
         for col in self.dataframe.columns:
-            # Пропускаем колонку с id
+            # Пропускаем колонку с id и колонки с нарушениями
             if col == 'id_exemplar':
+                continue
+
+            # Проверяем, не является ли колонка колонкой с нарушениями
+            if self.dataframe[col].dtype == 'object' and 'нарушено' in self.dataframe[col].values:
                 continue
 
             # Проверяем тип данных колонки
@@ -181,10 +256,3 @@ class StatisticsPanel(QScrollArea):
                     numeric_cols.append(col)
 
         return numeric_cols
-
-    def update_data(self, dataframe: pd.DataFrame):
-        """Обновляет данные на панели"""
-        self.dataframe = dataframe
-        # Очищаем и пересоздаем интерфейс
-        self.takeWidget().deleteLater()
-        self.setup_ui()

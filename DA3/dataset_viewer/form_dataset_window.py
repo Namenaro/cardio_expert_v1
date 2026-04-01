@@ -12,7 +12,7 @@ from DA3.dataset_viewer.statistics_widget import StatisticsPanel
 
 matplotlib.use('Qt5Agg')
 
-from CORE.datasets_wrappers import LUDB
+from CORE.datasets_wrappers.LUDB import LUDB
 from CORE.datasets_wrappers.form_associated.exemplars_dataset import ExemplarsDataset
 from CORE.datasets_wrappers.form_associated.parametrised_dataset import ParametrisedDataset
 from CORE.db.db_manager import DBManager
@@ -23,6 +23,7 @@ from CORE.paths import DB_PATH
 from DA3.dataset_viewer.dataframe_widget import DataFrameWidget
 
 logger = get_logger(__name__)
+
 
 class FormDatasetWindow(QMainWindow):
     """Главное окно с отображением параметров формы"""
@@ -37,7 +38,11 @@ class FormDatasetWindow(QMainWindow):
 
         # Загружаем данные формы
         try:
-            df = self.load_form_parameters(form)
+            # Получаем параметризованный датасет
+            parametrised_dataset = self.load_parametrised_dataset(form)
+
+            # Получаем объединенный фрейм
+            df = parametrised_dataset.get_merged_frame()
 
             # Создаем центральный виджет с горизонтальным расположением
             central_widget = QWidget()
@@ -57,9 +62,14 @@ class FormDatasetWindow(QMainWindow):
 
             # Добавляем информацию в статусную строку
             numeric_cols_count = len(self.stats_panel.find_numeric_columns())
+
+            # Подсчитываем количество нарушений
+            violations_count = self.count_violations(df)
+
             self.statusBar().showMessage(
                 f"Форма: {form.name} | Всего строк: {len(df)}, Колонок: {len(df.columns)} | "
-                f"Числовых колонок: {numeric_cols_count}"
+                f"Числовых колонок: {numeric_cols_count} | "
+                f"Строк с нарушениями: {violations_count}"
             )
 
         except Exception as e:
@@ -69,15 +79,15 @@ class FormDatasetWindow(QMainWindow):
             self.data_widget = DataFrameWidget(pd.DataFrame())
             self.setCentralWidget(self.data_widget)
 
-    def load_form_parameters(self, form: Form) -> pd.DataFrame:
+    def load_parametrised_dataset(self, form: Form) -> ParametrisedDataset:
         """
-        Загружает параметры формы из базы данных
+        Загружает параметризованный датасет из базы данных
 
         Args:
             form: объект формы
 
         Returns:
-            pd.DataFrame: таблица параметров
+            ParametrisedDataset: параметризованный датасет
         """
         logger.info(f"Загрузка параметров формы {form.id} - {form.name}")
 
@@ -100,15 +110,38 @@ class FormDatasetWindow(QMainWindow):
             form=form
         )
 
-        # Получаем таблицу параметров
-        df = parametrised_dataset.parameters_frame
-
-        if df.empty:
+        if parametrised_dataset.parameters_frame.empty:
             logger.warning(f"Таблица параметров для формы {form.id} пуста")
         else:
-            logger.info(f"Загружено {len(df)} записей, {len(df.columns)} колонок")
+            logger.info(f"Загружено {len(parametrised_dataset.parameters_frame)} записей параметров, "
+                        f"{len(parametrised_dataset.violations_frame)} записей нарушений")
 
-        return df
+        return parametrised_dataset
+
+    def count_violations(self, df: pd.DataFrame) -> int:
+        """
+        Подсчитывает количество строк, содержащих нарушения
+
+        Args:
+            df: объединенный фрейм
+
+        Returns:
+            int: количество строк с нарушениями
+        """
+        if df.empty:
+            return 0
+
+        # Находим все колонки, которые содержат "нарушено"
+        violation_count = 0
+        for col in df.columns:
+            if col != 'id_exemplar':
+                # Проверяем, содержит ли колонка значение "нарушено"
+                if df[col].dtype == 'object' and 'нарушено' in df[col].values:
+                    # Подсчитываем строки, где есть хотя бы одно нарушение
+                    violation_rows = df[df[col] == 'нарушено']
+                    violation_count = max(violation_count, len(violation_rows))
+
+        return violation_count
 
 
 if __name__ == '__main__':

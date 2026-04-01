@@ -116,3 +116,42 @@ class ParametrisedDataset:
 
         # Возвращаем значения параметра в виде списка (без индексов)
         return self.parameters_frame[param_name].tolist()
+
+    def get_merged_frame(self) -> pd.DataFrame:
+        """
+        Возвращает объединенный фрейм, содержащий параметры и информацию о нарушении HC
+
+        Объединяет parameters_frame и violations_frame по id_exemplar.
+        Для HC колонок значения True/False преобразуются в "нарушено"/"не нарушено"
+        для удобства отображения.
+
+        Returns:
+            pd.DataFrame: объединенный фрейм
+        """
+        if self.parameters_frame.empty:
+            return pd.DataFrame()
+
+        # Начинаем с фрейма параметров
+        merged_df = self.parameters_frame.copy()
+
+        # Если есть фрейм нарушений, объединяем их
+        if not self.violations_frame.empty:
+            # Объединяем по id_exemplar (левый join, чтобы сохранить все записи)
+            merged_df = pd.merge(
+                merged_df,
+                self.violations_frame,
+                on=self.ID_COLUMN,
+                how='left'
+            )
+
+            # Преобразуем булевы значения в читаемый текст для HC колонок
+            hc_columns = [col for col in self.violations_frame.columns if col != self.ID_COLUMN]
+            for hc_col in hc_columns:
+                if hc_col in merged_df.columns:
+                    merged_df[hc_col] = merged_df[hc_col].map({
+                        True: "нарушено",
+                        False: "не нарушено",
+                        pd.NA: "не нарушено"
+                    }).fillna("не нарушено")
+
+        return merged_df
