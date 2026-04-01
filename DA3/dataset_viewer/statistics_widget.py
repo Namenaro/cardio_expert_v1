@@ -97,30 +97,20 @@ class StatisticsPanel(QScrollArea):
 
     def setup_ui(self):
         """Настраивает интерфейс панели"""
-        # Настройка скроллинга
         self.setWidgetResizable(True)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
 
-        # Создаем контейнер для содержимого
         container = QWidget()
         self.setWidget(container)
-
-        # Сохраняем ссылку на контейнер для обновления
         self.container = container
 
-        # Основной layout
         layout = QVBoxLayout(container)
         layout.setSpacing(10)
         layout.setContentsMargins(10, 10, 10, 10)
-
-        # Сохраняем ссылку на layout для обновления
         self.main_layout = layout
 
-        # Заполняем интерфейс
         self.populate_ui(layout)
-
-        # Устанавливаем фиксированную ширину панели
         self.setFixedWidth(500)
 
     def populate_ui(self, layout: QVBoxLayout):
@@ -142,8 +132,8 @@ class StatisticsPanel(QScrollArea):
         line.setFrameShadow(QFrame.Sunken)
         layout.addWidget(line)
 
-        # Добавляем информацию о нарушениях
-        self.add_violations_info(layout)
+        # Добавляем информацию о нарушениях HC
+        self.add_hc_violations_info(layout)
 
         # Находим числовые колонки
         numeric_columns = self.find_numeric_columns()
@@ -156,7 +146,6 @@ class StatisticsPanel(QScrollArea):
         else:
             # Для каждой числовой колонки добавляем гистограмму
             for col in numeric_columns:
-                # Создаем контейнер для гистограммы
                 hist_container = QWidget()
                 hist_container.setStyleSheet("""
                     QWidget {
@@ -166,7 +155,6 @@ class StatisticsPanel(QScrollArea):
                     }
                 """)
 
-                # Добавляем гистограмму
                 hist_widget = HistogramWidget(col, self.dataframe[col])
 
                 hist_layout = QVBoxLayout(hist_container)
@@ -175,27 +163,22 @@ class StatisticsPanel(QScrollArea):
 
                 layout.addWidget(hist_container)
 
-                # Добавляем разделитель между гистограммами
                 if col != numeric_columns[-1]:
                     separator = QFrame()
                     separator.setFrameShape(QFrame.HLine)
                     separator.setFrameShadow(QFrame.Sunken)
                     layout.addWidget(separator)
 
-        # Добавляем растяжку в конец
         layout.addStretch()
 
-    def add_violations_info(self, layout: QVBoxLayout):
-        """Добавляет информацию о нарушениях на панель статистики"""
-        # Находим все колонки с нарушениями
-        violation_columns = []
-        for col in self.dataframe.columns:
-            if col != 'id_exemplar' and self.dataframe[col].dtype == 'object':
-                if 'нарушено' in self.dataframe[col].values:
-                    violation_columns.append(col)
+    def add_hc_violations_info(self, layout: QVBoxLayout):
+        """Добавляет информацию о нарушениях HC на панель статистики"""
+        # Находим все колонки HC (начинаются с HC_)
+        hc_columns = [col for col in self.dataframe.columns
+                      if isinstance(col, str) and col.startswith('HC_')]
 
-        if violation_columns:
-            # Создаем контейнер для информации о нарушениях
+        if hc_columns:
+            # Создаем контейнер для информации о нарушениях HC
             violations_container = QWidget()
             violations_container.setStyleSheet("""
                 QWidget {
@@ -217,22 +200,25 @@ class StatisticsPanel(QScrollArea):
             violations_layout.addWidget(violations_title)
 
             # Статистика по каждому HC
-            for hc_col in violation_columns:
+            for hc_col in hc_columns:
                 violation_count = (self.dataframe[hc_col] == 'нарушено').sum()
                 total_count = len(self.dataframe)
                 percentage = (violation_count / total_count * 100) if total_count > 0 else 0
 
+                # Убираем префикс HC_ для отображения
+                display_name = hc_col.replace('HC_', '')
+
                 hc_label = QLabel(
-                    f"<b>{hc_col}</b><br>"
+                    f"<b>{display_name}</b><br>"
                     f"Нарушений: {violation_count} / {total_count} ({percentage:.1f}%)"
                 )
                 hc_label.setWordWrap(True)
                 violations_layout.addWidget(hc_label)
 
             # Общая статистика
-            total_violations = sum((self.dataframe[col] == 'нарушено').sum() for col in violation_columns)
+            total_violations = sum((self.dataframe[col] == 'нарушено').sum() for col in hc_columns)
             rows_with_violations = len(self.dataframe[
-                                           self.dataframe[violation_columns].apply(
+                                           self.dataframe[hc_columns].apply(
                                                lambda row: any(row == 'нарушено'), axis=1
                                            )
                                        ])
@@ -256,7 +242,6 @@ class StatisticsPanel(QScrollArea):
     def update_data(self, dataframe: pd.DataFrame):
         """Обновляет данные на панели"""
         self.dataframe = dataframe
-        # Пересоздаем интерфейс с новыми данными
         self.populate_ui(self.main_layout)
 
     def find_numeric_columns(self) -> list:
@@ -264,17 +249,16 @@ class StatisticsPanel(QScrollArea):
         numeric_cols = []
 
         for col in self.dataframe.columns:
-            # Пропускаем колонку с id и колонки с нарушениями
+            # Пропускаем колонку с id и HC колонки
             if col == 'id_exemplar':
                 continue
 
-            # Проверяем, не является ли колонка колонкой с нарушениями
-            if self.dataframe[col].dtype == 'object' and 'нарушено' in self.dataframe[col].values:
+            # Пропускаем HC колонки
+            if isinstance(col, str) and col.startswith('HC_'):
                 continue
 
             # Проверяем тип данных колонки
             if pd.api.types.is_numeric_dtype(self.dataframe[col]):
-                # Проверяем, что есть хотя бы одно числовое значение (не NaN)
                 if self.dataframe[col].count() > 0:
                     numeric_cols.append(col)
 

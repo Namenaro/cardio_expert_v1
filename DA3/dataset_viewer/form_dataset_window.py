@@ -127,28 +127,28 @@ class FormDatasetWindow(QMainWindow):
         if df.empty:
             return 0
 
-        # Находим все колонки с нарушениями
-        violation_columns = []
-        for col in df.columns:
-            if col != 'id_exemplar' and df[col].dtype == 'object':
-                if 'нарушено' in df[col].values:
-                    violation_columns.append(col)
+        # Находим все HC колонки (начинаются с HC_)
+        hc_columns = [col for col in df.columns
+                      if isinstance(col, str) and col.startswith('HC_')]
 
-        if not violation_columns:
+        if not hc_columns:
             return 0
 
         # Подсчитываем строки, где есть хотя бы одно нарушение
-        return len(df[df[violation_columns].apply(lambda row: any(row == 'нарушено'), axis=1)])
+        return len(df[df[hc_columns].apply(lambda row: any(row == 'нарушено'), axis=1)])
 
     def count_total_violations(self, df: pd.DataFrame) -> int:
         """Подсчитывает общее количество нарушений во всем датасете"""
         if df.empty:
             return 0
 
+        # Находим все HC колонки (начинаются с HC_)
+        hc_columns = [col for col in df.columns
+                      if isinstance(col, str) and col.startswith('HC_')]
+
         total = 0
-        for col in df.columns:
-            if col != 'id_exemplar' and df[col].dtype == 'object':
-                total += (df[col] == 'нарушено').sum()
+        for col in hc_columns:
+            total += (df[col] == 'нарушено').sum()
         return total
 
 

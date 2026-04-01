@@ -17,6 +17,16 @@ class PandasModel(QAbstractTableModel):
         self._data = data
         self._cache = self._calculate_nan_rows()
         self._violation_cache = self._calculate_violation_cells()
+        # Определяем колонки с HC
+        self._hc_columns = self._identify_hc_columns()
+
+    def _identify_hc_columns(self):
+        """Определяет колонки, которые начинаются с HC_"""
+        hc_columns = []
+        for col in self._data.columns:
+            if isinstance(col, str) and col.startswith('HC_'):
+                hc_columns.append(col)
+        return hc_columns
 
     def _calculate_nan_rows(self):
         """Кэширует строки, содержащие NaN"""
@@ -35,6 +45,7 @@ class PandasModel(QAbstractTableModel):
         for row in range(len(self._data)):
             for col in range(len(self._data.columns)):
                 value = self._data.iloc[row, col]
+                # Проверяем, является ли значение "нарушено"
                 if isinstance(value, str) and value == "нарушено":
                     violation_cells[(row, col)] = True
 
@@ -46,6 +57,7 @@ class PandasModel(QAbstractTableModel):
         self._data = new_data
         self._cache = self._calculate_nan_rows()
         self._violation_cache = self._calculate_violation_cells()
+        self._hc_columns = self._identify_hc_columns()
         self.endResetModel()
 
     def rowCount(self, parent=QModelIndex()):
@@ -61,6 +73,8 @@ class PandasModel(QAbstractTableModel):
         row = index.row()
         col = index.column()
         value = self._data.iloc[row, col]
+        column_name = self._data.columns[col]
+        is_hc_column = column_name in self._hc_columns
 
         # Отображение текста
         if role == Qt.DisplayRole:
@@ -68,28 +82,36 @@ class PandasModel(QAbstractTableModel):
                 return "NaN"
             return str(value)
 
-        # Подсветка фона - приоритет: нарушение > NaN
+        # Подсветка фона
         if role == Qt.BackgroundRole:
-            # Сначала проверяем на нарушение
-            if (row, col) in self._violation_cache:
-                return QBrush(QColor(255, 200, 200))  # Светло-красный для нарушений
+            # Для HC колонок специальная подсветка
+            if is_hc_column:
+                if (row, col) in self._violation_cache:
+                    # Ярко-красный фон для нарушенных HC
+                    return QBrush(QColor(255, 100, 100))
+                elif not pd.isna(value) and str(value) == "не нарушено":
+                    # Светло-зеленый фон для не нарушенных HC
+                    return QBrush(QColor(200, 230, 200))
 
-            # Затем проверяем на NaN в строке
+            # Для остальных колонок - проверка на NaN
             if self._cache.get(row, False):
                 if pd.isna(value):
-                    return QBrush(QColor(255, 100, 100))  # Ярко-красный для самой ячейки NaN
-                return QBrush(QColor(255, 200, 200))  # Светло-красный для остальных ячеек в строке
+                    return QBrush(QColor(255, 100, 100))  # Ярко-красный для ячейки NaN
+                return QBrush(QColor(255, 200, 200))  # Светло-красный для строк с NaN
 
         # Цвет текста
         if role == Qt.ForegroundRole:
-            # Для нарушений делаем текст темно-красным и жирным
-            if (row, col) in self._violation_cache:
-                font = QFont()
-                font.setBold(True)
+            # Для нарушений в HC колонках - жирный темно-красный текст
+            if is_hc_column and (row, col) in self._violation_cache:
                 return QBrush(QColor(180, 0, 0))  # Темно-красный текст
 
+            # Для NaN
             if pd.isna(value):
                 return QBrush(QColor(150, 0, 0))  # Темно-красный текст для NaN
+
+            # Для "не нарушено" в HC колонках - серый текст
+            if is_hc_column and not pd.isna(value) and str(value) == "не нарушено":
+                return QBrush(QColor(100, 100, 100))  # Серый текст
 
         # Выравнивание текста
         if role == Qt.TextAlignmentRole:
@@ -98,9 +120,10 @@ class PandasModel(QAbstractTableModel):
                 return Qt.AlignRight | Qt.AlignVCenter
             return Qt.AlignLeft | Qt.AlignVCenter
 
-        # Жирный шрифт для нарушений
+        # Шрифт
         if role == Qt.FontRole:
-            if (row, col) in self._violation_cache:
+            # Для нарушений в HC колонках - жирный шрифт
+            if is_hc_column and (row, col) in self._violation_cache:
                 font = QFont()
                 font.setBold(True)
                 return font
@@ -114,12 +137,17 @@ class PandasModel(QAbstractTableModel):
             else:
                 return str(self._data.index[section])
 
+        # Стиль заголовков
         if role == Qt.FontRole:
             font = QFont()
             font.setBold(True)
             return font
 
         if role == Qt.BackgroundRole:
+            column_name = self._data.columns[section] if orientation == Qt.Horizontal else None
+            # Для HC колонок делаем специальный фон заголовка
+            if orientation == Qt.Horizontal and column_name in self._hc_columns:
+                return QBrush(QColor(255, 220, 220))  # Светло-красный фон для HC колонок
             return QBrush(QColor(240, 240, 240))
 
         return None
@@ -136,7 +164,6 @@ class PandasModel(QAbstractTableModel):
         if 0 <= row < len(self._data) and 0 <= col < len(self._data.columns):
             return self._data.iloc[row, col]
         return None
-
 
 class PandasSortFilterProxyModel(QSortFilterProxyModel):
     """Прокси-модель для сортировки с правильной обработкой NaN"""
