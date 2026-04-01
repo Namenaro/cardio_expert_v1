@@ -110,4 +110,58 @@ class ParametrisedDataset:
 
         return merged_df
 
-    # ... остальные методы остаются без изменений
+    def get_exemplar_ids_violated(self) -> List[Any]:
+        """
+        Возвращает список id экземпляров, у которых есть хотя бы одно нарушение HC
+
+        :returns List[Any]: список id экземпляров с нарушениями
+        """
+        if self.violations_frame.empty:
+            return []
+
+        # Выбираем только колонки с HC (все кроме id_exemplar)
+        hc_columns = [col for col in self.violations_frame.columns if col != self.ID_COLUMN]
+
+        # Находим строки, где хотя бы один HC равен True
+        violated_mask = self.violations_frame[hc_columns].any(axis=1)
+
+        # Возвращаем соответствующие id
+        return self.violations_frame.loc[violated_mask, self.ID_COLUMN].tolist()
+
+    def get_exemplars_by_hc_id(self, hc_id: str) -> List[Any]:
+        """
+        Возвращает список id экземпляров, у которых нарушено указанное HC
+
+        :param hc_id: идентификатор жесткого условия
+        :return List[Any]: список id экземпляров с нарушением данного HC
+        """
+        if self.violations_frame.empty:
+            return []
+
+        # Добавляем префикс, если его нет
+        if not hc_id.startswith(self.HC_PREFIX):
+            str_hc_id = f"{self.HC_PREFIX}{hc_id}"
+        else:
+            str_hc_id = hc_id
+
+        if str_hc_id not in self.violations_frame.columns:
+            return []
+
+        # Находим строки, где указанный HC равен True
+        violated_mask = self.violations_frame[str_hc_id] == True
+
+        # Возвращаем соответствующие id
+        return self.violations_frame.loc[violated_mask, self.ID_COLUMN].tolist()
+
+    def get_parameter_values(self, param_name: str) -> List[Any]:
+        """
+        Возвращает список значений указанного параметра для всех экземпляров
+        :param: param_name имя параметра
+        :return List[Any]: список значений параметра
+        """
+        if self.parameters_frame.empty or param_name not in self.parameters_frame.columns:
+            raise CoreError(
+                f"Из датасета параметров запрошен несуществующий параметр {param_name}, исходная форма содержит параметры: {self.param_names}")
+
+        # Возвращаем значения параметра в виде списка (без индексов)
+        return self.parameters_frame[param_name].tolist()
