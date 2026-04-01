@@ -19,9 +19,9 @@ class LessThanThreshold(HCBase):
 
     def run(self) -> bool:
         if self.param_to_eval< self.threshold:
-            return False
+            return True
 
-        return True
+        return False
 
 
 # Пример использования
