@@ -3,12 +3,8 @@ import sys
 import matplotlib
 import pandas as pd
 from PySide6.QtGui import QColor, QPalette
-from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QStyleFactory, QWidget,
-    QHBoxLayout, QVBoxLayout
-)
-from PySide6.QtWidgets import QToolBar, QPushButton, QCheckBox, QWidget, QHBoxLayout
-from PySide6.QtCore import Signal, Qt
+from PySide6.QtWidgets import (QApplication, QMainWindow, QStyleFactory)
+from PySide6.QtWidgets import QWidget, QHBoxLayout
 
 from DA3.dataset_viewer.statistics_widget import StatisticsPanel
 
