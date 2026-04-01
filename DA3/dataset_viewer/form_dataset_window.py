@@ -5,8 +5,10 @@ import pandas as pd
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QStyleFactory, QWidget,
-    QHBoxLayout
+    QHBoxLayout, QVBoxLayout
 )
+from PySide6.QtWidgets import QToolBar, QPushButton, QCheckBox, QWidget, QHBoxLayout
+from PySide6.QtCore import Signal, Qt
 
 from DA3.dataset_viewer.statistics_widget import StatisticsPanel
 
@@ -65,11 +67,13 @@ class FormDatasetWindow(QMainWindow):
 
             # Подсчитываем количество нарушений
             violations_count = self.count_violations(df)
+            total_violations = self.count_total_violations(df)
 
             self.statusBar().showMessage(
                 f"Форма: {form.name} | Всего строк: {len(df)}, Колонок: {len(df.columns)} | "
                 f"Числовых колонок: {numeric_cols_count} | "
-                f"Строк с нарушениями: {violations_count}"
+                f"Строк с нарушениями: {violations_count} | "
+                f"Всего нарушений: {total_violations}"
             )
 
         except Exception as e:
@@ -119,29 +123,33 @@ class FormDatasetWindow(QMainWindow):
         return parametrised_dataset
 
     def count_violations(self, df: pd.DataFrame) -> int:
-        """
-        Подсчитывает количество строк, содержащих нарушения
-
-        Args:
-            df: объединенный фрейм
-
-        Returns:
-            int: количество строк с нарушениями
-        """
+        """Подсчитывает количество строк, содержащих нарушения"""
         if df.empty:
             return 0
 
-        # Находим все колонки, которые содержат "нарушено"
-        violation_count = 0
+        # Находим все колонки с нарушениями
+        violation_columns = []
         for col in df.columns:
-            if col != 'id_exemplar':
-                # Проверяем, содержит ли колонка значение "нарушено"
-                if df[col].dtype == 'object' and 'нарушено' in df[col].values:
-                    # Подсчитываем строки, где есть хотя бы одно нарушение
-                    violation_rows = df[df[col] == 'нарушено']
-                    violation_count = max(violation_count, len(violation_rows))
+            if col != 'id_exemplar' and df[col].dtype == 'object':
+                if 'нарушено' in df[col].values:
+                    violation_columns.append(col)
 
-        return violation_count
+        if not violation_columns:
+            return 0
+
+        # Подсчитываем строки, где есть хотя бы одно нарушение
+        return len(df[df[violation_columns].apply(lambda row: any(row == 'нарушено'), axis=1)])
+
+    def count_total_violations(self, df: pd.DataFrame) -> int:
+        """Подсчитывает общее количество нарушений во всем датасете"""
+        if df.empty:
+            return 0
+
+        total = 0
+        for col in df.columns:
+            if col != 'id_exemplar' and df[col].dtype == 'object':
+                total += (df[col] == 'нарушено').sum()
+        return total
 
 
 if __name__ == '__main__':

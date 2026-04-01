@@ -106,10 +106,30 @@ class StatisticsPanel(QScrollArea):
         container = QWidget()
         self.setWidget(container)
 
+        # Сохраняем ссылку на контейнер для обновления
+        self.container = container
+
         # Основной layout
         layout = QVBoxLayout(container)
         layout.setSpacing(10)
         layout.setContentsMargins(10, 10, 10, 10)
+
+        # Сохраняем ссылку на layout для обновления
+        self.main_layout = layout
+
+        # Заполняем интерфейс
+        self.populate_ui(layout)
+
+        # Устанавливаем фиксированную ширину панели
+        self.setFixedWidth(500)
+
+    def populate_ui(self, layout: QVBoxLayout):
+        """Заполняет интерфейс данными"""
+        # Очищаем layout перед заполнением
+        while layout.count():
+            item = layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
 
         # Заголовок
         title = QLabel("<h3>Статистика по колонкам</h3>")
@@ -165,10 +185,7 @@ class StatisticsPanel(QScrollArea):
         # Добавляем растяжку в конец
         layout.addStretch()
 
-        # Устанавливаем фиксированную ширину панели
-        self.setFixedWidth(500)
-
-    def add_violations_info(self, layout):
+    def add_violations_info(self, layout: QVBoxLayout):
         """Добавляет информацию о нарушениях на панель статистики"""
         # Находим все колонки с нарушениями
         violation_columns = []
@@ -235,6 +252,12 @@ class StatisticsPanel(QScrollArea):
             separator.setFrameShape(QFrame.HLine)
             separator.setFrameShadow(QFrame.Sunken)
             layout.addWidget(separator)
+
+    def update_data(self, dataframe: pd.DataFrame):
+        """Обновляет данные на панели"""
+        self.dataframe = dataframe
+        # Пересоздаем интерфейс с новыми данными
+        self.populate_ui(self.main_layout)
 
     def find_numeric_columns(self) -> list:
         """Находит и возвращает список числовых колонок"""

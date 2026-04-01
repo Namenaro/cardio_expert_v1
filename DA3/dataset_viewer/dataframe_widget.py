@@ -10,12 +10,13 @@ logger = get_logger(__name__)
 
 
 class PandasModel(QAbstractTableModel):
-    """Модель для отображения pandas DataFrame с подсветкой NaN"""
+    """Модель для отображения pandas DataFrame с подсветкой NaN и нарушений"""
 
     def __init__(self, data: pd.DataFrame):
         super().__init__()
         self._data = data
         self._cache = self._calculate_nan_rows()
+        self._violation_cache = self._calculate_violation_cells()
 
     def _calculate_nan_rows(self):
         """Кэширует строки, содержащие NaN"""
@@ -24,11 +25,27 @@ class PandasModel(QAbstractTableModel):
             nan_rows[row] = self._data.iloc[row].isna().any()
         return nan_rows
 
+    def _calculate_violation_cells(self):
+        """
+        Кэширует ячейки, содержащие нарушения (значение "нарушено")
+        Возвращает словарь: (row, col) -> True, если ячейка содержит нарушение
+        """
+        violation_cells = {}
+
+        for row in range(len(self._data)):
+            for col in range(len(self._data.columns)):
+                value = self._data.iloc[row, col]
+                if isinstance(value, str) and value == "нарушено":
+                    violation_cells[(row, col)] = True
+
+        return violation_cells
+
     def update_data(self, new_data: pd.DataFrame):
         """Обновляет данные модели"""
         self.beginResetModel()
         self._data = new_data
         self._cache = self._calculate_nan_rows()
+        self._violation_cache = self._calculate_violation_cells()
         self.endResetModel()
 
     def rowCount(self, parent=QModelIndex()):
@@ -51,25 +68,42 @@ class PandasModel(QAbstractTableModel):
                 return "NaN"
             return str(value)
 
-        # Подсветка фона для строк с NaN
+        # Подсветка фона - приоритет: нарушение > NaN
         if role == Qt.BackgroundRole:
+            # Сначала проверяем на нарушение
+            if (row, col) in self._violation_cache:
+                return QBrush(QColor(255, 200, 200))  # Светло-красный для нарушений
+
+            # Затем проверяем на NaN в строке
             if self._cache.get(row, False):
-                # Проверяем, является ли текущая ячейка NaN для более яркой подсветки
                 if pd.isna(value):
                     return QBrush(QColor(255, 100, 100))  # Ярко-красный для самой ячейки NaN
                 return QBrush(QColor(255, 200, 200))  # Светло-красный для остальных ячеек в строке
 
-        # Цвет текста для NaN
+        # Цвет текста
         if role == Qt.ForegroundRole:
-            if pd.isna(value):
-                return QBrush(QColor(150, 0, 0))  # Темно-красный текст
+            # Для нарушений делаем текст темно-красным и жирным
+            if (row, col) in self._violation_cache:
+                font = QFont()
+                font.setBold(True)
+                return QBrush(QColor(180, 0, 0))  # Темно-красный текст
 
-        # Выравнивание текста (числа по правому краю, текст по левому)
+            if pd.isna(value):
+                return QBrush(QColor(150, 0, 0))  # Темно-красный текст для NaN
+
+        # Выравнивание текста
         if role == Qt.TextAlignmentRole:
             column_dtype = self._data.dtypes.iloc[col]
             if pd.api.types.is_numeric_dtype(column_dtype):
                 return Qt.AlignRight | Qt.AlignVCenter
             return Qt.AlignLeft | Qt.AlignVCenter
+
+        # Жирный шрифт для нарушений
+        if role == Qt.FontRole:
+            if (row, col) in self._violation_cache:
+                font = QFont()
+                font.setBold(True)
+                return font
 
         return None
 
@@ -80,7 +114,6 @@ class PandasModel(QAbstractTableModel):
             else:
                 return str(self._data.index[section])
 
-        # Стиль заголовков
         if role == Qt.FontRole:
             font = QFont()
             font.setBold(True)
@@ -126,7 +159,7 @@ class PandasSortFilterProxyModel(QSortFilterProxyModel):
         left_value = self._source_model.get_raw_value(left.row(), left.column())
         right_value = self._source_model.get_raw_value(right.row(), right.column())
 
-        # Проверяем на NaN - NaN всегда считаем больше (чтобы они были вверху)
+        # Проверяем на NaN - NaN всегда считаем больше (чтобы они были внизу)
         left_is_na = pd.isna(left_value)
         right_is_na = pd.isna(right_value)
 
@@ -134,11 +167,11 @@ class PandasSortFilterProxyModel(QSortFilterProxyModel):
         if left_is_na and right_is_na:
             return False
 
-        # Если левый NaN, а правый нет - левый больше (идет выше)
+        # Если левый NaN, а правый нет - левый больше (идет ниже при сортировке по возрастанию)
         if left_is_na and not right_is_na:
             return False
 
-        # Если правый NaN, а левый нет - левый меньше (правый выше)
+        # Если правый NaN, а левый нет - левый меньше (правый ниже)
         if not left_is_na and right_is_na:
             return True
 
@@ -158,17 +191,15 @@ class CustomTableView(QTableView):
         super().__init__(parent)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.show_context_menu)
-        self.setSortingEnabled(True)  # Включаем сортировку
+        self.setSortingEnabled(True)
 
     def show_context_menu(self, position: QPoint):
         """Показывает контекстное меню при правом клике"""
-        # Получаем индекс ячейки под курсором
         index = self.indexAt(position)
 
         if not index.isValid():
             return
 
-        # Создаем меню
         menu = QMenu()
 
         # Действие для копирования
@@ -176,7 +207,25 @@ class CustomTableView(QTableView):
         copy_action.triggered.connect(lambda: self.copy_cell_value(index))
         menu.addAction(copy_action)
 
-        # Показываем меню
+        # Добавляем действие для копирования всей строки
+        copy_row_action = QAction("Копировать строку", self)
+        copy_row_action.triggered.connect(lambda: self.copy_row_values(index.row()))
+        menu.addAction(copy_row_action)
+
+        # Проверяем, является ли ячейка нарушением
+        source_model = self.model().sourceModel() if hasattr(self.model(), 'sourceModel') else self.model()
+        if hasattr(source_model, 'is_violation_cell'):
+            source_row = self.model().mapToSource(index).row() if hasattr(self.model(), 'mapToSource') else index.row()
+            source_col = self.model().mapToSource(index).column() if hasattr(self.model(),
+                                                                             'mapToSource') else index.column()
+
+            if source_model.is_violation_cell(source_row, source_col):
+                # Добавляем информационное сообщение
+                info_action = QAction("⚠️ Нарушение жесткого условия", self)
+                info_action.setEnabled(False)
+                menu.addSeparator()
+                menu.addAction(info_action)
+
         menu.exec(self.viewport().mapToGlobal(position))
 
     def copy_cell_value(self, index: QModelIndex):
@@ -184,13 +233,23 @@ class CustomTableView(QTableView):
         if not index.isValid():
             return
 
-        # Получаем значение из модели
         value = index.data(Qt.DisplayRole)
-
-        # Копируем в буфер обмена
         clipboard = QGuiApplication.clipboard()
         clipboard.setText(str(value))
 
+    def copy_row_values(self, row: int):
+        """Копирует значения всей строки"""
+        if not self.model():
+            return
+
+        row_values = []
+        for col in range(self.model().columnCount()):
+            index = self.model().index(row, col)
+            value = index.data(Qt.DisplayRole)
+            row_values.append(str(value))
+
+        clipboard = QGuiApplication.clipboard()
+        clipboard.setText("\t".join(row_values))
 
 class DataFrameWidget(QWidget):
     """Виджет для отображения DataFrame с красивым оформлением"""
@@ -209,22 +268,21 @@ class DataFrameWidget(QWidget):
 
         # Создаем кастомную таблицу с контекстным меню
         self.table_view = CustomTableView()
-        self.table_view.setAlternatingRowColors(True)  # Чередование цветов строк
-        self.table_view.setSelectionBehavior(QTableView.SelectItems)  # Выделение отдельных ячеек
-        self.table_view.setSelectionMode(QTableView.ExtendedSelection)  # Множественный выбор
+        self.table_view.setAlternatingRowColors(True)
+        self.table_view.setSelectionBehavior(QTableView.SelectItems)
+        self.table_view.setSelectionMode(QTableView.ExtendedSelection)
 
         # Устанавливаем прокси-модель в представление
         self.table_view.setModel(self.proxy_model)
 
         # Настройка сортировки
         self.table_view.setSortingEnabled(True)
-        self.table_view.sortByColumn(-1, Qt.AscendingOrder)  # Изначально сортировка не применена
 
         # Настройка растягивания колонок
         self.table_view.horizontalHeader().setStretchLastSection(True)
         self.table_view.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
         self.table_view.verticalHeader().setVisible(True)
-        self.table_view.verticalHeader().setDefaultSectionSize(30)  # Высота строк
+        self.table_view.verticalHeader().setDefaultSectionSize(30)
 
         # Layout
         layout = QVBoxLayout()
@@ -313,9 +371,6 @@ class DataFrameWidget(QWidget):
         """Обновляет данные в виджете"""
         self._data = data
         self.source_model.update_data(data)
-
-        # Сбрасываем сортировку после обновления данных
-        self.table_view.sortByColumn(-1, Qt.AscendingOrder)
 
         # Настройка ширины колонок
         self.resize_columns_to_content()
