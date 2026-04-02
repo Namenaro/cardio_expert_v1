@@ -1,3 +1,5 @@
+import numpy as np
+from scipy.stats import percentileofscore
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.preprocessing import StandardScaler
 
@@ -6,7 +8,6 @@ from CORE.run import Exemplar
 from CORE.run.eval.base_eval import BaseEvaluator
 
 
-# Альтернативная версия с другой нормализацией (на основе перцентилей)
 class LOFPercentileEvaluator(BaseEvaluator):
     """
     Версия LOF-оценщика с нормализацией через перцентили эталонной выборки.
@@ -22,6 +23,7 @@ class LOFPercentileEvaluator(BaseEvaluator):
             contamination: float = 'auto',
             normalize: bool = True
     ):
+        self.positive_dataset = positive_dataset
         self.param_names = positive_dataset.param_names
         self.n_neighbors = n_neighbors
         self.contamination = contamination
@@ -59,28 +61,43 @@ class LOFPercentileEvaluator(BaseEvaluator):
         - Нормальная точка получает оценку близкую к 1 (высокий процентиль)
         - Выброс получает оценку близкую к 0 (низкий процентиль)
         """
-        from scipy.stats import percentileofscore
+        # Получаем вектор, матрицу и список общих параметров
+        x, data_matrix, common_params = self._get_common_data(
+            exemplar, self.param_names, self.positive_dataset
+        )
 
-        # Получаем вектор значений
-        x_raw = np.array([[
-            exemplar.get_parameter_value(p) for p in self.param_names
-        ]])
+        # Если нет общих параметров, возвращаем минимальную оценку
+        if x is None:
+            return 0.0
 
-        # Нормализуем
-        if self.normalize and self.scaler is not None:
-            x = self.scaler.transform(x_raw)
+        # Нормализуем данные
+        if self.normalize:
+            temp_scaler = StandardScaler()
+            data_normalized = temp_scaler.fit_transform(data_matrix)
+            x_normalized = temp_scaler.transform(x)
         else:
-            x = x_raw
+            data_normalized = data_matrix
+            x_normalized = x
+
+        # Обучаем LOF на актуальных данных
+        temp_lof = LocalOutlierFactor(
+            n_neighbors=min(self.n_neighbors, len(data_normalized) - 1),  # не больше, чем точек
+            contamination=self.contamination,
+            novelty=True
+        )
+        temp_lof.fit(data_normalized)
 
         # Получаем LOF-оценку
         try:
-            lof_score = self.lof.score_samples(x)[0]
+            lof_score = temp_lof.score_samples(x_normalized)[0]
         except AttributeError:
-            lof_score = self.lof.decision_function(x)[0]
+            lof_score = temp_lof.decision_function(x_normalized)[0]
+
+        # Получаем эталонные оценки
+        temp_reference_scores = temp_lof.negative_outlier_factor_
 
         # Вычисляем процентиль
-        # Важно: так как LOF-оценки отрицательные, используем kind='weak'
-        percentile = percentileofscore(self.reference_scores, lof_score, kind='weak')
+        percentile = percentileofscore(temp_reference_scores, lof_score, kind='weak')
 
         # Нормализуем в [0; 1]
         score = percentile / 100.0

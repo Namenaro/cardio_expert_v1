@@ -1,5 +1,7 @@
+import numpy as np
 from sklearn.covariance import EllipticEnvelope
 from sklearn.preprocessing import StandardScaler
+from scipy.stats import chi2
 
 from CORE.datasets_wrappers.form_associated.parametrised_dataset import ParametrisedDataset
 from CORE.run import Exemplar
@@ -27,33 +29,51 @@ class EllipticEnvelopeEvaluator(BaseEvaluator):
             normalize: bool = True,
             random_state: int = None
     ):
-        self.param_names = positive_dataset.param_names
+        self.positive_dataset = positive_dataset
+        self.all_param_names = positive_dataset.param_names
         self.contamination = contamination
+        self.support_fraction = support_fraction
         self.normalize = normalize
         self.random_state = random_state
 
-        # Собираем данные
-        data_list = [positive_dataset.get_parameter_values(p) for p in self.param_names]
-        self.data_matrix = np.array(data_list).T
+    def _get_model_for_params(self, param_names: list) -> tuple:
+        """
+        Обучает Elliptic Envelope для указанных параметров.
+
+        Args:
+            param_names (list): список имен параметров
+
+        Returns:
+            tuple: (scaler, ee, reference_distances)
+        """
+        # Собираем данные только для указанных параметров
+        data_list = []
+        for param in param_names:
+            vals = self.positive_dataset.get_parameter_values(param)
+            data_list.append(vals)
+
+        data_matrix = np.array(data_list).T
 
         # Нормализация
         if self.normalize:
-            self.scaler = StandardScaler()
-            self.data_normalized = self.scaler.fit_transform(self.data_matrix)
+            scaler = StandardScaler()
+            data_normalized = scaler.fit_transform(data_matrix)
         else:
-            self.scaler = None
-            self.data_normalized = self.data_matrix
+            scaler = None
+            data_normalized = data_matrix
 
         # Обучаем Elliptic Envelope
-        self.ee = EllipticEnvelope(
-            contamination=contamination,
-            support_fraction=support_fraction,
-            random_state=random_state
+        ee = EllipticEnvelope(
+            contamination=self.contamination,
+            support_fraction=self.support_fraction,
+            random_state=self.random_state
         )
-        self.ee.fit(self.data_normalized)
+        ee.fit(data_normalized)
 
         # Вычисляем расстояния Махаланобиса для эталона
-        self.reference_distances = self.ee.mahalanobis(self.data_normalized)
+        reference_distances = ee.mahalanobis(data_normalized)
+
+        return scaler, ee, reference_distances
 
     def eval_exemplar(self, exemplar: Exemplar) -> float:
         """
@@ -62,25 +82,30 @@ class EllipticEnvelopeEvaluator(BaseEvaluator):
         Используем хи-квадрат распределение для преобразования расстояния
         Махаланобиса в вероятность.
         """
-        from scipy.stats import chi2
+        # Получаем вектор, матрицу и список общих параметров
+        x, data_matrix, common_params = self._get_common_data(
+            exemplar, self.all_param_names, self.positive_dataset
+        )
 
-        # Получаем вектор значений
-        x_raw = np.array([[
-            exemplar.get_parameter_value(p) for p in self.param_names
-        ]])
+        # Если нет общих параметров, возвращаем минимальную оценку
+        if x is None:
+            return 0.0
 
-        # Нормализуем
-        if self.scaler is not None:
-            x = self.scaler.transform(x_raw)
+        # Обучаем модель для общих параметров
+        scaler, ee, reference_distances = self._get_model_for_params(common_params)
+
+        # Нормализуем вектор
+        if scaler is not None:
+            x_normalized = scaler.transform(x)
         else:
-            x = x_raw
+            x_normalized = x
 
         # Вычисляем расстояние Махаланобиса
-        mahal_dist = self.ee.mahalanobis(x)[0]
+        mahal_dist = ee.mahalanobis(x_normalized)[0]
 
         # Преобразуем расстояние в вероятность через хи-квадрат
         # Степени свободы = количество признаков
-        df = len(self.param_names)
+        df = len(common_params)
         p_value = 1 - chi2.cdf(mahal_dist, df)
 
         # p_value - это вероятность получить такое же или большее расстояние

@@ -13,68 +13,103 @@ class MahalanobisNonparametricEval(BaseEvaluator):
     """
 
     def __init__(self, positive_dataset: ParametrisedDataset, regularization=1e-6):
-        self.param_names = positive_dataset.param_names
+        self.positive_dataset = positive_dataset
+        self.all_param_names = positive_dataset.param_names
         self.regularization = regularization
 
-        # Собираем данные
-        data_list = [positive_dataset.get_parameter_values(p) for p in self.param_names]
-        self.data_matrix = np.array(data_list)  # shape: (n_features, n_samples)
+        # Собираем данные по всем параметрам
+        data_list = [positive_dataset.get_parameter_values(p) for p in self.all_param_names]
+        self.full_data_matrix = np.array(data_list)  # shape: (n_features, n_samples)
 
         # Нормализация данных для устойчивости
         self.scaler = StandardScaler()
-        self.data_matrix_normalized = self.scaler.fit_transform(self.data_matrix.T).T
+        self.full_data_matrix_normalized = self.scaler.fit_transform(self.full_data_matrix.T).T
 
-        self.mean_vector = np.mean(self.data_matrix_normalized, axis=1)
-        self.cov_matrix = np.cov(self.data_matrix_normalized)
+    def _get_stats_for_params(self, param_names: list) -> tuple:
+        """
+        Вычисляет статистики (mean_vector, inv_cov, scaler, reference_distances) для указанных параметров.
+
+        Args:
+            param_names (list): список имен параметров
+
+        Returns:
+            tuple: (scaler, mean_vector, inv_cov, reference_distances)
+        """
+        # Собираем данные только для указанных параметров
+        data_list = []
+        for param in param_names:
+            vals = self.positive_dataset.get_parameter_values(param)
+            data_list.append(vals)
+
+        data_matrix = np.array(data_list)  # shape: (n_features, n_samples)
+
+        # Нормализация данных
+        scaler = StandardScaler()
+        data_matrix_normalized = scaler.fit_transform(data_matrix.T).T
+
+        mean_vector = np.mean(data_matrix_normalized, axis=1)
+        cov_matrix = np.cov(data_matrix_normalized)
 
         # Регуляризация ковариационной матрицы
-        n_features = len(self.param_names)
-        self.cov_matrix_reg = self.cov_matrix + regularization * np.eye(n_features)
+        n_features = len(param_names)
+        cov_matrix_reg = cov_matrix + self.regularization * np.eye(n_features)
 
         # Вычисляем обратную матрицу
         try:
-            self.inv_cov = np.linalg.inv(self.cov_matrix_reg)
+            inv_cov = np.linalg.inv(cov_matrix_reg)
         except np.linalg.LinAlgError:
             # Если всё ещё вырождена, используем псевдообратную
-            self.inv_cov = np.linalg.pinv(self.cov_matrix_reg)
+            inv_cov = np.linalg.pinv(cov_matrix_reg)
 
         # Вычисляем эталонное распределение расстояний
-        self.reference_distances = self._compute_reference_distances()
+        reference_distances = self._compute_reference_distances(data_matrix_normalized, mean_vector, inv_cov)
 
-    def _compute_reference_distances(self) -> np.ndarray:
+        return scaler, mean_vector, inv_cov, reference_distances
+
+    def _compute_reference_distances(self, data_matrix_normalized: np.ndarray, mean_vector: np.ndarray,
+                                     inv_cov: np.ndarray) -> np.ndarray:
         """Вычисляет расстояния Махаланобиса для всех наблюдений."""
         distances = []
-        n_samples = self.data_matrix_normalized.shape[1]
+        n_samples = data_matrix_normalized.shape[1]
 
         for i in range(n_samples):
-            x_i = self.data_matrix_normalized[:, i]
-            diff = x_i - self.mean_vector
-            dist_sq = diff.T @ self.inv_cov @ diff
+            x_i = data_matrix_normalized[:, i]
+            diff = x_i - mean_vector
+            dist_sq = diff.T @ inv_cov @ diff
             distances.append(np.sqrt(max(dist_sq, 0)))
 
         return np.array(distances)
 
-    def _mahalanobis_distance(self, x: np.ndarray) -> float:
+    def _mahalanobis_distance(self, x: np.ndarray, mean_vector: np.ndarray, inv_cov: np.ndarray) -> float:
         """Вычисляет расстояние Махаланобиса для нормализованного вектора x."""
-        diff = x - self.mean_vector
-        dist_sq = diff.T @ self.inv_cov @ diff
+        diff = x - mean_vector
+        dist_sq = diff.T @ inv_cov @ diff
         return np.sqrt(max(dist_sq, 0))
 
     def eval_exemplar(self, exemplar: Exemplar) -> float:
         """
-        Возвращает оценку экземпляра в интервале [0; 1].
+        Возвращает оценку экземпляра в интервале [0; 1].
         """
-        # Получаем вектор значений
-        x_raw = np.array([exemplar.get_parameter_value(p) for p in self.param_names])
+        # Получаем вектор, матрицу и список общих параметров
+        x, data_matrix, common_params = self._get_common_data(
+            exemplar, self.all_param_names, self.positive_dataset
+        )
 
-        # Нормализуем так же, как обучающие данные
-        x_normalized = self.scaler.transform(x_raw.reshape(1, -1)).flatten()
+        # Если нет общих параметров, возвращаем минимальную оценку
+        if x is None:
+            return 0.0
+
+        # Получаем статистики для общих параметров
+        scaler, mean_vector, inv_cov, reference_distances = self._get_stats_for_params(common_params)
+
+        # Нормализуем вектор
+        x_normalized = scaler.transform(x).flatten()
 
         # Расстояние Махаланобиса
-        new_distance = self._mahalanobis_distance(x_normalized)
+        new_distance = self._mahalanobis_distance(x_normalized, mean_vector, inv_cov)
 
         # Процентиль в эталонном распределении
-        percentile = percentileofscore(self.reference_distances, new_distance)
+        percentile = percentileofscore(reference_distances, new_distance)
 
         # Инвертируем процентиль в оценку
         score = 1.0 - percentile / 100.0

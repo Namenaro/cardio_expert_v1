@@ -15,7 +15,7 @@ class MahalanobisEval(BaseEvaluator):
        - вычисляются вектор средних значений (mean_vector) и ковариационная матрица (cov_matrix);
        - находится обратная ковариационная матрица (inv_cov) для расчёта расстояния.
     2. Для оцениваемого экземпляра:
-       - формируется вектор его значений по всем параметрам;
+       - формируется вектор его значений по общим параметрам;
        - вычисляется расстояние Махаланобиса между этим вектором и средним вектором выборки;
        - расстояние преобразуется в оценку похожести.
 
@@ -38,52 +38,89 @@ class MahalanobisEval(BaseEvaluator):
         Args:
             positive_dataset (ParametrisedDataset): позитивная выборка для построения модели.
         """
-        # Собираем данные по всем параметрам в матрицу (параметры × наблюдения)
-        data_list = []
+        self.positive_dataset = positive_dataset
         self.param_names = positive_dataset.param_names
-        for param in self.param_names:
-            vals = positive_dataset.get_parameter_values(param)
+
+    def _get_stats_for_params(self, param_names: list) -> tuple:
+        """
+        Вычисляет статистики (среднее, ковариационную матрицу) для указанных параметров.
+
+        Args:
+            param_names (list): список имен параметров
+
+        Returns:
+            tuple: (mean_vector, inv_cov_matrix) где:
+                   - mean_vector: вектор средних
+                   - inv_cov_matrix: обратная ковариационная матрица
+        """
+        # Собираем данные только для указанных параметров
+        data_list = []
+        for param in param_names:
+            vals = self.positive_dataset.get_parameter_values(param)
             data_list.append(vals)
 
-        self.data_matrix = np.array(data_list)  # Форма: (n_params, n_observations)
-        self.n_params = len(self.param_names)
+        data_matrix = np.array(data_list)  # Форма: (n_params, n_observations)
 
         # Вычисляем вектор средних и ковариационную матрицу
-        self.mean_vector = np.mean(self.data_matrix, axis=1)  # Вектор средних по каждому параметру
-        self.cov_matrix = np.cov(self.data_matrix)  # Ковариационная матрица
+        mean_vector = np.mean(data_matrix, axis=1)
+        cov_matrix = np.cov(data_matrix)
 
         # Обрабатываем случай вырожденной матрицы
         try:
-            self.inv_cov = np.linalg.inv(self.cov_matrix)
+            inv_cov = np.linalg.inv(cov_matrix)
         except np.linalg.LinAlgError:
             # Если матрица вырождена, добавляем регуляризацию
             epsilon = 1e-8
-            self.inv_cov = np.linalg.inv(self.cov_matrix + epsilon * np.eye(self.n_params))
+            inv_cov = np.linalg.inv(cov_matrix + epsilon * np.eye(len(param_names)))
 
-    def _mahalanobis_distance(self, x: np.ndarray) -> float:
+        return mean_vector, inv_cov
+
+    def _mahalanobis_distance(self, x: np.ndarray, mean_vector: np.ndarray, inv_cov: np.ndarray) -> float:
         """
         Вычисляет расстояние Махаланобиса между вектором x и средним вектором выборки.
 
         Args:
-            x (np.ndarray): вектор значений экземпляра (форма: (n_params,)).
+            x (np.ndarray): вектор значений экземпляра.
+            mean_vector (np.ndarray): вектор средних.
+            inv_cov (np.ndarray): обратная ковариационная матрица.
 
         Returns:
             float: квадрат расстояния Махаланобиса.
         """
-        diff = x - self.mean_vector
-        distance_squared = diff.T @ self.inv_cov @ diff
+        diff = x - mean_vector
+        distance_squared = diff.T @ inv_cov @ diff
         return distance_squared
 
     def eval_exemplar(self, exemplar: Exemplar) -> float:
-        # Формируем вектор значений экземпляра
-        x = np.array([exemplar.get_parameter_value(p) for p in self.param_names])
+        # Получаем вектор, матрицу и список общих параметров
+        x, data_matrix, common_params = self._get_common_data(
+            exemplar, self.param_names, self.positive_dataset
+        )
+
+        # Если нет общих параметров, возвращаем минимальную оценку
+        if x is None:
+            return 0.0
+
+        # Если общих параметров меньше, чем в датасете, пересчитываем статистику
+        if len(common_params) < len(self.param_names):
+            # Получаем статистики только для общих параметров
+            mean_vector, inv_cov = self._get_stats_for_params(common_params)
+            x_vector = x.flatten()  # Преобразуем в одномерный массив
+        else:
+            # Используем предвычисленные статистики для всех параметров
+            # Но нужно убедиться, что порядок параметров правильный
+            # Для этого нужно создать mean_vector и inv_cov в правильном порядке
+            # В исходном коде они были в порядке self.param_names
+            mean_vector, inv_cov = self._get_stats_for_params(self.param_names)
+            x_vector = x.flatten()
 
         # Вычисляем расстояние Махаланобиса
-        mahal_dist_sq = self._mahalanobis_distance(x)
+        mahal_dist_sq = self._mahalanobis_distance(x_vector, mean_vector, inv_cov)
 
         # Преобразуем расстояние в оценку [0;1]
         # Используем нелинейное преобразование для плавного убывания
         score = 1.0 / (1.0 + np.sqrt(mahal_dist_sq))
+
         return float(score)
 
 
