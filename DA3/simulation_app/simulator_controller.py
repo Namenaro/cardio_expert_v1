@@ -240,8 +240,8 @@ class SimulatorController(QObject):
         else:
             # Успех - показываем результат в стандартном виджете
             pool = result
-            # Получаем ground truth из текущего экземпляра
-            ground_truth = self._create_ground_truth_from_exemplar(current_exemplar)
+
+            ground_truth = self.simulator.get_current_exemplar()
             if self.main_window:
                 self.main_window.show_form(pool, ground_truth)
                 logger.info(f"Форма выполнена успешно. Показано {len(pool)} экземпляров")
@@ -280,7 +280,7 @@ class SimulatorController(QObject):
             # Успех - показываем результат в расширенном виджете
             pool = result
             # Получаем ground truth из текущего экземпляра
-            ground_truth = self._create_ground_truth_from_exemplar(current_exemplar)
+            ground_truth = self.simulator.get_current_exemplar()
             if self.main_window:
                 self.main_window.show_form_extended(pool, ground_truth)
                 logger.info(f"Форма выполнена успешно. Показано {len(pool)} экземпляров в расширенном виде")
@@ -434,29 +434,7 @@ class SimulatorController(QObject):
 
         return None
 
-    def _create_ground_truth_from_exemplar(self, exemplar: Exemplar) -> Optional[Exemplar]:
-        """
-        Создает ground truth экземпляр из текущего экземпляра датасета.
-        Ground truth - это экземпляр с правильными координатами точек.
-        """
-        if not exemplar:
-            return None
 
-        # Создаем новый экземпляр с тем же сигналом
-        ground_truth = Exemplar(signal=exemplar.get_signal())
-
-        # Копируем все точки как ground truth
-        for point_name, (coord, track_id) in exemplar._points.items():
-            ground_truth.add_point(point_name, coord, track_id)
-
-        # Копируем параметры
-        for param_name, param_value in exemplar._params.items():
-            ground_truth.add_parameter(param_name, param_value)
-
-        # Устанавливаем максимальную оценку для ground truth
-        ground_truth.evaluation_result = 1.0
-
-        return ground_truth
 
     def get_r_form(self):
         return self.simulator.rform

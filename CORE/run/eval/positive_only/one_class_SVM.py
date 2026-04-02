@@ -30,10 +30,12 @@ class OneClassSVMEvaluator(BaseEvaluator):
             normalize: bool = True,
             use_robust_scaler: bool = True
     ):
+        self.positive_dataset = positive_dataset
         self.param_names = positive_dataset.param_names
         self.nu = nu
         self.gamma = gamma
         self.normalize = normalize
+        self.use_robust_scaler = use_robust_scaler
 
         # Собираем данные
         data_list = [positive_dataset.get_parameter_values(p) for p in self.param_names]
@@ -57,11 +59,11 @@ class OneClassSVMEvaluator(BaseEvaluator):
         # Вычисляем эталонные оценки для калибровки
         self.reference_scores = self.svm.score_samples(self.data_normalized)
 
-    def _sigmoid_normalize(self, score: float) -> float:
+    def _sigmoid_normalize(self, score: float, reference_scores: np.ndarray) -> float:
         """Нормализует оценку SVM в интервал [0; 1] через сигмоиду."""
         # Масштабируем относительно медианы эталонных оценок
-        median_score = np.median(self.reference_scores)
-        scaled = (score - median_score) / (self.reference_scores.std() + 1e-8)
+        median_score = np.median(reference_scores)
+        scaled = (score - median_score) / (reference_scores.std() + 1e-8)
 
         # Сигмоида: 1 / (1 + exp(-scaled))
         normalized = 1.0 / (1.0 + np.exp(-scaled))
@@ -69,22 +71,39 @@ class OneClassSVMEvaluator(BaseEvaluator):
 
     def eval_exemplar(self, exemplar: Exemplar) -> float:
         """Возвращает оценку экземпляра в [0; 1]."""
-        # Получаем вектор значений
-        x_raw = np.array([[
-            exemplar.get_parameter_value(p) for p in self.param_names
-        ]])
+        # Получаем вектор, матрицу и список общих параметров
+        x, data_matrix, common_params = self._get_common_data(
+            exemplar, self.param_names, self.positive_dataset
+        )
 
-        # Нормализуем
-        if self.scaler is not None:
-            x = self.scaler.transform(x_raw)
+        # Если нет общих параметров, возвращаем минимальную оценку
+        if x is None:
+            return 0.0
+
+        # Нормализуем данные
+        if self.normalize:
+            if self.use_robust_scaler:
+                temp_scaler = RobustScaler()
+            else:
+                temp_scaler = StandardScaler()
+            data_normalized = temp_scaler.fit_transform(data_matrix)
+            x_normalized = temp_scaler.transform(x)
         else:
-            x = x_raw
+            data_normalized = data_matrix
+            x_normalized = x
 
-        # Получаем оценку от SVM
-        svm_score = self.svm.score_samples(x)[0]
+        # Обучаем SVM на актуальных данных
+        temp_svm = OneClassSVM(kernel=self.svm.kernel, nu=self.nu, gamma=self.gamma)
+        temp_svm.fit(data_normalized)
 
-        # Нормализуем в [0; 1]
-        score = self._sigmoid_normalize(svm_score)
+        # Получаем оценку
+        svm_score = temp_svm.score_samples(x_normalized)[0]
+
+        # Получаем эталонные оценки для нормализации
+        temp_reference_scores = temp_svm.score_samples(data_normalized)
+
+        # Нормализуем через сигмоиду
+        score = self._sigmoid_normalize(svm_score, temp_reference_scores)
 
         return score
 
