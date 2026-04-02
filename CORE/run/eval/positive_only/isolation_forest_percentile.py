@@ -1,3 +1,4 @@
+import numpy as np
 from scipy.stats import percentileofscore
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
@@ -9,7 +10,7 @@ from CORE.run.eval.base_eval import BaseEvaluator
 
 class IsolationForestPercentileEvaluator(BaseEvaluator):
     """
-     Isolation Forest изолирует аномалии случайными разбиениями пространства.
+    Isolation Forest изолирует аномалии случайными разбиениями пространства.
     Чем меньше разбиений нужно для изоляции точки, тем она более аномальна.
 
     Оценка = процентиль в эталонном распределении
@@ -23,7 +24,9 @@ class IsolationForestPercentileEvaluator(BaseEvaluator):
             normalize: bool = True,
             random_state: int = 42
     ):
+        self.positive_dataset = positive_dataset
         self.param_names = positive_dataset.param_names
+        self.normalize = normalize
 
         # Собираем данные
         data_list = [positive_dataset.get_parameter_values(p) for p in self.param_names]
@@ -51,23 +54,41 @@ class IsolationForestPercentileEvaluator(BaseEvaluator):
 
     def eval_exemplar(self, exemplar: Exemplar) -> float:
         """Оценка = процентиль в эталонном распределении."""
-        # Получаем вектор значений
-        x_raw = np.array([[
-            exemplar.get_parameter_value(p) for p in self.param_names
-        ]])
+        # Получаем вектор, матрицу и список общих параметров
+        x, data_matrix, common_params = self._get_common_data(
+            exemplar, self.param_names, self.positive_dataset
+        )
 
-        # Нормализуем
-        if self.scaler is not None:
-            x = self.scaler.transform(x_raw)
+        # Если нет общих параметров, возвращаем минимальную оценку
+        if x is None:
+            return 0.0
+
+        # Нормализуем данные
+        if self.normalize:
+            temp_scaler = StandardScaler()
+            data_normalized = temp_scaler.fit_transform(data_matrix)
+            x_normalized = temp_scaler.transform(x)
         else:
-            x = x_raw
+            data_normalized = data_matrix
+            x_normalized = x
+
+        # Обучаем Isolation Forest на актуальных данных
+        temp_iforest = IsolationForest(
+            n_estimators=self.iforest.n_estimators,
+            contamination=self.iforest.contamination,
+            random_state=self.iforest.random_state,
+            bootstrap=True
+        )
+        temp_iforest.fit(data_normalized)
 
         # Получаем оценку
-        iforest_score = self.iforest.score_samples(x)[0]
+        iforest_score = temp_iforest.score_samples(x_normalized)[0]
+
+        # Получаем эталонные оценки
+        temp_reference_scores = temp_iforest.score_samples(data_normalized)
 
         # Вычисляем процентиль (доля эталонных точек с меньшей оценкой)
-        # Чем выше оценка, тем лучше
-        percentile = percentileofscore(self.reference_scores, iforest_score, kind='mean')
+        percentile = percentileofscore(temp_reference_scores, iforest_score, kind='mean')
 
         # Нормализуем в [0; 1]
         score = percentile / 100.0
