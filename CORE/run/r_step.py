@@ -54,7 +54,7 @@ class RStep:
             return 0.0
         return self.out_of_signal_tracks / len(self.r_tracks)
 
-    def run(self, exemplar: Exemplar) -> Tuple[StepRes, List[Exemplar]]:
+    def run(self, exemplar: Exemplar, filter_by_hc: bool = True) -> Tuple[StepRes, List[Exemplar]]:
         """
         Создает на основе переданного "родительского" экземпляра список экзепляров, каждый из которых на точку длиннее родительского.
         Родительский экзепляр не меняется. Дочерние экземпляры имеют гарантированно разные точки (т.е. дочерние экземпляры прорежены по последней точке)
@@ -64,6 +64,8 @@ class RStep:
         - List[Exemplar] содержит созданные экземпляры (для обратной совместимости)
 
         :param exemplar: Экземляр формы (в котором выполнены все шаги, предыдущие к данному)
+        :param filter_by_hc: Если True - фильтровать экземпляры по жестким условиям,
+                             если False - возвращать все экземпляры (но fit_conditions все равно вызывается)
         :raises RunStepError, RunTrackError, RunPazzleError
         :return: Кортеж (StepRes, List[Exemplar])
         """
@@ -99,14 +101,18 @@ class RStep:
                                tracks_results=tracks_results)
             return step_res, []
 
-        # 5. Удаляем те, которые нарушили жесткие условия на параметры
-        exemplars = [ex for ex in exemplars if self.parametriser.fit_conditions(ex, self.rHC_objects)]
+        # 5. Проверяем жесткие условия для всех экземпляров и сразу фильтруем (если нужно)
+        filtered_exemplars = []
+        for ex in exemplars:
+            is_fitted = self.parametriser.fit_conditions(ex, self.rHC_objects)
+            if not filter_by_hc or is_fitted:
+                filtered_exemplars.append(ex)
 
         # 6. Создаем StepRes с результатами
         step_res = StepRes(id=self.num_in_form, signal=exemplar.signal, left_coord=left_t, right_coord=right_t,
                            tracks_results=tracks_results)
 
-        return step_res, exemplars
+        return step_res, filtered_exemplars
 
     def _run_all_tracks(self, signal: Signal, left_t: float, right_t: float) -> Tuple[
         List[TrackRes], List[Tuple[int, float]]]:
