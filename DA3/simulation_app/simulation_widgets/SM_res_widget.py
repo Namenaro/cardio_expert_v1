@@ -2,7 +2,7 @@ import sys
 from math import sin
 
 import matplotlib.pyplot as plt
-from PySide6.QtWidgets import QWidget, QLabel, QTextEdit
+from PySide6.QtWidgets import QWidget, QLabel, QTextEdit, QVBoxLayout
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
 from CORE import Signal
@@ -13,6 +13,14 @@ from CORE.visual_debug.results_drawers.draw_SM_res import DrawSM_Res
 class SM_ResWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.sm_res_obj = None
+        self.draw_sm_res = None
+
+        # Храним ссылки на текущие фигуры и канвасы
+        self.figure = None
+        self.ax = None
+        self.canvas = None
+
         self.init_ui()
 
     def init_ui(self):
@@ -26,35 +34,93 @@ class SM_ResWidget(QWidget):
         layout.addWidget(QLabel("ID объекта SM_Res:"))
         layout.addWidget(self.id_text_edit)
 
-        # Канвас для визуализации
-        self.figure, self.ax = plt.subplots(figsize=(10, 4))
-        self.canvas = FigureCanvas(self.figure)
+        # Изначально создаем пустую фигуру
+        self._create_new_figure()
         layout.addWidget(self.canvas)
 
-        # Хранилище для объекта SM_Res и Drawer
-        self.ps_res_obj = None
+    def _create_new_figure(self):
+        """Создает новую фигуру и канвас"""
+        # Закрываем старые, если есть
+        self._cleanup_figures()
+
+        # Создаем новые
+        self.figure, self.ax = plt.subplots(figsize=(10, 4))
+        self.canvas = FigureCanvas(self.figure)
+
+    def _cleanup_figures(self):
+        """Закрывает старые фигуры"""
+        if self.canvas:
+            self.canvas.deleteLater()
+            self.canvas = None
+
+        if self.figure:
+            plt.close(self.figure)
+            self.figure = None
+            self.ax = None
+
+    def clear(self):
+        """Очищает виджет"""
+        self.id_text_edit.clear()
+
+        # Пересоздаем фигуру для очистки
+        self._create_new_figure()
+
+        # Обновляем layout с новым канвасом
+        if self.canvas:
+            # Находим layout и заменяем канвас
+            layout = self.layout()
+            if layout:
+                # Удаляем старый канвас из layout, если он там есть
+                for i in range(layout.count()):
+                    item = layout.itemAt(i)
+                    if item and item.widget() == self.canvas:
+                        break
+                else:
+                    # Если канвас не найден, добавляем новый
+                    layout.addWidget(self.canvas)
+
+        self.sm_res_obj = None
         self.draw_sm_res = None
 
     def reset_data(self, sm_res: SM_Res):
-        """Заполняет канвас на основе PS_Res и записывает ID в текстовое поле.
-        :param ps_res объект с результатом запуска ps
-        :param ground_true_point правильная координата точки этого шага, из датасета (опционально)"""
+        """Заполняет канвас на основе SM_Res и записывает ID в текстовое поле."""
         self.sm_res_obj = sm_res
 
         # Обновляем текстовое поле с ID
         self.id_text_edit.clear()
         self.id_text_edit.append(str(sm_res.id))
 
-        # Очищаем фигуру перед перерисовкой
-        self.ax.clear()
+        # Очищаем старые фигуры
+        self._cleanup_figures()
 
         # Создаём визуализатор и получаем фигуру
-        self.draw_ps_res = DrawSM_Res(res_obj=sm_res)
-        updated_fig = self.draw_ps_res.get_fig()
+        self.draw_sm_res = DrawSM_Res(res_obj=sm_res)
+        updated_fig = self.draw_sm_res.get_fig()
 
-        # Заменяем текущую фигуру на обновлённую
-        self.canvas.figure = updated_fig
-        self.canvas.draw()
+        # Сохраняем новую фигуру
+        self.figure = updated_fig
+        self.canvas = FigureCanvas(self.figure)
+
+        # Обновляем layout
+        layout = self.layout()
+        if layout:
+            # Удаляем старый канвас, если есть
+            for i in range(layout.count()):
+                item = layout.itemAt(i)
+                if item and isinstance(item.widget(), FigureCanvas):
+                    old_canvas = item.widget()
+                    layout.removeWidget(old_canvas)
+                    old_canvas.deleteLater()
+                    break
+
+            # Добавляем новый канвас
+            layout.addWidget(self.canvas)
+
+    def cleanup(self):
+        """Очищает ресурсы matplotlib"""
+        self._cleanup_figures()
+        self.sm_res_obj = None
+        self.draw_sm_res = None
 
 
 if __name__ == "__main__":
@@ -80,7 +146,7 @@ if __name__ == "__main__":
             print("Сигнал (первые 10 точек):", test_signal.signal_mv[:10])
             print("Время (первые 10 точек):", test_signal.time[:10])
 
-            # Создание тестового PS_Res
+            # Создание тестового SM_Res
             test_sm_res = SM_Res(
                 id=1,
                 old_signal=test_signal,

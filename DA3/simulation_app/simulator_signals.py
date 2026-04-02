@@ -11,6 +11,8 @@ class SimulatorSignals(QObject):
     # Сигналы для выбора элементов формы
     track_selected = Signal(int)  # (track_id)
     step_selected = Signal(int, int)  # (step_id, num_in_form)
+    SM_selected = Signal(int)  # (sm_id)
+    PS_selected = Signal(int)  # (ps_id)
 
     # Сигналы для навигации по датасету
     requested_next = Signal()

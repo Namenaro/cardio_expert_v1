@@ -14,6 +14,8 @@ from CORE.run import Exemplar
 from CORE.run.exemplars_pool import ExemplarsPool
 from CORE.run.r_form import RForm
 from CORE.visual_debug import TrackRes, StepRes
+from CORE.visual_debug.results_datcalsses.PS_res import PS_Res
+from CORE.visual_debug.results_datcalsses.SM_res import SM_Res
 from DA3.settings import Settings
 from DA3.simulation_app.simulator_utils import find_track, make_interval, get_coords, exec_track, \
     create_snapshot_from_step
@@ -204,6 +206,94 @@ class Simulator:
     def has_prev(self) -> bool:
         """Проверяет, есть ли предыдущий экземпляр"""
         return self._current_idx > 0
+
+    def run_SM(self, ex: Exemplar, sm_id: int) -> Union[str, SM_Res]:
+        """
+        Запускает SM-пазл (Signal Modifier) на сигнале экземпляра.
+
+        Args:
+            ex: экземпляр с сигналом и уже установленными точками
+            sm_id: идентификатор SM-пазла в базе
+
+        Returns:
+            Union[str, SM_Res]: результат выполнения SM-пазла или сообщение об ошибке
+        """
+        if not self.rform:
+            return "Форма не инициализирована"
+
+        # Находим трек, содержащий этот SM
+        found = self.rform.find_track_by_sm_id(sm_id)
+        if not found:
+            return f"SM с id {sm_id} не найден ни в одном треке формы"
+
+        step_idx, track_id = found
+
+        # Получаем центр для первого шага, если нужно
+        center = None
+        if step_idx == 0:
+            center = self._request_random_center_for_first_point(ex)
+            if center is None:
+                # Если не удалось получить центр из точек, используем середину сигнала
+                signal = ex.get_signal()
+                center = signal.get_duration() / 2
+                logger.info(f"SM {sm_id}: используем центр по умолчанию: {center:.3f}")
+
+        # Запускаем трек
+        result = self.run_track(ex, track_id, center)
+
+        if isinstance(result, str):
+            return f"Ошибка при выполнении трека для SM {sm_id}: {result}"
+
+        # Из результатов трека извлекаем нужный SM_Res
+        for sm_res in result.sm_res_objs:
+            if sm_res.id == sm_id:
+                return sm_res
+
+        return f"SM с id {sm_id} не найден в результатах трека {track_id}"
+
+    def run_PS(self, ex: Exemplar, ps_id: int) -> Union[str, PS_Res]:
+        """
+        Запускает PS-пазл (Point Selector) на сигнале экземпляра.
+
+        Args:
+            ex: экземпляр с сигналом и уже установленными точками
+            ps_id: идентификатор PS-пазла в базе
+
+        Returns:
+            Union[str, PS_Res]: результат выполнения PS-пазла или сообщение об ошибке
+        """
+        if not self.rform:
+            return "Форма не инициализирована"
+
+        # Находим трек, содержащий этот PS
+        found = self.rform.find_track_by_ps_id(ps_id)
+        if not found:
+            return f"PS с id {ps_id} не найден ни в одном треке формы"
+
+        step_idx, track_id = found
+
+        # Получаем центр для первого шага, если нужно
+        center = None
+        if step_idx == 0:
+            center = self._request_random_center_for_first_point(ex)
+            if center is None:
+                # Если не удалось получить центр из точек, используем середину сигнала
+                signal = ex.get_signal()
+                center = signal.get_duration() / 2
+                logger.info(f"PS {ps_id}: используем центр по умолчанию: {center:.3f}")
+
+        # Запускаем трек
+        result = self.run_track(ex, track_id, center)
+
+        if isinstance(result, str):
+            return f"Ошибка при выполнении трека для PS {ps_id}: {result}"
+
+        # Из результатов трека извлекаем нужный PS_Res
+        for ps_res in result.ps_res_objs:
+            if ps_res.id == ps_id:
+                return ps_res
+
+        return f"PS с id {ps_id} не найден в результатах трека {track_id}"
 
 
 if __name__ == "__main__":

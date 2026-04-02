@@ -158,6 +158,14 @@ class MainFormSimulator(QMainWindow):
         """Показывает Step контент"""
         self.content_manager.show_step(step_res)
 
+    def show_sm(self, sm_res):
+        """Показывает SM контент"""
+        self.content_manager.show_sm(sm_res)
+
+    def show_ps(self, ps_res, ground_true_point=None):
+        """Показывает PS контент"""
+        self.content_manager.show_ps(ps_res, ground_true_point)
+
     def show_empty(self, error_message=None):
         """Показывает пустой контент"""
         self.content_manager.show_empty(error_message)

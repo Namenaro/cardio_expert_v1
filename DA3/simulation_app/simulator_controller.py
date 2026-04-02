@@ -6,7 +6,7 @@ from typing import Optional
 from PySide6.QtCore import QObject
 
 from CORE.db_dataclasses import Form
-from CORE.visual_debug import TrackRes, StepRes
+from CORE.visual_debug import TrackRes, StepRes, SM_Res, PS_Res  # ДОБАВЛЯЕМ SM_Res, PS_Res
 from DA3 import app_signals
 from DA3.simulation_app.main_window import MainFormSimulator
 from DA3.simulation_app.simulator import Simulator
@@ -24,6 +24,8 @@ class SimulatorController(QObject):
         # Для хранения текущего выбранного элемента
         self.current_track_id: Optional[int] = None
         self.current_step_id: Optional[int] = None
+        self.current_sm_id: Optional[int] = None  # НОВОЕ ПОЛЕ
+        self.current_ps_id: Optional[int] = None  # НОВОЕ ПОЛЕ
 
         # Получаем глобальные сигналы
         self.signals = get_signals()
@@ -39,6 +41,8 @@ class SimulatorController(QObject):
         """Подключает сигналы к обработчикам"""
         self.signals.track_selected.connect(self.on_track_selected)
         self.signals.step_selected.connect(self.on_step_selected)
+        self.signals.SM_selected.connect(self.on_sm_selected)
+        self.signals.PS_selected.connect(self.on_ps_selected)
         self.signals.requested_next.connect(self.on_next_requested)
         self.signals.requested_prev.connect(self.on_prev_requested)
         self.signals.clear_selection_requested.connect(self.on_clear_selection)
@@ -48,6 +52,8 @@ class SimulatorController(QObject):
         self.simulator.reset_form(form)
         self.current_track_id = None
         self.current_step_id = None
+        self.current_sm_id = None  # СБРАСЫВАЕМ
+        self.current_ps_id = None  # СБРАСЫВАЕМ
         if self.main_window:
             self.main_window.update_form(self.get_r_form())
             self._init_first_exemplar()
@@ -64,14 +70,18 @@ class SimulatorController(QObject):
             )
             self.current_track_id = None
             self.current_step_id = None
+            self.current_sm_id = None  # СБРАСЫВАЕМ
+            self.current_ps_id = None  # СБРАСЫВАЕМ
 
     def on_step_selected(self, step_id: int, num_in_form: int):
         """Обработчик выбора шага"""
         logger.debug(f"Выбран шаг: id={step_id}, num_in_form={num_in_form}")
 
-        # Сохраняем выбранный шаг
+        # Сохраняем выбранный шаг и сбрасываем другие
         self.current_step_id = step_id
-        self.current_track_id = None  # Сбрасываем выбранный трек
+        self.current_track_id = None
+        self.current_sm_id = None
+        self.current_ps_id = None
 
         # Получаем текущий экземпляр
         current_exemplar = self.simulator.get_current_exemplar()
@@ -99,9 +109,11 @@ class SimulatorController(QObject):
         """Обработчик выбора трека"""
         logger.debug(f"Выбран трек: id={track_id}")
 
-        # Сохраняем выбранный трек
+        # Сохраняем выбранный трек и сбрасываем другие
         self.current_track_id = track_id
-        self.current_step_id = None  # Сбрасываем выбранный шаг
+        self.current_step_id = None
+        self.current_sm_id = None
+        self.current_ps_id = None
 
         # Получаем текущий экземпляр
         current_exemplar = self.simulator.get_current_exemplar()
@@ -125,6 +137,76 @@ class SimulatorController(QObject):
             if self.main_window:
                 self.main_window.show_track(track_res)
 
+    def on_sm_selected(self, sm_id: int):  # НОВЫЙ МЕТОД
+        """Обработчик выбора SM-пазла"""
+        logger.debug(f"Выбран SM: id={sm_id}")
+
+        # Сохраняем выбранный SM и сбрасываем другие
+        self.current_sm_id = sm_id
+        self.current_track_id = None
+        self.current_step_id = None
+        self.current_ps_id = None
+
+        # Получаем текущий экземпляр
+        current_exemplar = self.simulator.get_current_exemplar()
+        if not current_exemplar:
+            self.signals.error_occurred.emit("Нет текущего экземпляра для симуляции")
+            if self.main_window:
+                self.main_window.show_empty("Нет текущего экземпляра для симуляции")
+            return
+
+        # Запускаем SM
+        result = self.simulator.run_SM(current_exemplar, sm_id)
+
+        if isinstance(result, str):
+            # Ошибка
+            logger.error(f"Ошибка при выполнении SM {sm_id}: {result}")
+            if self.main_window:
+                self.main_window.show_empty(result)
+        else:
+            # Успех - показываем результат
+            sm_res: SM_Res = result
+            if self.main_window:
+                self.main_window.show_sm(sm_res)
+
+    def on_ps_selected(self, ps_id: int):  # НОВЫЙ МЕТОД
+        """Обработчик выбора PS-пазла"""
+        logger.debug(f"Выбран PS: id={ps_id}")
+
+        # Сохраняем выбранный PS и сбрасываем другие
+        self.current_ps_id = ps_id
+        self.current_track_id = None
+        self.current_step_id = None
+        self.current_sm_id = None
+
+        # Получаем текущий экземпляр
+        current_exemplar = self.simulator.get_current_exemplar()
+        if not current_exemplar:
+            self.signals.error_occurred.emit("Нет текущего экземпляра для симуляции")
+            if self.main_window:
+                self.main_window.show_empty("Нет текущего экземпляра для симуляции")
+            return
+
+        # Получаем ground truth точку для PS (если есть)
+        # PS обычно связан с определенным шагом, можно попытаться получить целевую точку
+        ground_true_point = None
+        if self.main_window and hasattr(self.main_window, 'get_ground_truth_for_ps'):
+            ground_true_point = self.main_window.get_ground_truth_for_ps(ps_id)
+
+        # Запускаем PS
+        result = self.simulator.run_PS(current_exemplar, ps_id)
+
+        if isinstance(result, str):
+            # Ошибка
+            logger.error(f"Ошибка при выполнении PS {ps_id}: {result}")
+            if self.main_window:
+                self.main_window.show_empty(result)
+        else:
+            # Успех - показываем результат
+            ps_res: PS_Res = result
+            if self.main_window:
+                self.main_window.show_ps(ps_res, ground_true_point)
+
     def on_clear_selection(self):
         """Обработчик снятия выделения"""
         logger.debug("Снятие выделения")
@@ -132,6 +214,8 @@ class SimulatorController(QObject):
         # Сбрасываем выбранные элементы
         self.current_track_id = None
         self.current_step_id = None
+        self.current_sm_id = None
+        self.current_ps_id = None
 
         # Показываем текущий экземпляр
         current_exemplar = self.simulator.get_current_exemplar()
@@ -145,8 +229,42 @@ class SimulatorController(QObject):
         if not current_exemplar:
             return
 
+        # Если есть выбранный SM - обновляем его результат
+        if self.current_sm_id is not None:
+            logger.debug(f"Обновляем SM {self.current_sm_id} для нового экземпляра")
+            result = self.simulator.run_SM(current_exemplar, self.current_sm_id)
+
+            if isinstance(result, str):
+                logger.error(f"Ошибка при обновлении SM {self.current_sm_id}: {result}")
+                if self.main_window:
+                    self.main_window.show_empty(result)
+            else:
+                sm_res: SM_Res = result
+                if self.main_window:
+                    self.main_window.show_sm(sm_res)
+
+        # Если есть выбранный PS - обновляем его результат
+        elif self.current_ps_id is not None:
+            logger.debug(f"Обновляем PS {self.current_ps_id} для нового экземпляра")
+
+            # Получаем ground truth точку для PS (если есть)
+            ground_true_point = None
+            if self.main_window and hasattr(self.main_window, 'get_ground_truth_for_ps'):
+                ground_true_point = self.main_window.get_ground_truth_for_ps(self.current_ps_id)
+
+            result = self.simulator.run_PS(current_exemplar, self.current_ps_id)
+
+            if isinstance(result, str):
+                logger.error(f"Ошибка при обновлении PS {self.current_ps_id}: {result}")
+                if self.main_window:
+                    self.main_window.show_empty(result)
+            else:
+                ps_res: PS_Res = result
+                if self.main_window:
+                    self.main_window.show_ps(ps_res, ground_true_point)
+
         # Если есть выбранный шаг - обновляем его результат
-        if self.current_step_id is not None:
+        elif self.current_step_id is not None:
             logger.debug(f"Обновляем шаг {self.current_step_id} для нового экземпляра")
             result = self.simulator.run_step(current_exemplar, self.current_step_id)
 

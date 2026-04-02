@@ -221,7 +221,7 @@ class IdSelector(BaseWidget):
     def _on_sm_clicked(self, sm: R_SM, num_in_track: int, button: QPushButton):
         """Обработка клика по кнопке SM"""
         self._set_selected(button)
-        self.signals.SM_selected.emit(sm.base_pazzle.id, num_in_track)
+        self.signals.SM_selected.emit(sm.base_pazzle.id)
 
     def _on_ps_clicked(self, ps: R_PS, button: QPushButton):
         """Обработка клика по кнопке PS"""

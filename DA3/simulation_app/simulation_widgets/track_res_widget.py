@@ -13,9 +13,6 @@ from CORE.visual_debug.results_drawers.draw_track_res import DrawTrackRes
 from CORE.visual_debug.results_drawers.draw_track_res_SM import DrawTrackRes_SM
 
 
-# DA3/simulation_app/simulation_widgets/track_full_res_widget.py
-
-
 class TrackFullResWidget(QWidget):
     """
     Виджет для отображения полной информации о треке:

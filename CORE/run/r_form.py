@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple, Optional
 
 from CORE import Signal
 from CORE.db_dataclasses import Form
@@ -66,3 +66,37 @@ class RForm:
             exemplars_pool = new_pool
 
         return exemplars_pool
+
+    def find_track_by_sm_id(self, sm_id: int) -> Optional[Tuple[int, int]]:
+        """
+        Находит трек, содержащий SM с указанным ID.
+
+        Args:
+            sm_id: ID SM-пазла в базе
+
+        Returns:
+            Optional[Tuple[int, int]]: (индекс_шага, track_id) или None, если не найден
+        """
+        for step_idx, rstep in enumerate(self.rsteps):
+            for track in rstep.r_tracks:
+                for sm in track.rSM_objects:
+                    if sm.base_pazzle.id == sm_id:
+                        return step_idx, track.id
+        return None
+
+    def find_track_by_ps_id(self, ps_id: int) -> Optional[Tuple[int, int]]:
+        """
+        Находит трек, содержащий PS с указанным ID.
+
+        Args:
+            ps_id: ID PS-пазла в базе
+
+        Returns:
+            Optional[Tuple[int, int]]: (индекс_шага, track_id) или None, если не найден
+        """
+        for step_idx, rstep in enumerate(self.rsteps):
+            for track in rstep.r_tracks:
+                for ps in track.rPS_objects:
+                    if ps.base_pazzle.id == ps_id:
+                        return step_idx, track.id
+        return None
