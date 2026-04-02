@@ -19,7 +19,8 @@ class SimulatorSignals(QObject):
     requested_prev = Signal()
 
     # Сигналы для симуляции
-    full_simulate_requested = Signal()
+    full_simulate_requested = Signal()  # Запуск полной формы
+    full_simulate_extended_requested = Signal()  # показать все экземпляры по отдельности
     clear_selection_requested = Signal()
     error_occurred = Signal(str)
 

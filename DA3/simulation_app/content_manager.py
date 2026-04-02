@@ -13,6 +13,8 @@ from DA3.simulation_app.simulation_widgets.step_res_widget import StepResWidget
 from DA3.simulation_app.simulation_widgets.track_res_widget import TrackFullResWidget
 from DA3.simulation_app.simulation_widgets.SM_res_widget import SM_ResWidget
 from DA3.simulation_app.simulation_widgets.PS_res_widget import PS_ResWidget
+from DA3.simulation_app.simulation_widgets.form_res_widget import FormResWidget  # НОВЫЙ ИМПОРТ
+from DA3.simulation_app.simulation_widgets.form_res_widget_extended import FormResWidgetExtended  # НОВЫЙ ИМПОРТ
 
 
 class ContentType(Enum):
@@ -23,6 +25,8 @@ class ContentType(Enum):
     STEP = "step"
     SM = "sm"
     PS = "ps"
+    FORM = "form"  # НОВЫЙ ТИП
+    FORM_EXTENDED = "form_extended"  # НОВЫЙ ТИП
 
 
 class ContentManager:
@@ -39,15 +43,19 @@ class ContentManager:
         self.exemplar_widget = ExemplarWidget()
         self.track_widget = TrackFullResWidget()
         self.step_widget = StepResWidget()
-        self.sm_widget = SM_ResWidget()  # НОВЫЙ ВИДЖЕТ
-        self.ps_widget = PS_ResWidget()  # НОВЫЙ ВИДЖЕТ
+        self.sm_widget = SM_ResWidget()
+        self.ps_widget = PS_ResWidget()
+        self.form_widget = FormResWidget(padding_percent=20)  # НОВЫЙ ВИДЖЕТ
+        self.form_extended_widget = FormResWidgetExtended(padding_percent=20, min_card_height_mm=40)  # НОВЫЙ ВИДЖЕТ
 
         self.stacked_widget.addWidget(self.empty_widget)
         self.stacked_widget.addWidget(self.exemplar_widget)
         self.stacked_widget.addWidget(self.track_widget)
         self.stacked_widget.addWidget(self.step_widget)
-        self.stacked_widget.addWidget(self.sm_widget)  # ДОБАВЛЯЕМ
-        self.stacked_widget.addWidget(self.ps_widget)  # ДОБАВЛЯЕМ
+        self.stacked_widget.addWidget(self.sm_widget)
+        self.stacked_widget.addWidget(self.ps_widget)
+        self.stacked_widget.addWidget(self.form_widget)  # ДОБАВЛЯЕМ
+        self.stacked_widget.addWidget(self.form_extended_widget)  # ДОБАВЛЯЕМ
 
     def show_exemplar(self, exemplar: Exemplar, color: str = 'green') -> None:
         """Показывает виджет с текущим экземпляром датасета"""
@@ -79,6 +87,18 @@ class ContentManager:
         self.ps_widget.reset_data(ps_res, ground_true_point)
         self.stacked_widget.setCurrentWidget(self.ps_widget)
 
+    def show_form(self, pool, ground_truth=None) -> None:  # НОВЫЙ МЕТОД
+        """Показывает виджет с результатами полной симуляции формы"""
+        self.form_widget.clear()
+        self.form_widget.reset_data(pool, ground_truth)
+        self.stacked_widget.setCurrentWidget(self.form_widget)
+
+    def show_form_extended(self, pool, ground_truth=None) -> None:  # НОВЫЙ МЕТОД
+        """Показывает расширенный виджет с отдельными карточками для каждого экземпляра"""
+        self.form_extended_widget.clear()
+        self.form_extended_widget.reset_data(pool, ground_truth)
+        self.stacked_widget.setCurrentWidget(self.form_extended_widget)
+
     def show_empty(self, error_message: Optional[str] = None) -> None:
         """Показывает пустой виджет"""
         if error_message:
@@ -96,7 +116,9 @@ class ContentManager:
         self.exemplar_widget.cleanup()
         self.track_widget.cleanup()
         self.step_widget.cleanup()
-        self.sm_widget.cleanup()  # ДОБАВЛЯЕМ
-        self.ps_widget.cleanup()  # ДОБАВЛЯЕМ
+        self.sm_widget.cleanup()
+        self.ps_widget.cleanup()
+        self.form_widget.cleanup()
+        self.form_extended_widget.cleanup()
         self.empty_widget.cleanup()
         self.stacked_widget.deleteLater()

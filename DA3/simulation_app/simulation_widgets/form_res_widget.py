@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from PySide6.QtWidgets import QWidget, QLabel, QTextEdit
+from PySide6.QtWidgets import QWidget, QLabel, QTextEdit, QVBoxLayout
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
 from CORE.run.exemplars_pool import ExemplarsPool
@@ -9,9 +9,6 @@ from DA3.simulation_app.simulation_widgets.utils import (
     ExemplarInfoFormatter,
     TextEditHelper
 )
-
-
-# DA3/simulation_app/simulation_widgets/form_res_widget.py
 
 
 class FormResWidget(QWidget):

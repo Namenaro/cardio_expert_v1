@@ -3,7 +3,7 @@ from typing import Optional, List
 import matplotlib.pyplot as plt
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout
-from PySide6.QtWidgets import QWidget, QScrollArea, QSizePolicy, QLabel, QTextEdit
+from PySide6.QtWidgets import QWidget, QScrollArea, QSizePolicy, QLabel, QTextEdit, QVBoxLayout
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from CORE.run import Exemplar

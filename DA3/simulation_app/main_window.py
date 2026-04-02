@@ -72,10 +72,17 @@ class MainFormSimulator(QMainWindow):
         buttons_layout = QHBoxLayout()
         buttons_layout.setSpacing(10)
 
-        # Кнопка симуляции
-        self.simulate_button = QPushButton("Полная симуляция")
+        # Кнопка запуска формы (переименована)
+        self.simulate_button = QPushButton("Запустить форму")
+        self.simulate_button.setToolTip("Запустить полное распознавание формы на текущем сигнале")
         self.simulate_button.clicked.connect(self._on_simulate_clicked)
         buttons_layout.addWidget(self.simulate_button)
+
+        # НОВАЯ КНОПКА - показать все экземпляры по отдельности
+        self.extended_view_button = QPushButton("Показать все экземпляры по отдельности")
+        self.extended_view_button.setToolTip("Показать каждый экземпляр в отдельной карточке с ground truth")
+        self.extended_view_button.clicked.connect(self._on_extended_view_clicked)
+        buttons_layout.addWidget(self.extended_view_button)
 
         # Кнопка снять выделение
         self.clear_selection_button = QPushButton("Снять выделение")
@@ -99,6 +106,10 @@ class MainFormSimulator(QMainWindow):
 
         splitter.setSizes([300, 700])
         main_layout.addWidget(splitter, 1)
+
+    def _on_extended_view_clicked(self):
+        """Обработчик кнопки показа всех экземпляров по отдельности"""
+        self.signals.full_simulate_extended_requested.emit()
 
     def _create_selector_panel(self) -> QWidget:
         """Создает панель с селектором"""
@@ -169,6 +180,14 @@ class MainFormSimulator(QMainWindow):
     def show_empty(self, error_message=None):
         """Показывает пустой контент"""
         self.content_manager.show_empty(error_message)
+
+    def show_form(self, pool, ground_truth=None):
+        """Показывает результаты полной симуляции формы (стандартный вид)"""
+        self.content_manager.show_form(pool, ground_truth)
+
+    def show_form_extended(self, pool, ground_truth=None):
+        """Показывает результаты полной симуляции формы (расширенный вид - все экземпляры по отдельности)"""
+        self.content_manager.show_form_extended(pool, ground_truth)
 
     # Методы для управления навигатором
     def set_example_id(self, example_id: str) -> None:

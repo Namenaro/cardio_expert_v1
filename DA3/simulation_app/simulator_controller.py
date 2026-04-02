@@ -6,7 +6,8 @@ from typing import Optional
 from PySide6.QtCore import QObject
 
 from CORE.db_dataclasses import Form
-from CORE.visual_debug import TrackRes, StepRes, SM_Res, PS_Res  # ДОБАВЛЯЕМ SM_Res, PS_Res
+from CORE.run import Exemplar
+from CORE.visual_debug import TrackRes, StepRes, SM_Res, PS_Res
 from DA3 import app_signals
 from DA3.simulation_app.main_window import MainFormSimulator
 from DA3.simulation_app.simulator import Simulator
@@ -24,8 +25,8 @@ class SimulatorController(QObject):
         # Для хранения текущего выбранного элемента
         self.current_track_id: Optional[int] = None
         self.current_step_id: Optional[int] = None
-        self.current_sm_id: Optional[int] = None  # НОВОЕ ПОЛЕ
-        self.current_ps_id: Optional[int] = None  # НОВОЕ ПОЛЕ
+        self.current_sm_id: Optional[int] = None
+        self.current_ps_id: Optional[int] = None
 
         # Получаем глобальные сигналы
         self.signals = get_signals()
@@ -45,6 +46,8 @@ class SimulatorController(QObject):
         self.signals.PS_selected.connect(self.on_ps_selected)
         self.signals.requested_next.connect(self.on_next_requested)
         self.signals.requested_prev.connect(self.on_prev_requested)
+        self.signals.full_simulate_requested.connect(self.on_full_simulate_requested)
+        self.signals.full_simulate_extended_requested.connect(self.on_full_simulate_extended_requested)
         self.signals.clear_selection_requested.connect(self.on_clear_selection)
 
     def on_form_changed(self, form: Form):
@@ -52,8 +55,8 @@ class SimulatorController(QObject):
         self.simulator.reset_form(form)
         self.current_track_id = None
         self.current_step_id = None
-        self.current_sm_id = None  # СБРАСЫВАЕМ
-        self.current_ps_id = None  # СБРАСЫВАЕМ
+        self.current_sm_id = None
+        self.current_ps_id = None
         if self.main_window:
             self.main_window.update_form(self.get_r_form())
             self._init_first_exemplar()
@@ -70,8 +73,8 @@ class SimulatorController(QObject):
             )
             self.current_track_id = None
             self.current_step_id = None
-            self.current_sm_id = None  # СБРАСЫВАЕМ
-            self.current_ps_id = None  # СБРАСЫВАЕМ
+            self.current_sm_id = None
+            self.current_ps_id = None
 
     def on_step_selected(self, step_id: int, num_in_form: int):
         """Обработчик выбора шага"""
@@ -137,7 +140,7 @@ class SimulatorController(QObject):
             if self.main_window:
                 self.main_window.show_track(track_res)
 
-    def on_sm_selected(self, sm_id: int):  # НОВЫЙ МЕТОД
+    def on_sm_selected(self, sm_id: int):
         """Обработчик выбора SM-пазла"""
         logger.debug(f"Выбран SM: id={sm_id}")
 
@@ -169,7 +172,7 @@ class SimulatorController(QObject):
             if self.main_window:
                 self.main_window.show_sm(sm_res)
 
-    def on_ps_selected(self, ps_id: int):  # НОВЫЙ МЕТОД
+    def on_ps_selected(self, ps_id: int):
         """Обработчик выбора PS-пазла"""
         logger.debug(f"Выбран PS: id={ps_id}")
 
@@ -188,10 +191,7 @@ class SimulatorController(QObject):
             return
 
         # Получаем ground truth точку для PS (если есть)
-        # PS обычно связан с определенным шагом, можно попытаться получить целевую точку
-        ground_true_point = None
-        if self.main_window and hasattr(self.main_window, 'get_ground_truth_for_ps'):
-            ground_true_point = self.main_window.get_ground_truth_for_ps(ps_id)
+        ground_true_point = self._get_ground_truth_for_ps(current_exemplar, ps_id)
 
         # Запускаем PS
         result = self.simulator.run_PS(current_exemplar, ps_id)
@@ -206,6 +206,84 @@ class SimulatorController(QObject):
             ps_res: PS_Res = result
             if self.main_window:
                 self.main_window.show_ps(ps_res, ground_true_point)
+
+    def on_full_simulate_requested(self):
+        """Обработчик запроса полной симуляции формы (стандартный вид)"""
+        logger.debug("Запрошена полная симуляция формы (стандартный вид)")
+
+        # Сбрасываем выбранные элементы
+        self.current_track_id = None
+        self.current_step_id = None
+        self.current_sm_id = None
+        self.current_ps_id = None
+
+        # Получаем текущий экземпляр для сигнала
+        current_exemplar = self.simulator.get_current_exemplar()
+        if not current_exemplar:
+            self.signals.error_occurred.emit("Нет текущего экземпляра для симуляции")
+            if self.main_window:
+                self.main_window.show_empty("Нет текущего экземпляра для симуляции")
+            return
+
+        # Получаем сигнал и семинальную точку (середина сигнала)
+        signal = current_exemplar.get_signal()
+        seminal_point = signal.get_duration() / 2
+
+        # Запускаем форму
+        result = self.simulator.run_form(signal, seminal_point)
+
+        if isinstance(result, str):
+            # Ошибка
+            logger.error(f"Ошибка при выполнении формы: {result}")
+            if self.main_window:
+                self.main_window.show_empty(result)
+        else:
+            # Успех - показываем результат в стандартном виджете
+            pool = result
+            # Получаем ground truth из текущего экземпляра
+            ground_truth = self._create_ground_truth_from_exemplar(current_exemplar)
+            if self.main_window:
+                self.main_window.show_form(pool, ground_truth)
+                logger.info(f"Форма выполнена успешно. Показано {len(pool)} экземпляров")
+
+    def on_full_simulate_extended_requested(self):
+        """Обработчик запроса полной симуляции формы (расширенный вид - все экземпляры по отдельности)"""
+        logger.debug("Запрошена полная симуляция формы (расширенный вид)")
+
+        # Сбрасываем выбранные элементы
+        self.current_track_id = None
+        self.current_step_id = None
+        self.current_sm_id = None
+        self.current_ps_id = None
+
+        # Получаем текущий экземпляр для сигнала
+        current_exemplar = self.simulator.get_current_exemplar()
+        if not current_exemplar:
+            self.signals.error_occurred.emit("Нет текущего экземпляра для симуляции")
+            if self.main_window:
+                self.main_window.show_empty("Нет текущего экземпляра для симуляции")
+            return
+
+        # Получаем сигнал и семинальную точку (середина сигнала)
+        signal = current_exemplar.get_signal()
+        seminal_point = signal.get_duration() / 2
+
+        # Запускаем форму
+        result = self.simulator.run_form(signal, seminal_point)
+
+        if isinstance(result, str):
+            # Ошибка
+            logger.error(f"Ошибка при выполнении формы: {result}")
+            if self.main_window:
+                self.main_window.show_empty(result)
+        else:
+            # Успех - показываем результат в расширенном виджете
+            pool = result
+            # Получаем ground truth из текущего экземпляра
+            ground_truth = self._create_ground_truth_from_exemplar(current_exemplar)
+            if self.main_window:
+                self.main_window.show_form_extended(pool, ground_truth)
+                logger.info(f"Форма выполнена успешно. Показано {len(pool)} экземпляров в расширенном виде")
 
     def on_clear_selection(self):
         """Обработчик снятия выделения"""
@@ -247,10 +325,8 @@ class SimulatorController(QObject):
         elif self.current_ps_id is not None:
             logger.debug(f"Обновляем PS {self.current_ps_id} для нового экземпляра")
 
-            # Получаем ground truth точку для PS (если есть)
-            ground_true_point = None
-            if self.main_window and hasattr(self.main_window, 'get_ground_truth_for_ps'):
-                ground_true_point = self.main_window.get_ground_truth_for_ps(self.current_ps_id)
+            # Получаем ground truth точку для PS
+            ground_true_point = self._get_ground_truth_for_ps(current_exemplar, self.current_ps_id)
 
             result = self.simulator.run_PS(current_exemplar, self.current_ps_id)
 
@@ -327,6 +403,60 @@ class SimulatorController(QObject):
             self._update_current_content()
         else:
             logger.warning("Нет предыдущего экземпляра")
+
+    def _get_ground_truth_for_ps(self, exemplar: Exemplar, ps_id: int) -> Optional[float]:
+        """
+        Получает ground truth точку для PS.
+        PS обычно связан с определенным шагом, ищет целевую точку этого шага.
+        """
+        if not self.simulator.rform:
+            return None
+
+        # Находим трек, содержащий этот PS
+        found = self.simulator.rform.find_track_by_ps_id(ps_id)
+        if not found:
+            return None
+
+        step_idx, _ = found
+
+        # Получаем шаг
+        if step_idx >= len(self.simulator.rform.rsteps):
+            return None
+
+        rstep = self.simulator.rform.rsteps[step_idx]
+        target_point_name = rstep.target_point_name
+
+        # Получаем координату целевой точки из экземпляра
+        if target_point_name:
+            coord = exemplar.get_point_coord(target_point_name)
+            if coord is not None:
+                return coord
+
+        return None
+
+    def _create_ground_truth_from_exemplar(self, exemplar: Exemplar) -> Optional[Exemplar]:
+        """
+        Создает ground truth экземпляр из текущего экземпляра датасета.
+        Ground truth - это экземпляр с правильными координатами точек.
+        """
+        if not exemplar:
+            return None
+
+        # Создаем новый экземпляр с тем же сигналом
+        ground_truth = Exemplar(signal=exemplar.get_signal())
+
+        # Копируем все точки как ground truth
+        for point_name, (coord, track_id) in exemplar._points.items():
+            ground_truth.add_point(point_name, coord, track_id)
+
+        # Копируем параметры
+        for param_name, param_value in exemplar._params.items():
+            ground_truth.add_parameter(param_name, param_value)
+
+        # Устанавливаем максимальную оценку для ground truth
+        ground_truth.evaluation_result = 1.0
+
+        return ground_truth
 
     def get_r_form(self):
         return self.simulator.rform
