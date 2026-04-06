@@ -3,7 +3,8 @@ from typing import Optional, List
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
-from matplotlib.ticker import MultipleLocator
+from matplotlib.ticker import MultipleLocator, FuncFormatter
+from matplotlib.ticker import FormatStrFormatter
 
 from CORE.signal_1d import Signal
 from CORE.visual_debug.plt_visualisation.helpers.drawinfg_entities_dataclasses import (
@@ -41,7 +42,12 @@ class SignalRenderer:
         self.point_label_offset_x = 0.02
         self.point_label_offset_y = 0.05
 
-        # Прозрачность для точек и сегментов (можно переопределить)
+        # Настройки подписей для малой сетки
+        self.minor_tick_labels_enabled = True
+        self.minor_tick_labels_fontsize = 6
+        self.minor_tick_labels_color = "gray"
+
+        # Прозрачность для точек и сегментов
         self.alpha = self.DEFAULT_ALPHA
 
     # === Методы добавления элементов ===
@@ -155,14 +161,14 @@ class SignalRenderer:
             ax.plot([segment.x1, segment.x2], [segment.y1, segment.y2],
                     color=segment.color, linestyle=segment.style.value,
                     label=segment.label, zorder=segment.zorder,
-                    alpha=self.alpha)  # Добавлена прозрачность
+                    alpha=self.alpha)
 
     def _draw_points(self, ax: plt.Axes):
         for point in self.points:
             ax.scatter(point.x, point.y, color=point.color, s=50,
                        zorder=point.zorder,
                        label=point.label if point.label and not point.show_label_near_point else None,
-                       alpha=self.alpha)  # Добавлена прозрачность
+                       alpha=self.alpha)
 
             if point.label and point.show_label_near_point:
                 ax.text(point.x + self.point_label_offset_x,
@@ -178,10 +184,43 @@ class SignalRenderer:
         ax.set_ylabel('Амплитуда, мВ')
         ax.set_aspect(self.minor_cell_sec / self.minor_cell_mv)
 
+        # Настройка большой сетки
         ax.xaxis.set_major_locator(MultipleLocator(self.major_cell_sec))
-        ax.xaxis.set_minor_locator(MultipleLocator(self.minor_cell_sec))
         ax.yaxis.set_major_locator(MultipleLocator(self.major_cell_mv))
+
+        # Настройка малой сетки
+        ax.xaxis.set_minor_locator(MultipleLocator(self.minor_cell_sec))
         ax.yaxis.set_minor_locator(MultipleLocator(self.minor_cell_mv))
+
+        # Настройка подписей для большой сетки (оставляем стандартные)
+        ax.xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+        ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+
+        # Настройка подписей для малой сетки - меньшим шрифтом и другим цветом
+        if self.minor_tick_labels_enabled:
+            # Для оси X
+            ax.xaxis.set_minor_formatter(FormatStrFormatter('%.2f'))
+            # Для оси Y
+            ax.yaxis.set_minor_formatter(FormatStrFormatter('%.1f'))
+
+            # Получаем объекты текста для малых делений и меняем их стиль
+            # Это нужно сделать после того, как график будет нарисован
+            ax.figure.canvas.draw()
+
+            # Меняем стиль для X
+            for text in ax.xaxis.get_minor_ticks():
+                text.label1.set_fontsize(self.minor_tick_labels_fontsize)
+                text.label1.set_color(self.minor_tick_labels_color)
+                text.label1.set_alpha(0.7)
+
+            # Меняем стиль для Y
+            for text in ax.yaxis.get_minor_ticks():
+                text.label1.set_fontsize(self.minor_tick_labels_fontsize)
+                text.label1.set_color(self.minor_tick_labels_color)
+                text.label1.set_alpha(0.7)
+        else:
+            ax.xaxis.set_minor_formatter(plt.NullFormatter())
+            ax.yaxis.set_minor_formatter(plt.NullFormatter())
 
         ax.grid(True, 'major', color=self.major_grid_color, zorder=0)
         ax.grid(True, 'minor', color=self.minor_grid_color, linewidth=0.5, zorder=0)
@@ -208,7 +247,6 @@ class SignalRenderer:
             else:
                 ncol = 4
 
-            # Увеличиваем отступ снизу, чтобы легенда точно не накладывалась
             ax.legend(handles=all_handles,
                       loc='lower center',
                       bbox_to_anchor=(0.1, -0.35),
