@@ -210,46 +210,21 @@ class SimulatorController(QObject):
     def on_full_simulate_requested(self):
         """Обработчик запроса полной симуляции формы (стандартный вид)"""
         logger.debug("Запрошена полная симуляция формы (стандартный вид)")
-
-        # Сбрасываем выбранные элементы
-        self.current_track_id = None
-        self.current_step_id = None
-        self.current_sm_id = None
-        self.current_ps_id = None
-
-        # Получаем текущий экземпляр для сигнала
-        current_exemplar = self.simulator.get_current_exemplar()
-        if not current_exemplar:
-            self.signals.error_occurred.emit("Нет текущего экземпляра для симуляции")
-            if self.main_window:
-                self.main_window.show_empty("Нет текущего экземпляра для симуляции")
-            return
-
-        # Получаем сигнал и семинальную точку (середина сигнала)
-        signal = current_exemplar.get_signal()
-        seminal_point = signal.get_duration() / 2
-
-        # Запускаем форму
-        result = self.simulator.run_form(signal, seminal_point)
-
-        if isinstance(result, str):
-            # Ошибка
-            logger.error(f"Ошибка при выполнении формы: {result}")
-            if self.main_window:
-                self.main_window.show_empty(result)
-        else:
-            # Успех - показываем результат в стандартном виджете
-            pool = result
-
-            ground_truth = self.simulator.get_current_exemplar()
-            if self.main_window:
-                self.main_window.show_form(pool, ground_truth)
-                logger.info(f"Форма выполнена успешно. Показано {len(pool)} экземпляров")
+        self._run_full_simulation(extended=False)
 
     def on_full_simulate_extended_requested(self):
         """Обработчик запроса полной симуляции формы (расширенный вид - все экземпляры по отдельности)"""
         logger.debug("Запрошена полная симуляция формы (расширенный вид)")
+        self._run_full_simulation(extended=True)
 
+    def _run_full_simulation(self, extended: bool = False):
+        """
+        Выполняет полную симуляцию формы.
+
+        Args:
+            extended: Если True, показывает результат в расширенном виде,
+                      иначе в стандартном
+        """
         # Сбрасываем выбранные элементы
         self.current_track_id = None
         self.current_step_id = None
@@ -264,9 +239,9 @@ class SimulatorController(QObject):
                 self.main_window.show_empty("Нет текущего экземпляра для симуляции")
             return
 
-        # Получаем сигнал и семинальную точку (середина сигнала)
+        # Получаем сигнал и семинальную точку
         signal = current_exemplar.get_signal()
-        seminal_point = signal.get_duration() / 2
+        seminal_point = self.simulator.request_random_center_for_first_point(current_exemplar)
 
         # Запускаем форму
         result = self.simulator.run_form(signal, seminal_point)
@@ -277,13 +252,17 @@ class SimulatorController(QObject):
             if self.main_window:
                 self.main_window.show_empty(result)
         else:
-            # Успех - показываем результат в расширенном виджете
+            # Успех - показываем результат
             pool = result
-            # Получаем ground truth из текущего экземпляра
             ground_truth = self.simulator.get_current_exemplar()
+
             if self.main_window:
-                self.main_window.show_form_extended(pool, ground_truth)
-                logger.info(f"Форма выполнена успешно. Показано {len(pool)} экземпляров в расширенном виде")
+                if extended:
+                    self.main_window.show_form_extended(pool, ground_truth)
+                    logger.info(f"Форма выполнена успешно. Показано {len(pool)} экземпляров в расширенном виде")
+                else:
+                    self.main_window.show_form(pool, ground_truth)
+                    logger.info(f"Форма выполнена успешно. Показано {len(pool)} экземпляров")
 
     def on_clear_selection(self):
         """Обработчик снятия выделения"""

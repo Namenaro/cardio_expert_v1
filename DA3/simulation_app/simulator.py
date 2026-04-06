@@ -32,7 +32,7 @@ class Simulator:
         self._exemplar_ids: List[str] = []
         self.ludb = LUDB()
 
-    def _request_random_center_for_first_point(self, exemplar: Exemplar) -> Optional[float]:
+    def request_random_center_for_first_point(self, exemplar: Exemplar) -> Optional[float]:
         if not self.rform or not self.rform.form.points:
             return None
         first = self.rform.form.points[0].name
@@ -41,7 +41,8 @@ class Simulator:
             logger.warning(f"Точка {first} не найдена")
             return None
         delta = self.settings.max_half_padding_from_real_coord_of_first
-        return random.uniform(coord - delta, coord + delta)
+        random_center = random.uniform(coord - delta, coord + delta)
+        return random_center
 
     def reset_form(self, form: Form):
         self._reset_dataset(name=form.path_to_dataset)
@@ -100,7 +101,7 @@ class Simulator:
             return interval
 
         if step.num_in_form == 0:
-            center = center or self._request_random_center_for_first_point(ex)
+            center = center or self.request_random_center_for_first_point(ex)
             if center is None:
                 return "Нет центра для первого шага"
 
@@ -137,7 +138,7 @@ class Simulator:
         if step_id == 0:
             # Пытаемся получить центр через существующий метод
 
-            center = self._request_random_center_for_first_point(ex)
+            center = self.request_random_center_for_first_point(ex)
 
             # Если не получилось (нет точек в экземпляре), используем середину сигнала
             if center is None:
@@ -231,7 +232,7 @@ class Simulator:
         # Получаем центр для первого шага, если нужно
         center = None
         if step_idx == 0:
-            center = self._request_random_center_for_first_point(ex)
+            center = self.request_random_center_for_first_point(ex)
             if center is None:
                 # Если не удалось получить центр из точек, используем середину сигнала
                 signal = ex.get_signal()
@@ -275,7 +276,7 @@ class Simulator:
         # Получаем центр для первого шага, если нужно
         center = None
         if step_idx == 0:
-            center = self._request_random_center_for_first_point(ex)
+            center = self.request_random_center_for_first_point(ex)
             if center is None:
                 # Если не удалось получить центр из точек, используем середину сигнала
                 signal = ex.get_signal()
