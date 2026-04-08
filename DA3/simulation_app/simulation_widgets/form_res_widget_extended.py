@@ -16,8 +16,6 @@ from DA3.simulation_app.simulation_widgets.utils import (
 )
 
 
-# DA3/simulation_app/simulation_widgets/form_res_widget_extended.py
-
 
 class ExemplarCard(QWidget):
     """Виджет-карточка для отображения одного экземпляра с ground truth и текстовой информацией справа."""

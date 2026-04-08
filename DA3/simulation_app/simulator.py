@@ -3,7 +3,7 @@ from copy import deepcopy
 from typing import Optional, List, Union
 
 from CORE import Signal
-from CORE.datasets_wrappers.LUDB import LUDB
+from CORE.datasets_wrappers.ludb import LUDB
 from CORE.datasets_wrappers.form_associated.exemplars_dataset import ExemplarsDataset
 from CORE.datasets_wrappers.form_associated.parametrised_dataset import ParametrisedDataset
 from CORE.db.db_manager import DBManager

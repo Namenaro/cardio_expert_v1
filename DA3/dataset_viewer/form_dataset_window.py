@@ -10,7 +10,7 @@ from DA3.dataset_viewer.statistics_widget import StatisticsPanel
 
 matplotlib.use('Qt5Agg')
 
-from CORE.datasets_wrappers.LUDB import LUDB
+from CORE.datasets_wrappers.ludb import LUDB
 from CORE.datasets_wrappers.form_associated.exemplars_dataset import ExemplarsDataset
 from CORE.datasets_wrappers.form_associated.parametrised_dataset import ParametrisedDataset
 from CORE.db.db_manager import DBManager
@@ -82,21 +82,15 @@ class FormDatasetWindow(QMainWindow):
     def load_parametrised_dataset(self, form: Form) -> ParametrisedDataset:
         """
         Загружает параметризованный датасет из базы данных
-
-        Args:
-            form: объект формы
-
-        Returns:
-            ParametrisedDataset: параметризованный датасет
+        :param form объект формы
+        :returns:  параметризованный датасет
         """
-        logger.info(f"Загрузка параметров формы {form.id} - {form.name}")
 
         # Получаем имя датасета из формы
         dataset_name = form.path_to_dataset
         if not dataset_name:
             raise ValueError(f"У формы {form.id} не указан путь к датасету")
 
-        logger.info(f"Загрузка датасета: {dataset_name}")
 
         # Загружаем сырой датасет с использованием LUDB
         raw_dataset = ExemplarsDataset(
@@ -109,12 +103,6 @@ class FormDatasetWindow(QMainWindow):
             raw_exemplars=raw_dataset,
             form=form
         )
-
-        if parametrised_dataset.parameters_frame.empty:
-            logger.warning(f"Таблица параметров для формы {form.id} пуста")
-        else:
-            logger.info(f"Загружено {len(parametrised_dataset.parameters_frame)} записей параметров, "
-                        f"{len(parametrised_dataset.violations_frame)} записей нарушений")
 
         return parametrised_dataset
 

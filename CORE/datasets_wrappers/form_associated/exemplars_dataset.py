@@ -5,6 +5,7 @@ from typing import List, Optional, Dict
 
 from CORE.datasets_wrappers.form_associated.raw_entry import RawEntry
 from CORE.datasets_wrappers.third_party_dataset import ThirdPartyDataset
+from CORE.datasets_wrappers.ludb import LUDB
 from CORE.logger import get_logger
 from CORE.paths import EXEMPLARS_DATASETS_PATH
 from CORE.run import Exemplar
@@ -128,7 +129,7 @@ class ExemplarsDataset:
 
 
 if __name__ == "__main__":
-    from CORE.datasets_wrappers import LUDB
+    from CORE.datasets_wrappers.ludb import LUDB
 
     print("=" * 60)
     print("ТЕСТИРОВАНИЕ ЗАГРУЗКИ ДАТАСЕТА")

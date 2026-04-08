@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QMessageBox
 
 # Импортируем app_signals для типизации
 import DA3.app_signals as app_signals
-from CORE.datasets_wrappers.LUDB import LUDB
+from CORE.datasets_wrappers.ludb import LUDB
 from CORE.db_dataclasses import *
 from CORE.run.schema import Schema
 from DA3.dataset_viewer.form_dataset_window import FormDatasetWindow
