@@ -16,8 +16,7 @@ def create_test_db():
     add_all_classes_to_db(db_manager)
 
     # Добавляем одну тестовую форму
-    get_test_form(db_manager)
-
+    # get_test_form(db_manager)
 
     # Распечатаем содержимое базы в файл
     generate_html_report()
